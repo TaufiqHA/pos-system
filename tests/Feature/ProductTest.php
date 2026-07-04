@@ -19,7 +19,8 @@ class ProductTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->user = User::factory()->create();
+        $adminRole = \App\Models\Role::firstOrCreate(['name' => 'admin'], ['id' => (string) \Illuminate\Support\Str::uuid()]);
+        $this->user = User::factory()->create(['role_id' => $adminRole->id]);
         $this->category = Category::create([
             'id' => Str::uuid()->toString(),
             'name' => 'Elektronik',

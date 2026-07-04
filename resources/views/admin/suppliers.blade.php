@@ -328,7 +328,7 @@
         document.getElementById('edit-email').value = supplier.email || '';
         document.getElementById('edit-address').value = supplier.address || '';
         document.getElementById('edit-notes').value = supplier.notes || '';
-        document.getElementById('edit-form').action = `/suppliers/${supplier.id}`;
+        document.getElementById('edit-form').action = `/admin/suppliers/${supplier.id}`;
         document.getElementById('edit-modal').classList.remove('hidden');
     }
     function closeEditModal() {

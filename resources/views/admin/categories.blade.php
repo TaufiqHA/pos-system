@@ -207,7 +207,7 @@
     function openEditModal(category) {
         document.getElementById('edit-id').value = category.id;
         document.getElementById('edit-name').value = category.name;
-        document.getElementById('edit-form').action = `/categories/${category.id}`;
+        document.getElementById('edit-form').action = `/admin/categories/${category.id}`;
         document.getElementById('edit-modal').classList.remove('hidden');
     }
     function closeEditModal() {

@@ -152,7 +152,7 @@
 
         // Update form action dynamically
         const form = document.getElementById('edit-form');
-        form.action = '/product-stocks/' + stockData.id;
+        form.action = '/admin/product-stocks/' + stockData.id;
 
         // Show modal
         const modal = document.getElementById('edit-modal');

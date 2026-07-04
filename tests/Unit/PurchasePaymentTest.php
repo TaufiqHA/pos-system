@@ -22,7 +22,8 @@ class PurchasePaymentTest extends TestCase
     {
         parent::setUp();
 
-        $this->user = User::factory()->create();
+        $adminRole = \App\Models\Role::firstOrCreate(['name' => 'admin'], ['id' => (string) \Illuminate\Support\Str::uuid()]);
+        $this->user = User::factory()->create(['role_id' => $adminRole->id]);
 
         $this->branch = Branch::create([
             'id' => (string) Str::uuid(),
@@ -61,7 +62,7 @@ class PurchasePaymentTest extends TestCase
             'paid_at' => now()->toDateTimeString(),
         ];
 
-        $response = $this->actingAs($this->user)->postJson('/purchase-payments', $payload);
+        $response = $this->actingAs($this->user)->postJson('/admin/purchase-payments', $payload);
 
         $response->assertStatus(201);
         $this->assertDatabaseHas('purchase_payments', [
@@ -81,7 +82,7 @@ class PurchasePaymentTest extends TestCase
             'status' => 'Paid',
         ]);
 
-        $response = $this->actingAs($this->user)->getJson('/purchase-payments/' . $payment->id);
+        $response = $this->actingAs($this->user)->getJson('/admin/purchase-payments/' . $payment->id);
 
         $response->assertStatus(200)
                  ->assertJsonFragment(['method' => 'Cash']);
@@ -98,7 +99,7 @@ class PurchasePaymentTest extends TestCase
             'status' => 'Unpaid',
         ]);
 
-        $response = $this->actingAs($this->user)->putJson('/purchase-payments/' . $payment->id, [
+        $response = $this->actingAs($this->user)->putJson('/admin/purchase-payments/' . $payment->id, [
             'status' => 'Paid'
         ]);
 
@@ -120,7 +121,7 @@ class PurchasePaymentTest extends TestCase
             'status' => 'Paid',
         ]);
 
-        $response = $this->actingAs($this->user)->deleteJson('/purchase-payments/' . $payment->id);
+        $response = $this->actingAs($this->user)->deleteJson('/admin/purchase-payments/' . $payment->id);
 
         $response->assertStatus(200);
         $this->assertDatabaseMissing('purchase_payments', [

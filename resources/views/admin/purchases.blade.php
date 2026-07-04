@@ -782,7 +782,7 @@
         })) : [];
         renderItems('edit');
 
-        document.getElementById('edit-form').action = `/purchases/${purchase.id}`;
+        document.getElementById('edit-form').action = `/admin/purchases/${purchase.id}`;
         document.getElementById('edit-modal').classList.remove('hidden');
     }
     function closeEditModal() {

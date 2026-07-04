@@ -28,7 +28,8 @@ class PurchaseItemTest extends TestCase
     {
         parent::setUp();
 
-        $this->user = User::factory()->create();
+        $adminRole = \App\Models\Role::firstOrCreate(['name' => 'admin'], ['id' => (string) \Illuminate\Support\Str::uuid()]);
+        $this->user = User::factory()->create(['role_id' => $adminRole->id]);
 
         $this->branch = Branch::create([
             'id' => (string) Str::uuid(),

@@ -597,7 +597,7 @@
             }
         }
 
-        document.getElementById('edit-form').action = `/products/${product.id}`;
+        document.getElementById('edit-form').action = `/admin/products/${product.id}`;
         document.getElementById('edit-modal').classList.remove('hidden');
     }
     function closeEditModal() {
@@ -814,7 +814,7 @@
         }
 
         try {
-            const response = await fetch(`/wholesale-prices/${id}`, {
+            const response = await fetch(`/admin/wholesale-prices/${id}`, {
                 method: 'DELETE',
                 headers: {
                     'Accept': 'application/json',
@@ -890,7 +890,7 @@
         messageElement.textContent = 'Mengecek SKU...';
 
         try {
-            let url = `/products/check-sku?sku=${encodeURIComponent(sku)}`;
+            let url = `/admin/products/check-sku?sku=${encodeURIComponent(sku)}`;
             if (ignoreId) {
                 url += `&ignore_id=${ignoreId}`;
             }

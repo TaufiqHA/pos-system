@@ -13,6 +13,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectGuestsTo('/');
+        $middleware->alias([
+            'role.admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'role.cabang' => \App\Http\Middleware\CabangMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

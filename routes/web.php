@@ -43,22 +43,13 @@ Route::delete("/branches/{id}", [BranchController::class, "destroy"])->name(
 );
 
 // Admin Dashboard Routes
-Route::prefix('admin')->middleware('auth')->group(function () {
+Route::prefix('admin')->middleware(['auth', 'role.admin'])->group(function () {
     Route::get('/dashboard', function () {
         return view('admin.dashboard');
     })->name('admin.dashboard');
     Route::get('/monitoring-stock', [ProductStockController::class, 'index'])->name('admin.monitoring-stock');
-});
 
-// Cabang Dashboard Routes
-Route::prefix('cabang')->middleware('auth')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('cabang.dashboard');
-    })->name('cabang.dashboard');
-});
 
-// Categories & Products Routes
-Route::middleware(['auth'])->group(function () {
     Route::get('/products/check-sku', [ProductController::class, 'checkSku'])->name('products.check_sku');
     Route::resource('categories', CategoryController::class);
     Route::resource('products', ProductController::class);
@@ -81,6 +72,13 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('purchase-payments', PurchasePaymentController::class)->only([
         'store', 'show', 'update', 'destroy'
     ]);
+});
+
+// Cabang Dashboard Routes
+Route::prefix('cabang')->middleware(['auth', 'role.cabang'])->group(function () {
+    Route::get('/dashboard', function () {
+        return view('cabang.dashboard');
+    })->name('cabang.dashboard');
 });
 
 // Auth Routes
