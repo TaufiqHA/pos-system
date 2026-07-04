@@ -29,6 +29,13 @@ Route::delete("/branches/{id}", [BranchController::class, "destroy"])->name(
     "branches.destroy",
 );
 
+// Admin Dashboard Routes
+Route::prefix('admin')->middleware('auth')->group(function () {
+    Route::get('/dashboard', function () {
+        return view('admin.dashboard');
+    })->name('admin.dashboard');
+});
+
 // Auth Routes
 Route::prefix("auth")->group(function () {
     Route::post("/login", [AuthController::class, "login"]);

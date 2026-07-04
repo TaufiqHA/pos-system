@@ -27,7 +27,7 @@ class AuthController extends Controller
                 ]);
             }
 
-            return redirect()->intended('/');
+            return redirect()->intended('/admin/dashboard');
         }
 
         if ($request->expectsJson()) {
