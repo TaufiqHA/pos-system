@@ -14,6 +14,7 @@ use App\Http\Controllers\PurchasesController;
 use App\Http\Controllers\PurchaseItemController;
 use App\Http\Controllers\PurchasePaymentController;
 use App\Http\Controllers\WilayahController;
+use App\Http\Controllers\SalesController;
 
 Route::get("/", function () {
     return view("login");
@@ -56,6 +57,7 @@ Route::prefix('admin')->middleware(['auth', 'role.admin'])->group(function () {
     Route::resource('product-stocks', ProductStockController::class);
     Route::resource('suppliers', SuppliersController::class);
     Route::resource('purchases', PurchasesController::class);
+    Route::resource('sales', SalesController::class);
 
     // Wholesale Prices Routes
     Route::post('/wholesale-prices', [WholesalePriceController::class, 'store'])->name('wholesale-prices.store');
