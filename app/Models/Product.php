@@ -39,4 +39,10 @@ class Product extends Model
     {
         return $this->belongsTo(Category::class, 'category_id', 'id');
     }
+
+    // Relasi: Produk memiliki banyak harga grosir
+    public function wholesalePrices()
+    {
+        return $this->hasMany(WholesalePrice::class, 'product_id', 'id');
+    }
 }

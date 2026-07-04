@@ -11,9 +11,10 @@ class ProductController extends Controller
 {
     public function index()
     {
-        $products = Product::with('category')->get();
+        $products = Product::with(['category', 'wholesalePrices.branch'])->get();
         $categories = Category::all(); // Needed for the modal select dropdown
-        return view('admin.products', compact('products', 'categories'));
+        $branches = \App\Models\Branch::all();
+        return view('admin.products', compact('products', 'categories', 'branches'));
     }
 
     public function create()

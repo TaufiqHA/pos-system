@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Middleware\AuthCheck;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\WholesalePriceController;
 
 Route::get("/", function () {
     return view("login");
@@ -44,6 +45,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/products/check-sku', [ProductController::class, 'checkSku'])->name('products.check_sku');
     Route::resource('categories', CategoryController::class);
     Route::resource('products', ProductController::class);
+
+    // Wholesale Prices Routes
+    Route::post('/wholesale-prices', [WholesalePriceController::class, 'store'])->name('wholesale-prices.store');
+    Route::put('/wholesale-prices/{id}', [WholesalePriceController::class, 'update'])->name('wholesale-prices.update');
+    Route::delete('/wholesale-prices/{id}', [WholesalePriceController::class, 'destroy'])->name('wholesale-prices.destroy');
 });
 
 // Auth Routes

@@ -32,6 +32,7 @@
                     <th class="pb-3 pl-4">SKU</th>
                     <th class="pb-3">Nama Produk</th>
                     <th class="pb-3">Kategori</th>
+                    <th class="pb-3 text-right">Harga Beli</th>
                     <th class="pb-3 text-right">Harga Jual</th>
                     <th class="pb-3 text-right pr-4">Aksi</th>
                 </tr>
@@ -43,6 +44,9 @@
                         <td class="py-4 font-semibold text-white">
                             <div>
                                 <span class="block">{{ $product->name }}</span>
+                                @if($product->is_wholesale)
+                                    <span class="inline-block bg-green-950/20 text-[#B4F481] border border-green-800/50 py-0.5 px-2 rounded-full text-[9px] font-semibold mt-1">Grosir</span>
+                                @endif
                             </div>
                         </td>
                         <td class="py-4">
@@ -50,15 +54,23 @@
                                 {{ $product->category->name ?? '-' }}
                             </span>
                         </td>
+                        <td class="py-4 text-right text-gray-400 font-medium">
+                            Rp {{ number_format($product->buy_price, 0, ',', '.') }}
+                        </td>
                         <td class="py-4 text-right font-bold text-[#B4F481]">
                             Rp {{ number_format($product->sell_price, 0, ',', '.') }}
                         </td>
                         <td class="py-4 text-right pr-4">
                             <div class="flex justify-end items-center gap-2">
-                                <button onclick="openDetailModal({{ json_encode($product->load('category')) }})" class="text-blue-400 hover:text-blue-300 font-semibold transition px-2 py-1 hover:bg-blue-500/10 rounded cursor-pointer">
+                                @if($product->is_wholesale)
+                                    <button onclick="openWholesaleModal('{{ $product->id }}')" class="text-green-400 hover:text-green-300 font-semibold transition px-2 py-1 hover:bg-green-500/10 rounded cursor-pointer">
+                                        Harga Grosir
+                                    </button>
+                                @endif
+                                <button onclick="openDetailModal('{{ $product->id }}')" class="text-blue-400 hover:text-blue-300 font-semibold transition px-2 py-1 hover:bg-blue-500/10 rounded cursor-pointer">
                                     Detail
                                 </button>
-                                <button onclick="openEditModal({{ json_encode($product) }})" class="text-yellow-400 hover:text-yellow-300 font-semibold transition px-2 py-1 hover:bg-yellow-500/10 rounded cursor-pointer">
+                                <button onclick="openEditModal('{{ $product->id }}')" class="text-yellow-400 hover:text-yellow-300 font-semibold transition px-2 py-1 hover:bg-yellow-500/10 rounded cursor-pointer">
                                     Edit
                                 </button>
                                 <form action="{{ route('products.destroy', $product->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Apakah Anda yakin ingin menghapus produk ini?')">
@@ -354,6 +366,23 @@
                     </div>
                 </div>
 
+                <div id="detail-wholesale-section" class="hidden">
+                    <span class="text-gray-500 font-bold uppercase tracking-wider text-[9px] block">Daftar Harga Grosir</span>
+                    <div class="mt-1 bg-gray-900 p-3 rounded-xl border border-gray-800/80 overflow-x-auto max-h-40">
+                        <table class="w-full text-left border-collapse text-[10px]">
+                            <thead>
+                                <tr class="border-b border-gray-850 text-gray-500">
+                                    <th class="pb-1 font-bold">Cabang</th>
+                                    <th class="pb-1 text-center font-bold">Min. Qty</th>
+                                    <th class="pb-1 text-right font-bold pr-2">Harga Grosir</th>
+                                </tr>
+                            </thead>
+                            <tbody id="detail-wholesale-list" class="divide-y divide-gray-800/40 text-gray-300">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <div>
                     <span class="text-gray-500 font-bold uppercase tracking-wider text-[9px] block">Deskripsi</span>
                     <p id="detail-description" class="text-white mt-1 leading-relaxed bg-gray-900 p-3 rounded-xl border border-gray-800/80"></p>
@@ -369,7 +398,84 @@
     </div>
 </div>
 
+<!-- ================= MODAL BOX: KELOLA HARGA GROSIR ================= -->
+<div id="wholesale-modal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div class="card max-w-3xl w-full p-6 rounded-2xl shadow-2xl relative border border-gray-800 my-8">
+        <button onclick="closeWholesaleModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+        <div class="mb-6">
+            <h3 class="text-base font-bold tracking-wide font-display text-white">Kelola Harga Grosir</h3>
+            <p class="text-[11px] text-gray-400 mt-1">Mengelola daftar harga grosir berdasarkan cabang dan kuantitas minimum untuk produk: <span id="wholesale-product-name" class="font-bold text-[#B4F481]"></span></p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
+            <!-- Form Tambah Harga Grosir -->
+            <div class="md:col-span-1 p-4 bg-gray-900/50 rounded-2xl border border-gray-800 space-y-4">
+                <h4 class="text-white font-bold text-xs border-b border-gray-800 pb-2">Tambah Harga Grosir</h4>
+                <form id="wholesale-form" onsubmit="submitWholesaleForm(event)" class="space-y-3">
+                    @csrf
+                    <input type="hidden" name="product_id" id="wholesale-product-id">
+                    
+                    <input type="hidden" name="branch_id" id="wholesale-branch-id" value="{{ auth()->user()->branch_id ?? '' }}">
+
+                    <div class="space-y-1">
+                        <label for="wholesale-min-qty" class="block font-bold text-gray-300">Min. Qty *</label>
+                        <input type="number" name="min_qty" id="wholesale-min-qty" min="1" required placeholder="Contoh: 10" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-2.5 focus:outline-none focus:border-green-400">
+                    </div>
+
+                    <div class="space-y-1">
+                        <label for="wholesale-price" class="block font-bold text-gray-300">Harga Satuan Grosir *</label>
+                        <input type="text" name="price" id="wholesale-price" required oninput="formatRupiah(this)" placeholder="Contoh: 45.000" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-2.5 focus:outline-none focus:border-green-400">
+                    </div>
+
+                    <div class="pt-2">
+                        <button type="submit" class="w-full bg-[#B4F481] hover:bg-green-400 text-black font-bold py-2.5 px-4 rounded-xl transition shadow-lg shadow-[#B4F481]/20 cursor-pointer flex items-center justify-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Tambah Harga
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Daftar Harga Grosir Aktif -->
+            <div class="md:col-span-2 p-4 bg-gray-900/50 rounded-2xl border border-gray-800 flex flex-col">
+                <h4 class="text-white font-bold text-xs border-b border-gray-800 pb-2 mb-3">Daftar Harga Grosir Terdaftar</h4>
+                <div class="overflow-x-auto flex-1 max-h-64">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-gray-800 text-gray-400 text-[10px] font-bold uppercase tracking-wider">
+                                <th class="pb-2">Cabang</th>
+                                <th class="pb-2 text-center">Min. Qty</th>
+                                <th class="pb-2 text-right">Harga Grosir</th>
+                                <th class="pb-2 text-right pr-2">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="wholesale-list-body" class="divide-y divide-gray-800 text-gray-300">
+                            <!-- Diisi dinamis lewat JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="pt-4 mt-6 flex items-center justify-end border-t border-gray-800">
+            <button onclick="closeWholesaleModal()" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 px-6 rounded-xl transition cursor-pointer">
+                Selesai
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
+    // Master data produk & cabang dari server
+    let productsData = @json($products);
+    const branchesData = @json($branches);
+
     function formatRupiah(element) {
         // Hapus karakter selain angka
         let value = element.value.replace(/[^0-9]/g, '');
@@ -444,7 +550,10 @@
     }
 
     // Edit Modal
-    function openEditModal(product) {
+    function openEditModal(id) {
+        const product = productsData.find(p => p.id === id);
+        if (!product) return;
+
         document.getElementById('edit-id').value = product.id;
         document.getElementById('edit-category_id').value = product.category_id;
         document.getElementById('edit-sku').value = product.sku;
@@ -482,7 +591,10 @@
     }
 
     // Detail Modal
-    function openDetailModal(product) {
+    function openDetailModal(id) {
+        const product = productsData.find(p => p.id === id);
+        if (!product) return;
+
         document.getElementById('detail-sku-label').textContent = product.sku;
         document.getElementById('detail-name').textContent = product.name;
         document.getElementById('detail-category').textContent = product.category ? product.category.name : '-';
@@ -510,10 +622,238 @@
             imageFallback.classList.remove('hidden');
         }
 
+        // Wholesale prices section
+        const wholesaleSection = document.getElementById('detail-wholesale-section');
+        const wholesaleList = document.getElementById('detail-wholesale-list');
+        wholesaleList.innerHTML = '';
+
+        if (product.is_wholesale && product.wholesale_prices && product.wholesale_prices.length > 0) {
+            wholesaleSection.classList.remove('hidden');
+            product.wholesale_prices.forEach(wp => {
+                const branchName = wp.branch ? wp.branch.name : 'Semua Cabang';
+                const formattedPrice = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(wp.price);
+                const row = `
+                    <tr class="border-b border-gray-800/20">
+                        <td class="py-1.5">${branchName}</td>
+                        <td class="py-1.5 text-center font-bold">${wp.min_qty}</td>
+                        <td class="py-1.5 text-right font-bold text-[#B4F481] pr-2">${formattedPrice}</td>
+                    </tr>
+                `;
+                wholesaleList.insertAdjacentHTML('beforeend', row);
+            });
+        } else {
+            wholesaleSection.classList.add('hidden');
+        }
+
         document.getElementById('detail-modal').classList.remove('hidden');
     }
     function closeDetailModal() {
         document.getElementById('detail-modal').classList.add('hidden');
+    }
+
+    // Wholesale Price Modal Functions
+    let currentWholesaleProductId = null;
+    let currentWholesalePrices = [];
+
+    function openWholesaleModal(productId) {
+        const product = productsData.find(p => p.id === productId);
+        if (!product) return;
+
+        currentWholesaleProductId = productId;
+        currentWholesalePrices = product.wholesale_prices || [];
+
+        document.getElementById('wholesale-product-id').value = productId;
+        document.getElementById('wholesale-product-name').textContent = `${product.name} (${product.sku})`;
+        
+        // Reset form
+        document.getElementById('wholesale-form').reset();
+
+        renderWholesalePricesList();
+
+        document.getElementById('wholesale-modal').classList.remove('hidden');
+    }
+
+    function closeWholesaleModal() {
+        document.getElementById('wholesale-modal').classList.add('hidden');
+    }
+
+    function renderWholesalePricesList() {
+        const listBody = document.getElementById('wholesale-list-body');
+        listBody.innerHTML = '';
+
+        if (currentWholesalePrices.length === 0) {
+            listBody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="py-4 text-center text-gray-500">Belum ada harga grosir untuk produk ini.</td>
+                </tr>
+            `;
+            return;
+        }
+
+        // Sort by branch name and min_qty
+        const sortedPrices = [...currentWholesalePrices].sort((a, b) => {
+            const nameA = (a.branch ? a.branch.name : '').toLowerCase();
+            const nameB = (b.branch ? b.branch.name : '').toLowerCase();
+            if (nameA !== nameB) return nameA.localeCompare(nameB);
+            return a.min_qty - b.min_qty;
+        });
+
+        sortedPrices.forEach(wp => {
+            const branchName = wp.branch ? wp.branch.name : 'Semua Cabang';
+            const formattedPrice = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(wp.price);
+            
+            const row = `
+                <tr class="hover:bg-gray-805/30 transition">
+                    <td class="py-2.5">${branchName}</td>
+                    <td class="py-2.5 text-center font-bold">${wp.min_qty}</td>
+                    <td class="py-2.5 text-right font-bold text-[#B4F481]">${formattedPrice}</td>
+                    <td class="py-2.5 text-right pr-2">
+                        <button type="button" onclick="deleteWholesalePrice('${wp.id}')" class="text-red-500 hover:text-red-400 font-semibold transition px-2 py-0.5 hover:bg-red-500/10 rounded cursor-pointer">
+                            Hapus
+                        </button>
+                    </td>
+                </tr>
+            `;
+            listBody.insertAdjacentHTML('beforeend', row);
+        });
+    }
+
+    async function submitWholesaleForm(event) {
+        event.preventDefault();
+
+        const form = document.getElementById('wholesale-form');
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const productId = document.getElementById('wholesale-product-id').value;
+        const branchId = document.getElementById('wholesale-branch-id').value;
+        const minQty = document.getElementById('wholesale-min-qty').value;
+        
+        // Clean price input of dots
+        let priceRaw = document.getElementById('wholesale-price').value;
+        const price = priceRaw.replace(/\./g, '');
+
+        // Client-side validation: wholesale price cannot be below product buy price
+        const product = productsData.find(p => p.id === productId);
+        if (product && parseFloat(price) < parseFloat(product.buy_price)) {
+            const formattedBuyPrice = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(product.buy_price);
+            alert(`Harga grosir tidak boleh di bawah harga beli produk (${formattedBuyPrice})`);
+            return;
+        }
+
+        submitBtn.disabled = true;
+        const originalBtnContent = submitBtn.innerHTML;
+        submitBtn.innerHTML = 'Menyimpan...';
+
+        try {
+            const response = await fetch('{{ route("wholesale-prices.store") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    product_id: productId,
+                    branch_id: branchId,
+                    min_qty: minQty,
+                    price: price
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.status === 201) {
+                // Success! Get branch object info from branchesData
+                const branchObj = branchesData.find(b => b.id === branchId);
+                const newPriceItem = data.data;
+                newPriceItem.branch = branchObj; // attach branch relation representation for UI
+
+                // Update productsData and currentWholesalePrices
+                const product = productsData.find(p => p.id === productId);
+                if (product) {
+                    if (!product.wholesale_prices) product.wholesale_prices = [];
+                    product.wholesale_prices.push(newPriceItem);
+                    currentWholesalePrices = product.wholesale_prices;
+                } else {
+                    currentWholesalePrices.push(newPriceItem);
+                }
+
+                renderWholesalePricesList();
+                form.reset();
+                
+                // Show floating small notification
+                showToast('Harga grosir berhasil ditambahkan!');
+            } else {
+                alert(data.message || 'Gagal menambahkan harga grosir');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan jaringan.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnContent;
+        }
+    }
+
+    async function deleteWholesalePrice(id) {
+        if (!confirm('Apakah Anda yakin ingin menghapus harga grosir ini?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/wholesale-prices/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Remove from local memory lists
+                currentWholesalePrices = currentWholesalePrices.filter(wp => wp.id !== id);
+                
+                const product = productsData.find(p => p.id === currentWholesaleProductId);
+                if (product) {
+                    product.wholesale_prices = product.wholesale_prices.filter(wp => wp.id !== id);
+                }
+
+                renderWholesalePricesList();
+                showToast('Harga grosir berhasil dihapus!');
+            } else {
+                alert(data.message || 'Gagal menghapus harga grosir');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan jaringan.');
+        }
+    }
+
+    function showToast(message) {
+        // Create dynamic toast notification matching modern aesthetics
+        let toast = document.createElement('div');
+        toast.className = 'fixed bottom-5 right-5 z-55 bg-gray-900 border border-green-500/30 text-green-400 p-4 rounded-xl text-xs flex items-center gap-2 shadow-2xl transition duration-500 transform translate-y-10 opacity-0';
+        toast.innerHTML = `
+            <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>${message}</span>
+        `;
+        document.body.appendChild(toast);
+        
+        // Trigger reflow & animate in
+        setTimeout(() => {
+            toast.classList.remove('translate-y-10', 'opacity-0');
+        }, 10);
+
+        // Animate out & remove
+        setTimeout(() => {
+            toast.classList.add('translate-y-10', 'opacity-0');
+            setTimeout(() => {
+                toast.remove();
+            }, 500);
+        }, 3000);
     }
 
     let skuCheckTimeout;
