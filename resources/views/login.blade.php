@@ -39,7 +39,7 @@
                 </div>
                 <div class="flex justify-between items-center text-gray-400">
                     <span>Kata Sandi:</span>
-                    <span class="text-white font-mono select-all font-semibold">12345678</span>
+                    <span class="text-white font-mono select-all font-semibold">password</span>
                 </div>
             </div>
         </div>

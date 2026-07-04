@@ -4,10 +4,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\AuthController;
+use App\Http\Middleware\AuthCheck;
 
 Route::get("/", function () {
     return view("login");
-})->name("login");
+})->name("login")->middleware(AuthCheck::class);
 
 // Roles Routes
 Route::post("/roles", [RoleController::class, "store"])->name("roles.store");
