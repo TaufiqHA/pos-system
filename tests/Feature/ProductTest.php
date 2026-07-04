@@ -84,6 +84,39 @@ class ProductTest extends TestCase
         ]);
     }
 
+    public function test_can_store_product_and_automatically_creates_stock(): void
+    {
+        $branch = \App\Models\Branch::create([
+            'id' => (string) Str::uuid(),
+            'name' => 'Cabang Surabaya',
+            'address' => 'Jl. Pemuda',
+            'phone' => '081234567890',
+            'wilayah' => 'Jawa Timur',
+        ]);
+
+        $this->user->update(['branch_id' => $branch->id]);
+
+        $response = $this->actingAs($this->user)->post(route('products.store'), [
+            'category_id' => $this->category->id,
+            'sku' => 'SKU-777',
+            'name' => 'Laptop Dell',
+            'buy_price' => 10000000,
+            'sell_price' => 12000000,
+        ]);
+
+        $response->assertStatus(302);
+
+        $product = Product::where('sku', 'SKU-777')->firstOrFail();
+
+        $this->assertDatabaseHas('product_stocks', [
+            'product_id' => $product->id,
+            'branch_id' => $branch->id,
+            'stock' => 0,
+            'minimum_stock' => 0,
+            'average_cost' => 0,
+        ]);
+    }
+
     public function test_cannot_store_product_without_required_fields(): void
     {
         $response = $this->actingAs($this->user)->post(route('products.store'), [
@@ -236,6 +269,41 @@ class ProductTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertJson(['exists' => false]);
+    }
+
+    public function test_check_sku_returns_true_even_if_sku_is_soft_deleted(): void
+    {
+        $product = Product::create([
+            'id' => Str::uuid()->toString(),
+            'category_id' => $this->category->id,
+            'sku' => 'SKU-TRASHED',
+            'name' => 'Laptop Toshiba',
+            'buy_price' => 3000000,
+            'sell_price' => 4000000,
+        ]);
+        $product->delete();
+
+        $response = $this->actingAs($this->user)->get(route('products.check_sku', ['sku' => 'SKU-TRASHED']));
+
+        $response->assertStatus(200);
+        $response->assertJson(['exists' => true]);
+    }
+
+    public function test_check_sku_is_case_insensitive(): void
+    {
+        Product::create([
+            'id' => Str::uuid()->toString(),
+            'category_id' => $this->category->id,
+            'sku' => 'SKU-mixedCASE',
+            'name' => 'Laptop Lenovo',
+            'buy_price' => 6000000,
+            'sell_price' => 7000000,
+        ]);
+
+        $response = $this->actingAs($this->user)->get(route('products.check_sku', ['sku' => 'sku-MIXEDcase']));
+
+        $response->assertStatus(200);
+        $response->assertJson(['exists' => true]);
     }
 }
 

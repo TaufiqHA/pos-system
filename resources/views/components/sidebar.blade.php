@@ -36,7 +36,7 @@
 
         <!-- Menu Kategori: Produk & Stok -->
         <div class="space-y-2">
-            <div class="flex justify-between items-center {{ request()->routeIs('products.*') || request()->routeIs('categories.*') ? 'text-white' : 'text-gray-400' }} px-2 cursor-pointer hover:text-white transition" onclick="toggleDropdown('produk-menu', 'produk-icon')">
+            <div class="flex justify-between items-center {{ request()->routeIs('products.*') || request()->routeIs('categories.*') || request()->routeIs('admin.monitoring-stock') ? 'text-white' : 'text-gray-400' }} px-2 cursor-pointer hover:text-white transition" onclick="toggleDropdown('produk-menu', 'produk-icon')">
                 <span class="text-[10px] font-bold tracking-wider uppercase">Produk & Stok</span>
                 <svg id="produk-icon" class="w-3 h-3 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -49,7 +49,9 @@
                 <li class="hover:text-white transition {{ request()->routeIs('categories.*') ? 'text-[#B4F481] font-semibold' : '' }}">
                     <a href="{{ route('categories.index') }}" class="block w-full">Daftar Kategori</a>
                 </li>
-                <li class="hover:text-white cursor-pointer transition">Monitoring Stok</li>
+                <li class="hover:text-white transition {{ request()->routeIs('admin.monitoring-stock') ? 'text-[#B4F481] font-semibold' : '' }}">
+                    <a href="{{ route('admin.monitoring-stock') }}" class="block w-full">Monitoring Stok</a>
+                </li>
             </ul>
         </div>
 

@@ -8,6 +8,7 @@ use App\Http\Middleware\AuthCheck;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\WholesalePriceController;
+use App\Http\Controllers\ProductStockController;
 
 Route::get("/", function () {
     return view("login");
@@ -38,6 +39,7 @@ Route::prefix('admin')->middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
         return view('admin.dashboard');
     })->name('admin.dashboard');
+    Route::get('/monitoring-stock', [ProductStockController::class, 'index'])->name('admin.monitoring-stock');
 });
 
 // Categories & Products Routes
@@ -45,6 +47,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/products/check-sku', [ProductController::class, 'checkSku'])->name('products.check_sku');
     Route::resource('categories', CategoryController::class);
     Route::resource('products', ProductController::class);
+    Route::resource('product-stocks', ProductStockController::class);
 
     // Wholesale Prices Routes
     Route::post('/wholesale-prices', [WholesalePriceController::class, 'store'])->name('wholesale-prices.store');

@@ -35,7 +35,20 @@ class ProductController extends Controller
         $data = $request->all();
         $data['id'] = Str::uuid()->toString();
 
-        Product::create($data);
+        $product = Product::create($data);
+
+        // Automatis create product stock dengan default stok 0 untuk cabang yang sedang login saja
+        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()?->id;
+        if ($branchId) {
+            \App\Models\ProductStock::create([
+                'id' => (string) Str::uuid(),
+                'product_id' => $product->id,
+                'branch_id' => $branchId,
+                'stock' => 0,
+                'minimum_stock' => 0,
+                'average_cost' => 0,
+            ]);
+        }
 
         return redirect()->route('products.index')->with('success', 'Product created successfully.');
     }
@@ -81,7 +94,7 @@ class ProductController extends Controller
             return response()->json(['exists' => false]);
         }
 
-        $query = Product::where('sku', $sku);
+        $query = Product::withTrashed()->whereRaw('LOWER(sku) = ?', [strtolower($sku)]);
 
         // Abaikan pengecekan ID saat ini jika dalam mode Edit
         if ($ignoreId) {
