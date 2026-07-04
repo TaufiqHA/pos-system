@@ -11,6 +11,7 @@ use App\Http\Controllers\PurchasesController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\SalesItemController;
+use App\Http\Controllers\SalesPaymentController;
 use App\Http\Controllers\SuppliersController;
 use App\Http\Controllers\WholesalePriceController;
 use App\Http\Controllers\WilayahController;
@@ -82,6 +83,12 @@ Route::prefix('admin')->middleware(['auth', 'role.admin'])->group(function () {
         Route::put('/{id}', [SalesItemController::class, 'update'])->name('sales-items.update');
         Route::delete('/{id}', [SalesItemController::class, 'destroy'])->name('sales-items.destroy');
     });
+
+    // Route untuk Sales Payment
+    Route::post('/sales-payments', [SalesPaymentController::class, 'create'])->name('admin.sales-payments.create');
+    Route::get('/sales-payments/{id}', [SalesPaymentController::class, 'show'])->name('admin.sales-payments.show');
+    Route::put('/sales-payments/{id}', [SalesPaymentController::class, 'update'])->name('admin.sales-payments.update');
+    Route::delete('/sales-payments/{id}', [SalesPaymentController::class, 'delete'])->name('admin.sales-payments.delete');
 });
 
 // Cabang Dashboard Routes
