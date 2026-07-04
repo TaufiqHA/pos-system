@@ -50,6 +50,13 @@ Route::prefix('admin')->middleware('auth')->group(function () {
     Route::get('/monitoring-stock', [ProductStockController::class, 'index'])->name('admin.monitoring-stock');
 });
 
+// Cabang Dashboard Routes
+Route::prefix('cabang')->middleware('auth')->group(function () {
+    Route::get('/dashboard', function () {
+        return view('cabang.dashboard');
+    })->name('cabang.dashboard');
+});
+
 // Categories & Products Routes
 Route::middleware(['auth'])->group(function () {
     Route::get('/products/check-sku', [ProductController::class, 'checkSku'])->name('products.check_sku');

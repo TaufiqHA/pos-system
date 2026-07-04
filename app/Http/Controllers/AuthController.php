@@ -20,11 +20,17 @@ class AuthController extends Controller
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
+            $user = Auth::user();
+
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'Login success',
-                    'user' => Auth::user(),
+                    'user' => $user,
                 ]);
+            }
+
+            if ($user->role && $user->role->name === 'cabang') {
+                return redirect()->intended('/cabang/dashboard');
             }
 
             return redirect()->intended('/admin/dashboard');
@@ -63,8 +69,12 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return response()->json([
-            'message' => 'Logout success',
-        ]);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Logout success',
+            ]);
+        }
+
+        return redirect('/');
     }
 }
