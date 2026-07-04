@@ -114,6 +114,7 @@
                 <div class="space-y-1">
                     <label for="create-sku" class="block font-bold text-gray-300">SKU *</label>
                     <input type="text" name="sku" id="create-sku" value="{{ !old('_method') ? old('sku') : '' }}" placeholder="Contoh: PRD-001" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @if($errors->has('sku') && !old('_method')) border-red-500 @endif">
+                    <span id="create-sku-message" class="text-[10px] mt-1 hidden"></span>
                     @if($errors->has('sku') && !old('_method'))
                         <p class="text-red-500 text-[10px] mt-1">{{ $errors->first('sku') }}</p>
                     @endif
@@ -219,6 +220,7 @@
                 <div class="space-y-1">
                     <label for="edit-sku" class="block font-bold text-gray-300">SKU *</label>
                     <input type="text" name="sku" id="edit-sku" value="{{ old('_method') === 'PUT' ? old('sku') : '' }}" placeholder="Contoh: PRD-001" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @if($errors->has('sku') && old('_method') === 'PUT') border-red-500 @endif">
+                    <span id="edit-sku-message" class="text-[10px] mt-1 hidden"></span>
                     @if($errors->has('sku') && old('_method') === 'PUT')
                         <p class="text-red-500 text-[10px] mt-1">{{ $errors->first('sku') }}</p>
                     @endif
@@ -418,6 +420,23 @@
 
     // Create Modal
     function openCreateModal() {
+        // Reset SKU checking states
+        const createSkuMessage = document.getElementById('create-sku-message');
+        if (createSkuMessage) {
+            createSkuMessage.classList.add('hidden');
+        }
+        const createSkuInput = document.getElementById('create-sku');
+        if (createSkuInput) {
+            createSkuInput.classList.remove('border-red-500');
+        }
+        const createForm = document.querySelector('#create-modal form');
+        if (createForm) {
+            const submitBtn = createForm.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
         document.getElementById('create-modal').classList.remove('hidden');
     }
     function closeCreateModal() {
@@ -437,6 +456,24 @@
         document.getElementById('edit-description').value = product.description || '';
         document.getElementById('edit-image').value = product.image || '';
         
+        // Reset SKU checking states
+        const editSkuMessage = document.getElementById('edit-sku-message');
+        if (editSkuMessage) {
+            editSkuMessage.classList.add('hidden');
+        }
+        const editSkuInput = document.getElementById('edit-sku');
+        if (editSkuInput) {
+            editSkuInput.classList.remove('border-red-500');
+        }
+        const editForm = document.getElementById('edit-form');
+        if (editForm) {
+            const submitBtn = editForm.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
         document.getElementById('edit-form').action = `/products/${product.id}`;
         document.getElementById('edit-modal').classList.remove('hidden');
     }
@@ -478,5 +515,72 @@
     function closeDetailModal() {
         document.getElementById('detail-modal').classList.add('hidden');
     }
+
+    let skuCheckTimeout;
+
+    async function checkSku(inputElement, messageElement, ignoreId = null) {
+        const sku = inputElement.value.trim();
+        const form = inputElement.closest('form');
+        const submitBtn = form.querySelector('button[type="submit"]');
+
+        if (sku === '') {
+            messageElement.classList.add('hidden');
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            inputElement.classList.remove('border-red-500');
+            return;
+        }
+
+        messageElement.classList.remove('hidden');
+        messageElement.className = 'text-[10px] mt-1 text-gray-400 block';
+        messageElement.textContent = 'Mengecek SKU...';
+
+        try {
+            let url = `/products/check-sku?sku=${encodeURIComponent(sku)}`;
+            if (ignoreId) {
+                url += `&ignore_id=${ignoreId}`;
+            }
+
+            const response = await fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+            const data = await response.json();
+
+            if (data.exists) {
+                messageElement.className = 'text-[10px] mt-1 text-red-500 block font-bold';
+                messageElement.textContent = '❌ SKU sudah digunakan!';
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                inputElement.classList.add('border-red-500');
+            } else {
+                messageElement.className = 'text-[10px] mt-1 text-green-400 block font-bold';
+                messageElement.textContent = '✅ SKU tersedia.';
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                inputElement.classList.remove('border-red-500');
+            }
+        } catch (error) {
+            console.error('Error saat mengecek SKU:', error);
+        }
+    }
+
+    // Event listener dengan debounce ringan (300ms) untuk mengurangi request ke server
+    document.getElementById('create-sku').addEventListener('input', function() {
+        clearTimeout(skuCheckTimeout);
+        skuCheckTimeout = setTimeout(() => {
+            checkSku(this, document.getElementById('create-sku-message'));
+        }, 300);
+    });
+
+    document.getElementById('edit-sku').addEventListener('input', function() {
+        clearTimeout(skuCheckTimeout);
+        const productId = document.getElementById('edit-id').value;
+        skuCheckTimeout = setTimeout(() => {
+            checkSku(this, document.getElementById('edit-sku-message'), productId);
+        }, 300);
+    });
 </script>
 @endsection

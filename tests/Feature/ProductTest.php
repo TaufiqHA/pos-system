@@ -184,4 +184,58 @@ class ProductTest extends TestCase
             'id' => $product->id,
         ]);
     }
+
+    public function test_check_sku_returns_false_if_sku_does_not_exist(): void
+    {
+        $response = $this->actingAs($this->user)->get(route('products.check_sku', ['sku' => 'NONEXISTENT']));
+
+        $response->assertStatus(200);
+        $response->assertJson(['exists' => false]);
+    }
+
+    public function test_check_sku_returns_true_if_sku_exists(): void
+    {
+        Product::create([
+            'id' => Str::uuid()->toString(),
+            'category_id' => $this->category->id,
+            'sku' => 'SKU-EXIST',
+            'name' => 'Laptop Acer',
+            'buy_price' => 4000000,
+            'sell_price' => 5000000,
+        ]);
+
+        $response = $this->actingAs($this->user)->get(route('products.check_sku', ['sku' => 'SKU-EXIST']));
+
+        $response->assertStatus(200);
+        $response->assertJson(['exists' => true]);
+    }
+
+    public function test_check_sku_ignores_specified_id(): void
+    {
+        $product = Product::create([
+            'id' => Str::uuid()->toString(),
+            'category_id' => $this->category->id,
+            'sku' => 'SKU-EXIST',
+            'name' => 'Laptop Acer',
+            'buy_price' => 4000000,
+            'sell_price' => 5000000,
+        ]);
+
+        $response = $this->actingAs($this->user)->get(route('products.check_sku', [
+            'sku' => 'SKU-EXIST',
+            'ignore_id' => $product->id
+        ]));
+
+        $response->assertStatus(200);
+        $response->assertJson(['exists' => false]);
+    }
+
+    public function test_check_sku_returns_false_if_sku_empty(): void
+    {
+        $response = $this->actingAs($this->user)->get(route('products.check_sku', ['sku' => '']));
+
+        $response->assertStatus(200);
+        $response->assertJson(['exists' => false]);
+    }
 }
+

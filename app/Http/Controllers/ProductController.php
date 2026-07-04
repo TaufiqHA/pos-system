@@ -70,4 +70,26 @@ class ProductController extends Controller
         $product->delete();
         return redirect()->route('products.index')->with('success', 'Product deleted successfully.');
     }
+
+    public function checkSku(Request $request)
+    {
+        $sku = $request->query('sku');
+        $ignoreId = $request->query('ignore_id');
+
+        if (!$sku) {
+            return response()->json(['exists' => false]);
+        }
+
+        $query = Product::where('sku', $sku);
+
+        // Abaikan pengecekan ID saat ini jika dalam mode Edit
+        if ($ignoreId) {
+            $query->where('id', '!=', $ignoreId);
+        }
+
+        $exists = $query->exists();
+
+        return response()->json(['exists' => $exists]);
+    }
 }
+

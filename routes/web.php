@@ -41,6 +41,7 @@ Route::prefix('admin')->middleware('auth')->group(function () {
 
 // Categories & Products Routes
 Route::middleware(['auth'])->group(function () {
+    Route::get('/products/check-sku', [ProductController::class, 'checkSku'])->name('products.check_sku');
     Route::resource('categories', CategoryController::class);
     Route::resource('products', ProductController::class);
 });
