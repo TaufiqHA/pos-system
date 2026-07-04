@@ -22,5 +22,8 @@ class Wilayah extends Model
         'name',
     ];
 
-    // TODO: Definisikan relasi ke model lain di sini sesuai kebutuhan
+    public function branches()
+    {
+        return $this->hasMany(Branch::class, 'wilayah_id');
+    }
 }

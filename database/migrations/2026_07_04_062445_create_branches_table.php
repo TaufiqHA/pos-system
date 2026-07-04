@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->text('address')->nullable();
             $table->string('phone')->nullable();
-            $table->string('wilayah')->nullable();
+            $table->string('wilayah_id')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
             $table->softDeletes();

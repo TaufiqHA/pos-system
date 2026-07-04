@@ -91,7 +91,7 @@ class ProductTest extends TestCase
             'name' => 'Cabang Surabaya',
             'address' => 'Jl. Pemuda',
             'phone' => '081234567890',
-            'wilayah' => 'Jawa Timur',
+            'wilayah_id' => 'Jawa Timur',
         ]);
 
         $this->user->update(['branch_id' => $branch->id]);

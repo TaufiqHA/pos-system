@@ -32,7 +32,7 @@ class ProductStockTest extends TestCase
             'name' => 'Cabang Bandung',
             'address' => 'Jl. Merdeka No. 10',
             'phone' => '08123456789',
-            'wilayah' => 'Jawa Barat',
+            'wilayah_id' => 'Jawa Barat',
             'notes' => 'Kantor Cabang Baru',
         ]);
 

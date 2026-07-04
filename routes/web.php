@@ -29,6 +29,9 @@ Route::delete("/roles/{id}", [RoleController::class, "destroy"])->name(
 );
 
 // Branches Routes
+Route::get("/branches", [BranchController::class, "index"])->name(
+    "branches.index",
+);
 Route::post("/branches", [BranchController::class, "store"])->name(
     "branches.store",
 );

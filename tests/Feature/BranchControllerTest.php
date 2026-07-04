@@ -12,11 +12,16 @@ class BranchControllerTest extends TestCase
 
     public function test_can_create_branch(): void
     {
+        \App\Models\Wilayah::create([
+            'id' => 'Jawa Barat',
+            'name' => 'Jawa Barat',
+        ]);
+
         $response = $this->post(route('branches.store'), [
             'name' => 'Cabang Bandung',
             'address' => 'Jl. Merdeka No. 10',
             'phone' => '08123456789',
-            'wilayah' => 'Jawa Barat',
+            'wilayah_id' => 'Jawa Barat',
             'notes' => 'Kantor Cabang Baru',
         ]);
 
@@ -27,7 +32,7 @@ class BranchControllerTest extends TestCase
             'name' => 'Cabang Bandung',
             'address' => 'Jl. Merdeka No. 10',
             'phone' => '08123456789',
-            'wilayah' => 'Jawa Barat',
+            'wilayah_id' => 'Jawa Barat',
             'notes' => 'Kantor Cabang Baru',
         ]);
 
@@ -85,5 +90,60 @@ class BranchControllerTest extends TestCase
         $this->assertSoftDeleted('branches', [
             'id' => $branch->id,
         ]);
+    }
+
+    public function test_can_get_branches_index(): void
+    {
+        $response = $this->get(route('branches.index'));
+
+        $response->assertStatus(200);
+        $response->assertViewIs('admin.branch');
+        $response->assertViewHas('branches');
+        $response->assertViewHas('wilayahs');
+    }
+
+    public function test_branches_index_hides_branches_associated_with_admin_users(): void
+    {
+        // 1. Create a branch linked to an admin user
+        $adminRole = \App\Models\Role::firstOrCreate(['name' => 'admin'], ['id' => (string) \Illuminate\Support\Str::uuid()]);
+        $branchWithAdmin = Branch::create([
+            'id' => (string) \Illuminate\Support\Str::uuid(),
+            'name' => 'Cabang Admin',
+        ]);
+        \App\Models\User::factory()->create([
+            'role_id' => $adminRole->id,
+            'branch_id' => $branchWithAdmin->id,
+        ]);
+
+        // 2. Create a branch linked to a non-admin user
+        $cabangRole = \App\Models\Role::firstOrCreate(['name' => 'cabang'], ['id' => (string) \Illuminate\Support\Str::uuid()]);
+        $branchWithCabang = Branch::create([
+            'id' => (string) \Illuminate\Support\Str::uuid(),
+            'name' => 'Cabang Biasa',
+        ]);
+        \App\Models\User::factory()->create([
+            'role_id' => $cabangRole->id,
+            'branch_id' => $branchWithCabang->id,
+        ]);
+
+        // 3. Create a branch not linked to any user
+        $branchWithoutUser = Branch::create([
+            'id' => (string) \Illuminate\Support\Str::uuid(),
+            'name' => 'Cabang Kosong',
+        ]);
+
+        // Run request
+        $response = $this->get(route('branches.index'));
+
+        $response->assertStatus(200);
+        
+        $branchesInView = $response->viewData('branches');
+        
+        // Assert Cabang Admin is hidden
+        $this->assertFalse($branchesInView->contains('id', $branchWithAdmin->id));
+        
+        // Assert other branches are visible
+        $this->assertTrue($branchesInView->contains('id', $branchWithCabang->id));
+        $this->assertTrue($branchesInView->contains('id', $branchWithoutUser->id));
     }
 }

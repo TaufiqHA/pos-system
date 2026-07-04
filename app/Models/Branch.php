@@ -11,5 +11,15 @@ class Branch extends Model
     
     protected $keyType = 'string';
     public $incrementing = false;
-    protected $fillable = ['id', 'name', 'address', 'phone', 'wilayah', 'notes'];
+    protected $fillable = ['id', 'name', 'address', 'phone', 'wilayah_id', 'notes'];
+
+    public function wilayah()
+    {
+        return $this->belongsTo(Wilayah::class, 'wilayah_id');
+    }
+
+    public function users()
+    {
+        return $this->hasMany(User::class, 'branch_id');
+    }
 }

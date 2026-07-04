@@ -8,13 +8,25 @@ use Illuminate\Support\Str;
 
 class BranchController extends Controller
 {
+    public function index()
+    {
+        $branches = Branch::whereDoesntHave('users', function ($query) {
+            $query->whereHas('role', function ($q) {
+                $q->where('name', 'admin');
+            });
+        })->with('wilayah')->get();
+
+        $wilayahs = \App\Models\Wilayah::all();
+        return view('admin.branch', compact('branches', 'wilayahs'));
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
             'name' => 'required|string',
             'address' => 'nullable|string',
             'phone' => 'nullable|string',
-            'wilayah' => 'nullable|string',
+            'wilayah_id' => 'nullable|string|exists:wilayahs,id',
             'notes' => 'nullable|string',
         ]);
 
@@ -33,7 +45,7 @@ class BranchController extends Controller
             'name' => 'required|string',
             'address' => 'nullable|string',
             'phone' => 'nullable|string',
-            'wilayah' => 'nullable|string',
+            'wilayah_id' => 'nullable|string|exists:wilayahs,id',
             'notes' => 'nullable|string',
         ]);
 
