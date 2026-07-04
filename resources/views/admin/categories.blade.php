@@ -17,7 +17,7 @@
     </div>
 
     @if (session('success'))
-        <div class="mb-4 bg-green-500/10 border border-green-500/30 text-green-400 p-4 rounded-xl text-xs flex items-center gap-2">
+        <div id="success-alert" class="mb-4 bg-green-500/10 border border-green-500/30 text-green-400 p-4 rounded-xl text-xs flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
@@ -181,6 +181,20 @@
 </div>
 
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto hide success alert after 3 seconds
+        const successAlert = document.getElementById('success-alert');
+        if (successAlert) {
+            setTimeout(() => {
+                successAlert.style.transition = 'opacity 0.5s ease';
+                successAlert.style.opacity = '0';
+                setTimeout(() => {
+                    successAlert.remove();
+                }, 500);
+            }, 3000);
+        }
+    });
+
     // Create Modal
     function openCreateModal() {
         document.getElementById('create-modal').classList.remove('hidden');

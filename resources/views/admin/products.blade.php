@@ -17,7 +17,7 @@
     </div>
 
     @if (session('success'))
-        <div class="mb-4 bg-green-500/10 border border-green-500/30 text-green-400 p-4 rounded-xl text-xs flex items-center gap-2">
+        <div id="success-alert" class="mb-4 bg-green-500/10 border border-green-500/30 text-green-400 p-4 rounded-xl text-xs flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
@@ -138,7 +138,7 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="space-y-1">
                     <label for="create-buy_price" class="block font-bold text-gray-300">Harga Beli *</label>
-                    <input type="number" step="0.01" name="buy_price" id="create-buy_price" value="{{ !old('_method') ? old('buy_price', 0) : 0 }}" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @if($errors->has('buy_price') && !old('_method')) border-red-500 @endif">
+                    <input type="text" name="buy_price" id="create-buy_price" value="{{ !old('_method') ? old('buy_price', 0) : 0 }}" oninput="formatRupiah(this)" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @if($errors->has('buy_price') && !old('_method')) border-red-500 @endif">
                     @if($errors->has('buy_price') && !old('_method'))
                         <p class="text-red-500 text-[10px] mt-1">{{ $errors->first('buy_price') }}</p>
                     @endif
@@ -146,7 +146,7 @@
 
                 <div class="space-y-1">
                     <label for="create-sell_price" class="block font-bold text-gray-300">Harga Jual *</label>
-                    <input type="number" step="0.01" name="sell_price" id="create-sell_price" value="{{ !old('_method') ? old('sell_price', 0) : 0 }}" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @if($errors->has('sell_price') && !old('_method')) border-red-500 @endif">
+                    <input type="text" name="sell_price" id="create-sell_price" value="{{ !old('_method') ? old('sell_price', 0) : 0 }}" oninput="formatRupiah(this)" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @if($errors->has('sell_price') && !old('_method')) border-red-500 @endif">
                     @if($errors->has('sell_price') && !old('_method'))
                         <p class="text-red-500 text-[10px] mt-1">{{ $errors->first('sell_price') }}</p>
                     @endif
@@ -243,7 +243,7 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="space-y-1">
                     <label for="edit-buy_price" class="block font-bold text-gray-300">Harga Beli *</label>
-                    <input type="number" step="0.01" name="buy_price" id="edit-buy_price" value="{{ old('_method') === 'PUT' ? old('buy_price', 0) : 0 }}" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @if($errors->has('buy_price') && old('_method') === 'PUT') border-red-500 @endif">
+                    <input type="text" name="buy_price" id="edit-buy_price" value="{{ old('_method') === 'PUT' ? old('buy_price', 0) : 0 }}" oninput="formatRupiah(this)" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @if($errors->has('buy_price') && old('_method') === 'PUT') border-red-500 @endif">
                     @if($errors->has('buy_price') && old('_method') === 'PUT')
                         <p class="text-red-500 text-[10px] mt-1">{{ $errors->first('buy_price') }}</p>
                     @endif
@@ -251,7 +251,7 @@
 
                 <div class="space-y-1">
                     <label for="edit-sell_price" class="block font-bold text-gray-300">Harga Jual *</label>
-                    <input type="number" step="0.01" name="sell_price" id="edit-sell_price" value="{{ old('_method') === 'PUT' ? old('sell_price', 0) : 0 }}" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @if($errors->has('sell_price') && old('_method') === 'PUT') border-red-500 @endif">
+                    <input type="text" name="sell_price" id="edit-sell_price" value="{{ old('_method') === 'PUT' ? old('sell_price', 0) : 0 }}" oninput="formatRupiah(this)" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @if($errors->has('sell_price') && old('_method') === 'PUT') border-red-500 @endif">
                     @if($errors->has('sell_price') && old('_method') === 'PUT')
                         <p class="text-red-500 text-[10px] mt-1">{{ $errors->first('sell_price') }}</p>
                     @endif
@@ -368,6 +368,54 @@
 </div>
 
 <script>
+    function formatRupiah(element) {
+        // Hapus karakter selain angka
+        let value = element.value.replace(/[^0-9]/g, '');
+        
+        // Tambahkan titik setiap 3 angka (format ribuan Indonesia)
+        if (value) {
+            element.value = parseInt(value, 10).toLocaleString('id-ID').replace(/,/g, '.');
+        } else {
+            element.value = '';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto hide success alert after 3 seconds
+        const successAlert = document.getElementById('success-alert');
+        if (successAlert) {
+            setTimeout(() => {
+                successAlert.style.transition = 'opacity 0.5s ease';
+                successAlert.style.opacity = '0';
+                setTimeout(() => {
+                    successAlert.remove();
+                }, 500);
+            }, 3000);
+        }
+
+        // Auto-format any pre-filled/validation-failed price inputs on load
+        const priceInputsOnLoad = document.querySelectorAll('input[name="buy_price"], input[name="sell_price"]');
+        priceInputsOnLoad.forEach(input => {
+            if (input.value) {
+                formatRupiah(input);
+            }
+        });
+
+        const forms = document.querySelectorAll('form');
+        
+        forms.forEach(form => {
+            form.addEventListener('submit', function() {
+                const priceInputs = form.querySelectorAll('input[name="buy_price"], input[name="sell_price"]');
+                priceInputs.forEach(input => {
+                    if (input.value) {
+                        // Hapus semua titik agar menjadi angka murni untuk dikirim ke backend
+                        input.value = input.value.replace(/\./g, '');
+                    }
+                });
+            });
+        });
+    });
+
     // Create Modal
     function openCreateModal() {
         document.getElementById('create-modal').classList.remove('hidden');
@@ -383,8 +431,8 @@
         document.getElementById('edit-sku').value = product.sku;
         document.getElementById('edit-name').value = product.name;
         document.getElementById('edit-unit').value = product.unit || '';
-        document.getElementById('edit-buy_price').value = product.buy_price;
-        document.getElementById('edit-sell_price').value = product.sell_price;
+        document.getElementById('edit-buy_price').value = product.buy_price ? parseInt(product.buy_price, 10).toLocaleString('id-ID').replace(/,/g, '.') : '0';
+        document.getElementById('edit-sell_price').value = product.sell_price ? parseInt(product.sell_price, 10).toLocaleString('id-ID').replace(/,/g, '.') : '0';
         document.getElementById('edit-is_wholesale').value = product.is_wholesale ? '1' : '0';
         document.getElementById('edit-description').value = product.description || '';
         document.getElementById('edit-image').value = product.image || '';

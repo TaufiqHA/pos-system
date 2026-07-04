@@ -25,6 +25,7 @@ class UserSeeder extends Seeder
         if ($user) {
             $user->update([
                 'role_id' => $adminRole?->id,
+                'branch_id' => 'BRC-001', // Relasi ke Gudang Pusat
                 'name' => 'Admin POS',
                 'status' => 'active',
             ]);
@@ -32,6 +33,7 @@ class UserSeeder extends Seeder
             User::create([
                 'id' => (string) Str::uuid(),
                 'role_id' => $adminRole?->id,
+                'branch_id' => 'BRC-001', // Relasi ke Gudang Pusat
                 'name' => 'Admin POS',
                 'email' => 'admin@pos.com',
                 'password' => Hash::make('password'),
