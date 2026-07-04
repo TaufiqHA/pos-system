@@ -5,6 +5,8 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\AuthController;
 use App\Http\Middleware\AuthCheck;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ProductController;
 
 Route::get("/", function () {
     return view("login");
@@ -37,6 +39,12 @@ Route::prefix('admin')->middleware('auth')->group(function () {
     })->name('admin.dashboard');
 });
 
+// Categories & Products Routes
+Route::middleware(['auth'])->group(function () {
+    Route::resource('categories', CategoryController::class);
+    Route::resource('products', ProductController::class);
+});
+
 // Auth Routes
 Route::prefix("auth")->group(function () {
     Route::post("/login", [AuthController::class, "login"]);
@@ -47,3 +55,4 @@ Route::prefix("auth")->group(function () {
         Route::post("/logout", [AuthController::class, "logout"]);
     });
 });
+

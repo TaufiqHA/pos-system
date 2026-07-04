@@ -93,7 +93,7 @@ class AuthTest extends TestCase
     public function test_unauthenticated_user_cannot_access_me_endpoint(): void
     {
         $response = $this->get('/auth/me');
-        $response->assertRedirect('/auth/login');
+        $response->assertRedirect(route('login'));
     }
 
     /**
