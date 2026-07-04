@@ -13,6 +13,7 @@ use App\Http\Controllers\SuppliersController;
 use App\Http\Controllers\PurchasesController;
 use App\Http\Controllers\PurchaseItemController;
 use App\Http\Controllers\PurchasePaymentController;
+use App\Http\Controllers\WilayahController;
 
 Route::get("/", function () {
     return view("login");
@@ -81,5 +82,14 @@ Route::prefix("auth")->group(function () {
         Route::get("/me", [AuthController::class, "me"]);
         Route::post("/logout", [AuthController::class, "logout"]);
     });
+});
+
+// Routes untuk Wilayah
+Route::prefix('wilayah')->group(function () {
+    Route::get('/', [WilayahController::class, 'index'])->name('wilayah.index');
+    Route::post('/', [WilayahController::class, 'create'])->name('wilayah.create');
+    Route::get('/{id}', [WilayahController::class, 'show'])->name('wilayah.show');
+    Route::put('/{id}', [WilayahController::class, 'update'])->name('wilayah.update');
+    Route::delete('/{id}', [WilayahController::class, 'delete'])->name('wilayah.delete');
 });
 

@@ -68,20 +68,22 @@
                 <li class="hover:text-white transition {{ request()->routeIs('purchases.*') ? 'text-[#B4F481] font-semibold' : '' }}">
                     <a href="{{ route('purchases.index') }}" class="block w-full">Pembelian</a>
                 </li>
-                <li class="hover:text-white cursor-pointer transition">Riwayat Transaksi</li>
+                <li class="hover:text-white cursor-pointer transition">Pengiriman</li>
             </ul>
         </div>
 
         <!-- Menu Kategori: Data Cabang -->
         <div class="space-y-2">
-            <div class="flex justify-between items-center text-gray-400 px-2 cursor-pointer hover:text-white transition" onclick="toggleDropdown('cabang-menu', 'cabang-icon')">
+            <div class="flex justify-between items-center {{ request()->routeIs('wilayah.*') || request()->routeIs('suppliers.*') ? 'text-white' : 'text-gray-400' }} px-2 cursor-pointer hover:text-white transition" onclick="toggleDropdown('cabang-menu', 'cabang-icon')">
                 <span class="text-[10px] font-bold tracking-wider uppercase">Data Cabang</span>
                 <svg id="cabang-icon" class="w-3 h-3 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                 </svg>
             </div>
             <ul id="cabang-menu" class="text-gray-400 space-y-2 ml-4 border-l border-gray-800 pl-4 text-xs transition-all duration-200">
-                <li class="hover:text-white cursor-pointer transition">Kelola Cabang</li>
+                <li class="hover:text-white transition {{ request()->routeIs('wilayah.*') ? 'text-[#B4F481] font-semibold' : '' }}">
+                    <a href="{{ route('wilayah.index') }}" class="block w-full">Wilayah</a>
+                </li>
                 <li class="hover:text-white cursor-pointer transition">Stok Cabang</li>
                 <li class="hover:text-white transition {{ request()->routeIs('suppliers.*') ? 'text-[#B4F481] font-semibold' : '' }}">
                     <a href="{{ route('suppliers.index') }}" class="block w-full">Daftar Supplier</a>
