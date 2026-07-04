@@ -1,15 +1,26 @@
 <!-- ================= SIDEBAR KIRI ================= -->
-<aside class="sidebar w-64 flex flex-col justify-between h-full border-r border-gray-800 flex-shrink-0">
+<aside 
+    class="sidebar w-64 flex flex-col justify-between h-full border-r border-gray-800 flex-shrink-0 fixed lg:relative inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out lg:translate-x-0"
+    :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
+>
     <!-- Logo & Nama Perusahaan -->
     <div class="p-6">
-        <div class="flex items-center space-x-3">
-            <div class="w-8 h-8 bg-gradient-to-tr from-[#B4F481] to-green-400 rounded-lg flex items-center justify-center shadow-lg shadow-green-500/20">
-                <span class="text-black font-black text-sm tracking-tighter">L</span>
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-gradient-to-tr from-[#B4F481] to-green-400 rounded-lg flex items-center justify-center shadow-lg shadow-green-500/20">
+                    <span class="text-black font-black text-sm tracking-tighter">L</span>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-green-400 tracking-wider font-display">LUCIFER</h1>
+                    <p class="text-[9px] text-gray-400 tracking-widest uppercase font-semibold">Kantor Pusat</p>
+                </div>
             </div>
-            <div>
-                <h1 class="text-lg font-bold text-green-400 tracking-wider font-display">LUCIFER</h1>
-                <p class="text-[9px] text-gray-400 tracking-widest uppercase font-semibold">Kantor Pusat</p>
-            </div>
+            <!-- Tombol Close (Hanya muncul di Mobile/Tablet) -->
+            <button @click="sidebarOpen = false" class="lg:hidden text-gray-400 hover:text-white focus:outline-none p-1 rounded-lg hover:bg-gray-800 transition cursor-pointer" aria-label="Tutup Sidebar">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
         </div>
     </div>
 
@@ -109,3 +120,17 @@
         </button>
     </div>
 </aside>
+
+<!-- Overlay / Backdrop saat sidebar terbuka di layar kecil -->
+<div 
+    x-show="sidebarOpen" 
+    x-transition:enter="transition-opacity ease-out duration-300"
+    x-transition:enter-start="opacity-0"
+    x-transition:enter-end="opacity-100"
+    x-transition:leave="transition-opacity ease-in duration-200"
+    x-transition:leave-start="opacity-100"
+    x-transition:leave-end="opacity-0"
+    @click="sidebarOpen = false"
+    class="fixed inset-0 bg-black/60 z-40 lg:hidden backdrop-blur-sm"
+    style="display: none;"
+></div>

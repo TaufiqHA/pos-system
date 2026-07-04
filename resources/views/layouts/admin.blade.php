@@ -6,6 +6,8 @@
     <title>@yield('title', 'Dashboard - POS')</title>
     <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js for interactive UI toggles -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <!-- Google Fonts: Plus Jakarta Sans for UI, Inter for body -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -59,7 +61,7 @@
         }
     </style>
 </head>
-<body class="flex h-screen overflow-hidden text-sm font-sans antialiased">
+<body x-data="{ sidebarOpen: false }" class="flex h-screen overflow-hidden text-sm font-sans antialiased">
 
     <!-- Panggil Sidebar -->
     @include('components.sidebar')
