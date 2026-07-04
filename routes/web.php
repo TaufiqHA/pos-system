@@ -10,6 +10,9 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\WholesalePriceController;
 use App\Http\Controllers\ProductStockController;
 use App\Http\Controllers\SuppliersController;
+use App\Http\Controllers\PurchasesController;
+use App\Http\Controllers\PurchaseItemController;
+use App\Http\Controllers\PurchasePaymentController;
 
 Route::get("/", function () {
     return view("login");
@@ -50,11 +53,23 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('products', ProductController::class);
     Route::resource('product-stocks', ProductStockController::class);
     Route::resource('suppliers', SuppliersController::class);
+    Route::resource('purchases', PurchasesController::class);
 
     // Wholesale Prices Routes
     Route::post('/wholesale-prices', [WholesalePriceController::class, 'store'])->name('wholesale-prices.store');
     Route::put('/wholesale-prices/{id}', [WholesalePriceController::class, 'update'])->name('wholesale-prices.update');
     Route::delete('/wholesale-prices/{id}', [WholesalePriceController::class, 'destroy'])->name('wholesale-prices.destroy');
+
+    // Purchase Items Routes
+    Route::post('/purchase-items', [PurchaseItemController::class, 'store'])->name('purchase-items.store');
+    Route::get('/purchase-items/{id}', [PurchaseItemController::class, 'show'])->name('purchase-items.show');
+    Route::put('/purchase-items/{id}', [PurchaseItemController::class, 'update'])->name('purchase-items.update');
+    Route::delete('/purchase-items/{id}', [PurchaseItemController::class, 'destroy'])->name('purchase-items.destroy');
+
+    // Purchase Payments Routes
+    Route::resource('purchase-payments', PurchasePaymentController::class)->only([
+        'store', 'show', 'update', 'destroy'
+    ]);
 });
 
 // Auth Routes

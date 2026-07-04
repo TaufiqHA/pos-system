@@ -57,7 +57,7 @@
 
         <!-- Menu Kategori: Transaksi -->
         <div class="space-y-2">
-            <div class="flex justify-between items-center text-gray-400 px-2 cursor-pointer hover:text-white transition" onclick="toggleDropdown('transaksi-menu', 'transaksi-icon')">
+            <div class="flex justify-between items-center {{ request()->routeIs('purchases.*') ? 'text-white' : 'text-gray-400' }} px-2 cursor-pointer hover:text-white transition" onclick="toggleDropdown('transaksi-menu', 'transaksi-icon')">
                 <span class="text-[10px] font-bold tracking-wider uppercase">Transaksi</span>
                 <svg id="transaksi-icon" class="w-3 h-3 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -65,7 +65,9 @@
             </div>
             <ul id="transaksi-menu" class="text-gray-400 space-y-2 ml-4 border-l border-gray-800 pl-4 text-xs transition-all duration-200">
                 <li class="hover:text-white cursor-pointer transition">Penjualan</li>
-                <li class="hover:text-white cursor-pointer transition">Pembelian</li>
+                <li class="hover:text-white transition {{ request()->routeIs('purchases.*') ? 'text-[#B4F481] font-semibold' : '' }}">
+                    <a href="{{ route('purchases.index') }}" class="block w-full">Pembelian</a>
+                </li>
                 <li class="hover:text-white cursor-pointer transition">Riwayat Transaksi</li>
             </ul>
         </div>
