@@ -36,7 +36,7 @@
 
         <!-- Menu Kategori: Produk & Stok -->
         <div class="space-y-2">
-            <div class="flex justify-between items-center {{ request()->routeIs('products.*') || request()->routeIs('categories.*') || request()->routeIs('admin.monitoring-stock') ? 'text-white' : 'text-gray-400' }} px-2 cursor-pointer hover:text-white transition" onclick="toggleDropdown('produk-menu', 'produk-icon')">
+            <div class="flex justify-between items-center {{ request()->routeIs('products.*') || request()->routeIs('categories.*') || request()->routeIs('suppliers.*') || request()->routeIs('admin.monitoring-stock') ? 'text-white' : 'text-gray-400' }} px-2 cursor-pointer hover:text-white transition" onclick="toggleDropdown('produk-menu', 'produk-icon')">
                 <span class="text-[10px] font-bold tracking-wider uppercase">Produk & Stok</span>
                 <svg id="produk-icon" class="w-3 h-3 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -81,6 +81,9 @@
             <ul id="cabang-menu" class="text-gray-400 space-y-2 ml-4 border-l border-gray-800 pl-4 text-xs transition-all duration-200">
                 <li class="hover:text-white cursor-pointer transition">Kelola Cabang</li>
                 <li class="hover:text-white cursor-pointer transition">Stok Cabang</li>
+                <li class="hover:text-white transition {{ request()->routeIs('suppliers.*') ? 'text-[#B4F481] font-semibold' : '' }}">
+                    <a href="{{ route('suppliers.index') }}" class="block w-full">Daftar Supplier</a>
+                </li>
             </ul>
         </div>
 

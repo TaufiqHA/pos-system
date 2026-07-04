@@ -9,6 +9,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\WholesalePriceController;
 use App\Http\Controllers\ProductStockController;
+use App\Http\Controllers\SuppliersController;
 
 Route::get("/", function () {
     return view("login");
@@ -48,6 +49,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('categories', CategoryController::class);
     Route::resource('products', ProductController::class);
     Route::resource('product-stocks', ProductStockController::class);
+    Route::resource('suppliers', SuppliersController::class);
 
     // Wholesale Prices Routes
     Route::post('/wholesale-prices', [WholesalePriceController::class, 'store'])->name('wholesale-prices.store');
