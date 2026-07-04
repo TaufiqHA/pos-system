@@ -8,7 +8,7 @@
 @section('content')
 <div class="card p-6 rounded-2xl shadow-xl">
     <div class="flex justify-end items-center mb-6">
-        <button onclick="openCreateModal()" class="bg-[#B4F481] hover:bg-green-400 text-black font-semibold text-xs py-2.5 px-4 rounded-xl transition flex items-center gap-2 shadow-lg shadow-[#B4F481]/20 cursor-pointer">
+        <button onclick="openCreateModal()" class="w-full sm:w-auto justify-center bg-[#B4F481] hover:bg-green-400 text-black font-semibold text-xs py-2.5 px-4 rounded-xl transition flex items-center gap-2 shadow-lg shadow-[#B4F481]/20 cursor-pointer">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
             </svg>
@@ -26,20 +26,20 @@
     @endif
 
     <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
+        <table class="w-full text-left border-collapse whitespace-nowrap">
             <thead>
                 <tr class="border-b border-gray-800 text-gray-400 text-xs font-bold uppercase tracking-wider">
-                    <th class="pb-3 pl-4">No</th>
-                    <th class="pb-3">Nama Kategori</th>
-                    <th class="pb-3 text-right pr-4">Aksi</th>
+                    <th class="pb-3 pl-4 pr-4">No</th>
+                    <th class="pb-3 px-4">Nama Kategori</th>
+                    <th class="pb-3 pl-4 pr-4 text-right">Aksi</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-800 text-xs text-gray-300">
                 @forelse($categories as $category)
                     <tr class="hover:bg-gray-800/30 transition">
-                        <td class="py-4 pl-4 font-semibold text-gray-400">{{ $loop->iteration }}</td>
-                        <td class="py-4 font-semibold text-white">{{ $category->name }}</td>
-                        <td class="py-4 text-right pr-4">
+                        <td class="py-4 pl-4 pr-4 font-semibold text-gray-400">{{ $loop->iteration }}</td>
+                        <td class="py-4 px-4 font-semibold text-white">{{ $category->name }}</td>
+                        <td class="py-4 pl-4 pr-4 text-right whitespace-nowrap">
                             <div class="flex justify-end items-center gap-2">
                                 <button onclick="openDetailModal({{ json_encode($category) }})" class="text-blue-400 hover:text-blue-300 font-semibold transition px-2 py-1 hover:bg-blue-500/10 rounded cursor-pointer">
                                     Detail
@@ -90,11 +90,11 @@
                     @enderror
                 @endif
             </div>
-            <div class="pt-4 flex items-center justify-end gap-3">
-                <button type="button" onclick="closeCreateModal()" class="text-gray-400 hover:text-white font-semibold py-2.5 px-4 rounded-xl hover:bg-gray-800 transition cursor-pointer">
+            <div class="pt-4 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3">
+                <button type="button" onclick="closeCreateModal()" class="w-full sm:w-auto text-center justify-center text-gray-400 hover:text-white font-semibold py-2.5 px-4 rounded-xl hover:bg-gray-800 transition cursor-pointer">
                     Batal
                 </button>
-                <button type="submit" class="bg-[#B4F481] hover:bg-green-400 text-black font-bold py-2.5 px-6 rounded-xl transition shadow-lg shadow-[#B4F481]/20 cursor-pointer">
+                <button type="submit" class="w-full sm:w-auto text-center justify-center bg-[#B4F481] hover:bg-green-400 text-black font-bold py-2.5 px-6 rounded-xl transition shadow-lg shadow-[#B4F481]/20 cursor-pointer">
                     Simpan
                 </button>
             </div>
@@ -128,11 +128,11 @@
                     @enderror
                 @endif
             </div>
-            <div class="pt-4 flex items-center justify-end gap-3">
-                <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-white font-semibold py-2.5 px-4 rounded-xl hover:bg-gray-800 transition cursor-pointer">
+            <div class="pt-4 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3">
+                <button type="button" onclick="closeEditModal()" class="w-full sm:w-auto text-center justify-center text-gray-400 hover:text-white font-semibold py-2.5 px-4 rounded-xl hover:bg-gray-800 transition cursor-pointer">
                     Batal
                 </button>
-                <button type="submit" class="bg-[#B4F481] hover:bg-green-400 text-black font-bold py-2.5 px-6 rounded-xl transition shadow-lg shadow-[#B4F481]/20 cursor-pointer">
+                <button type="submit" class="w-full sm:w-auto text-center justify-center bg-[#B4F481] hover:bg-green-400 text-black font-bold py-2.5 px-6 rounded-xl transition shadow-lg shadow-[#B4F481]/20 cursor-pointer">
                     Simpan Perubahan
                 </button>
             </div>

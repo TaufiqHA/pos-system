@@ -3,13 +3,12 @@
 @section('title', 'Monitoring Stok - Lucifer POS')
 
 @section('page_title', 'Monitoring Stok')
-@section('page_subtitle', 'Pantau persediaan stok produk di setiap cabang')
+@section('page_subtitle', 'Pantau persediaan stok produk')
 
 @section('content')
 <div class="card p-6 rounded-2xl shadow-xl">
     <div class="flex justify-between items-center mb-6">
         <h3 class="text-base font-bold tracking-wide font-display text-white">Status Persediaan Produk</h3>
-        <span class="text-[9px] text-[#B4F481] font-bold tracking-widest border border-green-900 bg-green-950/40 px-2.5 py-1 rounded-md">LIVE UPDATE</span>
     </div>
 
     @if (session('success'))
@@ -22,25 +21,25 @@
     @endif
 
     <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
+        <table class="w-full text-left border-collapse whitespace-nowrap">
             <thead>
                 <tr class="border-b border-gray-800 text-gray-400 text-xs font-bold uppercase tracking-wider">
-                    <th class="pb-3 pl-4">No</th>
-                    <th class="pb-3">Produk</th>
-                    <th class="pb-3 text-right">Stok Saat Ini</th>
-                    <th class="pb-3 text-right">Stok Minimum</th>
-                    <th class="pb-3 text-right">Harga Rata-rata</th>
-                    <th class="pb-3 text-right pr-4">Aksi</th>
+                    <th class="pb-3 pl-4 pr-4">No</th>
+                    <th class="pb-3 px-4">Produk</th>
+                    <th class="pb-3 px-4 text-right">Stok Saat Ini</th>
+                    <th class="pb-3 px-4 text-right">Stok Minimum</th>
+                    <th class="pb-3 px-4 text-right">Harga Rata-rata</th>
+                    <th class="pb-3 pl-4 pr-4 text-right">Aksi</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-800 text-xs text-gray-300">
                 @forelse($stocks as $stock)
                     <tr class="hover:bg-gray-800/30 transition">
-                        <td class="py-4 pl-4 font-semibold text-gray-400">{{ $loop->iteration }}</td>
-                        <td class="py-4 font-semibold text-white">
+                        <td class="py-4 pl-4 pr-4 font-semibold text-gray-400">{{ $loop->iteration }}</td>
+                        <td class="py-4 px-4 font-semibold text-white">
                             {{ $stock->product->name ?? $stock->product_id }}
                         </td>
-                        <td class="py-4 text-right">
+                        <td class="py-4 px-4 text-right">
                             <div class="flex items-center justify-end gap-2 font-mono">
                                 <span class="{{ $stock->stock <= $stock->minimum_stock ? 'text-red-400 font-bold' : 'text-white' }}">
                                     {{ $stock->stock }}
@@ -51,13 +50,13 @@
                                 </span>
                             </div>
                         </td>
-                        <td class="py-4 text-right font-mono text-gray-300">
+                        <td class="py-4 px-4 text-right font-mono text-gray-300">
                             {{ $stock->minimum_stock }}
                         </td>
-                        <td class="py-4 text-right font-mono text-gray-400">
+                        <td class="py-4 px-4 text-right font-mono text-gray-400">
                             Rp {{ number_format($stock->average_cost, 0, ',', '.') }}
                         </td>
-                        <td class="py-4 text-right pr-4">
+                        <td class="py-4 pl-4 pr-4 text-right">
                             <div class="flex justify-end items-center gap-2">
                                 <button onclick="openEditModal({{ json_encode([
                                     'id' => $stock->id,
@@ -104,7 +103,7 @@
                 <input type="hidden" name="product_name" id="edit-product-name-hidden" value="{{ old('product_name') }}">
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="space-y-1">
                     <label for="edit-stock" class="block font-bold text-gray-300">Stok Saat Ini</label>
                     <input type="number" name="stock" id="edit-stock" value="{{ old('stock') }}" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @error('stock') border-red-500 @enderror">
@@ -130,11 +129,11 @@
                 @enderror
             </div>
 
-            <div class="pt-4 flex items-center justify-end gap-3">
-                <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-white font-semibold py-2.5 px-4 rounded-xl hover:bg-gray-800 transition cursor-pointer">
+            <div class="pt-4 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3">
+                <button type="button" onclick="closeEditModal()" class="w-full sm:w-auto text-center justify-center text-gray-400 hover:text-white font-semibold py-2.5 px-4 rounded-xl hover:bg-gray-800 transition cursor-pointer">
                     Batal
                 </button>
-                <button type="submit" class="bg-[#B4F481] hover:bg-green-400 text-black font-bold py-2.5 px-6 rounded-xl transition shadow-lg shadow-[#B4F481]/20 cursor-pointer">
+                <button type="submit" class="w-full sm:w-auto text-center justify-center bg-[#B4F481] hover:bg-green-400 text-black font-bold py-2.5 px-6 rounded-xl transition shadow-lg shadow-[#B4F481]/20 cursor-pointer">
                     Simpan Perubahan
                 </button>
             </div>

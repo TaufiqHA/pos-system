@@ -3,12 +3,11 @@
 @section('title', 'Dashboard - POS')
 
 @section('content')
-    <!-- Quick Action Buttons -->
-    <div class="flex justify-end gap-3 mb-6 z-10">
-        <button class="px-5 py-2 rounded-full border border-green-400 text-green-400 font-bold text-xs tracking-wider hover:bg-green-400 hover:text-black transition">
+    <div class="flex flex-col sm:flex-row justify-end gap-3 mb-6 z-10">
+        <button class="w-full sm:w-auto flex items-center justify-center px-5 py-2 rounded-full border border-green-400 text-green-400 font-bold text-xs tracking-wider hover:bg-green-400 hover:text-black transition">
             PERMINTAAN PO
         </button>
-        <button class="px-5 py-2 rounded-full bg-[#B4F481] text-black font-bold text-xs tracking-wider hover:bg-[#a0dc72] transition flex items-center space-x-2">
+        <button class="w-full sm:w-auto justify-center px-5 py-2 rounded-full bg-[#B4F481] text-black font-bold text-xs tracking-wider hover:bg-[#a0dc72] transition flex items-center space-x-2">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path>
             </svg>

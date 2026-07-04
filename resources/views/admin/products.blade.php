@@ -8,7 +8,7 @@
 @section('content')
 <div class="card p-6 rounded-2xl shadow-xl">
     <div class="flex justify-end items-center mb-6">
-        <button onclick="openCreateModal()" class="bg-[#B4F481] hover:bg-green-400 text-black font-semibold text-xs py-2.5 px-4 rounded-xl transition flex items-center gap-2 shadow-lg shadow-[#B4F481]/20 cursor-pointer">
+        <button onclick="openCreateModal()" class="w-full sm:w-auto justify-center bg-[#B4F481] hover:bg-green-400 text-black font-semibold text-xs py-2.5 px-4 rounded-xl transition flex items-center gap-2 shadow-lg shadow-[#B4F481]/20 cursor-pointer">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
             </svg>
@@ -26,22 +26,22 @@
     @endif
 
     <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
+        <table class="w-full text-left border-collapse whitespace-nowrap">
             <thead>
                 <tr class="border-b border-gray-800 text-gray-400 text-xs font-bold uppercase tracking-wider">
-                    <th class="pb-3 pl-4">SKU</th>
-                    <th class="pb-3">Nama Produk</th>
-                    <th class="pb-3">Kategori</th>
-                    <th class="pb-3 text-right">Harga Beli</th>
-                    <th class="pb-3 text-right">Harga Jual</th>
-                    <th class="pb-3 text-right pr-4">Aksi</th>
+                    <th class="pb-3 pl-4 pr-4">SKU</th>
+                    <th class="pb-3 px-4">Nama Produk</th>
+                    <th class="pb-3 px-4">Kategori</th>
+                    <th class="pb-3 px-4 text-right">Harga Beli</th>
+                    <th class="pb-3 px-4 text-right">Harga Jual</th>
+                    <th class="pb-3 pl-4 pr-4 text-right">Aksi</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-800 text-xs text-gray-300">
                 @forelse($products as $product)
                     <tr class="hover:bg-gray-800/30 transition">
-                        <td class="py-4 pl-4 font-mono text-gray-400">{{ $product->sku }}</td>
-                        <td class="py-4 font-semibold text-white">
+                        <td class="py-4 pl-4 pr-4 font-mono text-gray-400">{{ $product->sku }}</td>
+                        <td class="py-4 px-4 font-semibold text-white">
                             <div>
                                 <span class="block">{{ $product->name }}</span>
                                 @if($product->is_wholesale)
@@ -49,18 +49,18 @@
                                 @endif
                             </div>
                         </td>
-                        <td class="py-4">
+                        <td class="py-4 px-4">
                             <span class="bg-indigo-900/40 text-indigo-300 border border-indigo-800/50 py-0.5 px-2 rounded-full text-[10px] font-semibold">
                                 {{ $product->category->name ?? '-' }}
                             </span>
                         </td>
-                        <td class="py-4 text-right text-gray-400 font-medium">
+                        <td class="py-4 px-4 text-right text-gray-400 font-medium">
                             Rp {{ number_format($product->buy_price, 0, ',', '.') }}
                         </td>
-                        <td class="py-4 text-right font-bold text-[#B4F481]">
+                        <td class="py-4 px-4 text-right font-bold text-[#B4F481]">
                             Rp {{ number_format($product->sell_price, 0, ',', '.') }}
                         </td>
-                        <td class="py-4 text-right pr-4">
+                        <td class="py-4 pl-4 pr-4 text-right whitespace-nowrap">
                             <div class="flex justify-end items-center gap-2">
                                 @if($product->is_wholesale)
                                     <button onclick="openWholesaleModal('{{ $product->id }}')" class="text-green-400 hover:text-green-300 font-semibold transition px-2 py-1 hover:bg-green-500/10 rounded cursor-pointer">
@@ -184,11 +184,11 @@
                 <input type="text" name="image" id="create-image" value="{{ !old('_method') ? old('image') : '' }}" placeholder="https://example.com/image.jpg" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400">
             </div>
 
-            <div class="pt-4 flex items-center justify-end gap-3 border-t border-gray-800">
-                <button type="button" onclick="closeCreateModal()" class="text-gray-400 hover:text-white font-semibold py-2.5 px-4 rounded-xl hover:bg-gray-800 transition cursor-pointer">
+            <div class="pt-4 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 border-t border-gray-800">
+                <button type="button" onclick="closeCreateModal()" class="w-full sm:w-auto text-center justify-center text-gray-400 hover:text-white font-semibold py-2.5 px-4 rounded-xl hover:bg-gray-800 transition cursor-pointer">
                     Batal
                 </button>
-                <button type="submit" class="bg-[#B4F481] hover:bg-green-400 text-black font-bold py-2.5 px-6 rounded-xl transition shadow-lg shadow-[#B4F481]/20 cursor-pointer">
+                <button type="submit" class="w-full sm:w-auto text-center justify-center bg-[#B4F481] hover:bg-green-400 text-black font-bold py-2.5 px-6 rounded-xl transition shadow-lg shadow-[#B4F481]/20 cursor-pointer">
                     Simpan
                 </button>
             </div>
@@ -290,11 +290,11 @@
                 <input type="text" name="image" id="edit-image" value="{{ old('_method') === 'PUT' ? old('image') : '' }}" placeholder="https://example.com/image.jpg" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400">
             </div>
 
-            <div class="pt-4 flex items-center justify-end gap-3 border-t border-gray-800">
-                <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-white font-semibold py-2.5 px-4 rounded-xl hover:bg-gray-800 transition cursor-pointer">
+            <div class="pt-4 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 border-t border-gray-800">
+                <button type="button" onclick="closeEditModal()" class="w-full sm:w-auto text-center justify-center text-gray-400 hover:text-white font-semibold py-2.5 px-4 rounded-xl hover:bg-gray-800 transition cursor-pointer">
                     Batal
                 </button>
-                <button type="submit" class="bg-[#B4F481] hover:bg-green-400 text-black font-bold py-2.5 px-6 rounded-xl transition shadow-lg shadow-[#B4F481]/20 cursor-pointer">
+                <button type="submit" class="w-full sm:w-auto text-center justify-center bg-[#B4F481] hover:bg-green-400 text-black font-bold py-2.5 px-6 rounded-xl transition shadow-lg shadow-[#B4F481]/20 cursor-pointer">
                     Simpan Perubahan
                 </button>
             </div>
@@ -340,7 +340,7 @@
 
 
 
-                <div class="grid grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                         <span class="text-gray-500 font-bold uppercase tracking-wider text-[9px] block">Harga Beli</span>
                         <span id="detail-buy_price" class="text-white font-bold block mt-0.5"></span>
@@ -446,7 +446,7 @@
             <div class="md:col-span-2 p-4 bg-gray-900/50 rounded-2xl border border-gray-800 flex flex-col">
                 <h4 class="text-white font-bold text-xs border-b border-gray-800 pb-2 mb-3">Daftar Harga Grosir Terdaftar</h4>
                 <div class="overflow-x-auto flex-1 max-h-64">
-                    <table class="w-full text-left border-collapse">
+                    <table class="w-full text-left border-collapse whitespace-nowrap">
                         <thead>
                             <tr class="border-b border-gray-800 text-gray-400 text-[10px] font-bold uppercase tracking-wider">
                                 <th class="pb-2">Cabang</th>
