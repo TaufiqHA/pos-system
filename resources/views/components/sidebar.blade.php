@@ -82,7 +82,7 @@
             </div>
             <ul id="cabang-menu" class="text-gray-400 space-y-2 ml-4 border-l border-gray-800 pl-4 text-xs transition-all duration-200">
                 <li class="hover:text-white transition {{ request()->routeIs('wilayah.*') ? 'text-[#B4F481] font-semibold' : '' }}">
-                    <a href="{{ route('wilayah.index') }}" class="block w-full">Wilayah</a>
+                    <a href="{{ route('wilayah.index') }}" class="block w-full">Daftar Wilayah</a>
                 </li>
                 <li class="hover:text-white transition {{ request()->routeIs('branches.*') ? 'text-[#B4F481] font-semibold' : '' }}">
                     <a href="{{ route('branches.index') }}" class="block w-full">Daftar Cabang</a>

@@ -9,9 +9,23 @@ use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::with(['category', 'wholesalePrices.branch'])->get();
+        $query = Product::with(['category', 'wholesalePrices.branch']);
+        
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('sku', 'like', "%{$search}%");
+            });
+        }
+        
+        $products = $query->get();
         $categories = Category::all(); // Needed for the modal select dropdown
         $branches = \App\Models\Branch::all();
         return view('admin.products', compact('products', 'categories', 'branches'));

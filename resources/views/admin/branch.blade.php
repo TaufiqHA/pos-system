@@ -7,7 +7,21 @@
 
 @section('content')
 <div class="card p-6 rounded-2xl shadow-xl">
-    <div class="flex justify-end items-center mb-6">
+    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+        <!-- Filter Form -->
+        <form method="GET" action="{{ route('branches.index') }}" class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari cabang atau telepon..." class="w-full sm:w-64 bg-gray-900 border border-gray-800 text-white rounded-xl py-2.5 px-4 focus:outline-none focus:border-green-400 text-xs shadow-lg shadow-gray-900/20">
+            <select name="wilayah_id" onchange="this.form.submit()" class="w-full sm:w-auto bg-gray-900 border border-gray-800 text-white rounded-xl py-2.5 px-4 focus:outline-none focus:border-green-400 text-xs shadow-lg shadow-gray-900/20 cursor-pointer">
+                <option value="">-- Semua Wilayah --</option>
+                @foreach($wilayahs as $wilayah)
+                    <option value="{{ $wilayah->id }}" {{ request('wilayah_id') == $wilayah->id ? 'selected' : '' }}>
+                        {{ $wilayah->name }}
+                    </option>
+                @endforeach
+            </select>
+            <button type="submit" class="hidden">Search</button>
+        </form>
+
         <button onclick="openCreateModal()" class="w-full sm:w-auto justify-center bg-[#B4F481] hover:bg-green-400 text-black font-semibold text-xs py-2.5 px-4 rounded-xl transition flex items-center gap-2 shadow-lg shadow-[#B4F481]/20 cursor-pointer">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -109,6 +123,24 @@
                     <label for="create-phone" class="block font-bold text-gray-300">Telepon</label>
                     <input type="text" name="phone" id="create-phone" value="{{ !old('_method') ? old('phone') : '' }}" placeholder="Contoh: 08123456789" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @error('phone') border-red-500 @enderror">
                     @error('phone')
+                        <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <div class="space-y-1">
+                    <label for="create-email" class="block font-bold text-gray-300">Email Akun Cabang</label>
+                    <input type="email" name="email" id="create-email" value="{{ !old('_method') ? old('email') : '' }}" placeholder="email@cabang.com" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @error('email') border-red-500 @enderror" required>
+                    @error('email')
+                        <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="space-y-1">
+                    <label for="create-password" class="block font-bold text-gray-300">Password</label>
+                    <input type="password" name="password" id="create-password" placeholder="Password akun" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @error('password') border-red-500 @enderror" required>
+                    @error('password')
                         <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p>
                     @enderror
                 </div>

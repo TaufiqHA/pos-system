@@ -23,10 +23,12 @@ class BranchControllerTest extends TestCase
             'phone' => '08123456789',
             'wilayah_id' => 'Jawa Barat',
             'notes' => 'Kantor Cabang Baru',
+            'email' => 'bandung@pos.com',
+            'password' => 'password123',
         ]);
 
         $response->assertStatus(302);
-        $response->assertSessionHas('success', 'Branch created successfully.');
+        $response->assertSessionHas('success', 'Branch dan Akun berhasil dibuat.');
 
         $this->assertDatabaseHas('branches', [
             'name' => 'Cabang Bandung',
@@ -39,12 +41,21 @@ class BranchControllerTest extends TestCase
         $branch = Branch::where('name', 'Cabang Bandung')->first();
         $this->assertNotNull($branch);
         $this->assertNotNull($branch->id);
+
+        $this->assertDatabaseHas('users', [
+            'name' => 'Admin Cabang Bandung',
+            'email' => 'bandung@pos.com',
+            'branch_id' => $branch->id,
+            'status' => 'active',
+        ]);
     }
 
     public function test_cannot_create_branch_without_name(): void
     {
         $response = $this->post(route('branches.store'), [
             'name' => '',
+            'email' => 'bandung@pos.com',
+            'password' => 'password123',
         ]);
 
         $response->assertSessionHasErrors('name');

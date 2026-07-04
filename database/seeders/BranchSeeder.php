@@ -9,16 +9,6 @@ class BranchSeeder extends Seeder
 {
     public function run(): void
     {
-        // Create a default Wilayah first
-        DB::table('wilayahs')->updateOrInsert(
-            ['id' => 'Pusat'],
-            [
-                'name' => 'Wilayah Pusat',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]
-        );
-
         // Menggunakan updateOrInsert untuk menghindari error duplicate entry jika dijalankan berulang
         DB::table('branches')->updateOrInsert(
             ['id' => 'BRC-001'],
@@ -26,7 +16,7 @@ class BranchSeeder extends Seeder
                 'name' => 'Gudang Pusat',
                 'address' => 'Alamat Gudang Pusat',
                 'phone' => '081111111111',
-                'wilayah_id' => 'Pusat',
+                'wilayah_id' => null,
                 'notes' => 'Cabang utama / Gudang Pusat',
                 'created_at' => now(),
                 'updated_at' => now(),

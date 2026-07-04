@@ -20,6 +20,8 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->timestamps();
             $table->softDeletes();
+
+            $table->foreign('wilayah_id')->references('id')->on('wilayahs')->onDelete('set null');
         });
     }
 
