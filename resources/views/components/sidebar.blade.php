@@ -64,7 +64,8 @@
                 </svg>
             </div>
             <ul id="transaksi-menu" class="text-gray-400 space-y-2 ml-4 border-l border-gray-800 pl-4 text-xs transition-all duration-200">
-                <li class="hover:text-white cursor-pointer transition">Kasir / Penjualan</li>
+                <li class="hover:text-white cursor-pointer transition">Penjualan</li>
+                <li class="hover:text-white cursor-pointer transition">Pembelian</li>
                 <li class="hover:text-white cursor-pointer transition">Riwayat Transaksi</li>
             </ul>
         </div>
