@@ -6,8 +6,8 @@ use App\Http\Controllers\BranchController;
 use App\Http\Controllers\AuthController;
 
 Route::get("/", function () {
-    return view("welcome");
-});
+    return view("login");
+})->name("login");
 
 // Roles Routes
 Route::post("/roles", [RoleController::class, "store"])->name("roles.store");
