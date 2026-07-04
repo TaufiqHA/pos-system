@@ -13,13 +13,13 @@ return new class extends Migration
     {
         Schema::create('wholesale_prices', function (Blueprint $table) {
             $table->string('id')->primary(); // Tipe varchar untuk primary key
-            
+
             $table->string('product_id');
             $table->string('branch_id');
-            
+
             $table->integer('min_qty');
             $table->decimal('price', 15, 2); // 15 digit total, 2 digit di belakang koma
-            
+
             $table->timestamps();
 
             // Deklarasi Foreign keys

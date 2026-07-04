@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Branch;
-use App\Models\User;
 use App\Models\Role;
+use App\Models\User;
+use App\Models\Wilayah;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -25,15 +26,15 @@ class BranchController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
+                    ->orWhere('phone', 'like', "%{$search}%");
             });
         }
 
         $branches = $query->get();
-        $wilayahs = \App\Models\Wilayah::all();
-        
+        $wilayahs = Wilayah::all();
+
         return view('admin.branch', compact('branches', 'wilayahs'));
     }
 
@@ -60,9 +61,9 @@ class BranchController extends Controller
 
         $cabangRole = Role::where('name', 'cabang')->first();
 
-        $user = new User();
+        $user = new User;
         $user->id = (string) Str::uuid();
-        $user->name = 'Admin ' . $request->name;
+        $user->name = 'Admin '.$request->name;
         $user->email = $email;
         $user->password = Hash::make($password);
         $user->branch_id = $branchId;
@@ -76,7 +77,7 @@ class BranchController extends Controller
     public function update(Request $request, $id)
     {
         $branch = Branch::findOrFail($id);
-        
+
         $validated = $request->validate([
             'name' => 'required|string',
             'address' => 'nullable|string',

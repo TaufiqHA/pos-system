@@ -11,10 +11,12 @@ class WholesalePrice extends Model
     use HasFactory;
 
     protected $table = 'wholesale_prices';
-    
+
     // Konfigurasi primary key string
     protected $primaryKey = 'id';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [

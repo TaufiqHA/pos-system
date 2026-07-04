@@ -8,9 +8,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Branch extends Model
 {
     use SoftDeletes;
-    
+
     protected $keyType = 'string';
+
     public $incrementing = false;
+
     protected $fillable = ['id', 'name', 'address', 'phone', 'wilayah_id', 'notes'];
 
     protected static function booted()
@@ -18,10 +20,10 @@ class Branch extends Model
         if (app()->environment('testing')) {
             static::creating(function ($branch) {
                 if ($branch->wilayah_id) {
-                    \App\Models\Wilayah::firstOrCreate([
-                        'id' => $branch->wilayah_id
+                    Wilayah::firstOrCreate([
+                        'id' => $branch->wilayah_id,
                     ], [
-                        'name' => $branch->wilayah_id
+                        'name' => $branch->wilayah_id,
                     ]);
                 }
             });

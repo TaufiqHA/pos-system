@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Role;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
 class RoleSeeder extends Seeder
@@ -21,7 +21,7 @@ class RoleSeeder extends Seeder
                 ['name' => $role['name']],
                 [
                     'id' => (string) Str::uuid(),
-                    'description' => $role['description']
+                    'description' => $role['description'],
                 ]
             );
         }

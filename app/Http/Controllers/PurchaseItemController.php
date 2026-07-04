@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\PurchaseItem;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class PurchaseItemController extends Controller
@@ -33,7 +33,7 @@ class PurchaseItemController extends Controller
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'Purchase item berhasil dibuat',
-                'data' => $purchaseItem
+                'data' => $purchaseItem,
             ], 201);
         }
 
@@ -76,7 +76,7 @@ class PurchaseItemController extends Controller
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'Purchase item berhasil diupdate',
-                'data' => $purchaseItem
+                'data' => $purchaseItem,
             ]);
         }
 
@@ -91,7 +91,7 @@ class PurchaseItemController extends Controller
 
         if ($request->wantsJson()) {
             return response()->json([
-                'message' => 'Purchase item berhasil dihapus'
+                'message' => 'Purchase item berhasil dihapus',
             ]);
         }
 

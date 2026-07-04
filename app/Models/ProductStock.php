@@ -2,9 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductStock extends Model
@@ -13,7 +12,7 @@ class ProductStock extends Model
 
     // Menandakan bahwa primary key bukan integer auto-increment
     public $incrementing = false;
-    
+
     // Menetapkan tipe primary key sebagai string
     protected $keyType = 'string';
 

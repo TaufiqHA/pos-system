@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\Branch;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
@@ -14,12 +16,13 @@ class ProductTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private Category $category;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $adminRole = \App\Models\Role::firstOrCreate(['name' => 'admin'], ['id' => (string) \Illuminate\Support\Str::uuid()]);
+        $adminRole = Role::firstOrCreate(['name' => 'admin'], ['id' => (string) Str::uuid()]);
         $this->user = User::factory()->create(['role_id' => $adminRole->id]);
         $this->category = Category::create([
             'id' => Str::uuid()->toString(),
@@ -87,7 +90,7 @@ class ProductTest extends TestCase
 
     public function test_can_store_product_and_automatically_creates_stock(): void
     {
-        $branch = \App\Models\Branch::create([
+        $branch = Branch::create([
             'id' => (string) Str::uuid(),
             'name' => 'Cabang Surabaya',
             'address' => 'Jl. Pemuda',
@@ -257,7 +260,7 @@ class ProductTest extends TestCase
 
         $response = $this->actingAs($this->user)->get(route('products.check_sku', [
             'sku' => 'SKU-EXIST',
-            'ignore_id' => $product->id
+            'ignore_id' => $product->id,
         ]));
 
         $response->assertStatus(200);
@@ -307,4 +310,3 @@ class ProductTest extends TestCase
         $response->assertJson(['exists' => true]);
     }
 }
-

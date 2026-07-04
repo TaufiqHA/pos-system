@@ -14,16 +14,16 @@ return new class extends Migration
         Schema::create('suppliers', function (Blueprint $table) {
             // id varchar [pk]
             $table->string('id')->primary();
-            
+
             $table->string('name');
             $table->string('contact_name')->nullable();
             $table->string('phone')->nullable();
             $table->string('email')->nullable();
             $table->text('address')->nullable();
             $table->text('notes')->nullable();
-            
+
             // created_at dan updated_at datetime
-            $table->timestamps(); 
+            $table->timestamps();
         });
     }
 

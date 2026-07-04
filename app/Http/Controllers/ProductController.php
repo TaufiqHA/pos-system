@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
+use App\Models\Branch;
 use App\Models\Category;
+use App\Models\Product;
+use App\Models\ProductStock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -12,22 +14,23 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $query = Product::with(['category', 'wholesalePrices.branch']);
-        
+
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
         }
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%");
+                    ->orWhere('sku', 'like', "%{$search}%");
             });
         }
-        
+
         $products = $query->get();
         $categories = Category::all(); // Needed for the modal select dropdown
-        $branches = \App\Models\Branch::all();
+        $branches = Branch::all();
+
         return view('admin.products', compact('products', 'categories', 'branches'));
     }
 
@@ -52,9 +55,9 @@ class ProductController extends Controller
         $product = Product::create($data);
 
         // Automatis create product stock dengan default stok 0 untuk cabang yang sedang login saja
-        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()?->id;
+        $branchId = auth()->user()->branch_id ?? Branch::first()?->id;
         if ($branchId) {
-            \App\Models\ProductStock::create([
+            ProductStock::create([
                 'id' => (string) Str::uuid(),
                 'product_id' => $product->id,
                 'branch_id' => $branchId,
@@ -70,6 +73,7 @@ class ProductController extends Controller
     public function show(Product $product)
     {
         $product->load('category');
+
         return response()->json($product);
     }
 
@@ -82,7 +86,7 @@ class ProductController extends Controller
     {
         $request->validate([
             'category_id' => 'required|exists:categories,id',
-            'sku' => 'required|string|unique:products,sku,' . $product->id,
+            'sku' => 'required|string|unique:products,sku,'.$product->id,
             'name' => 'required|string|max:255',
             'buy_price' => 'required|numeric',
             'sell_price' => 'required|numeric',
@@ -96,6 +100,7 @@ class ProductController extends Controller
     public function destroy(Product $product)
     {
         $product->delete();
+
         return redirect()->route('products.index')->with('success', 'Product deleted successfully.');
     }
 
@@ -104,7 +109,7 @@ class ProductController extends Controller
         $sku = $request->query('sku');
         $ignoreId = $request->query('ignore_id');
 
-        if (!$sku) {
+        if (! $sku) {
             return response()->json(['exists' => false]);
         }
 
@@ -120,4 +125,3 @@ class ProductController extends Controller
         return response()->json(['exists' => $exists]);
     }
 }
-

@@ -3,9 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Branch;
+use App\Models\Role;
 use App\Models\Sales;
 use App\Models\User;
-use App\Models\Role;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -15,6 +15,7 @@ class SalesTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private Branch $branch;
 
     protected function setUp(): void
@@ -25,7 +26,7 @@ class SalesTest extends TestCase
             ['name' => 'admin'],
             ['id' => (string) Str::uuid()]
         );
-        
+
         $this->branch = Branch::create([
             'id' => (string) Str::uuid(),
             'name' => 'Cabang Test',
@@ -44,7 +45,7 @@ class SalesTest extends TestCase
     public function test_unauthenticated_user_cannot_access_sales(): void
     {
         $response = $this->getJson(route('sales.index'));
-        $response->assertStatus(302);
+        $response->assertStatus(401);
     }
 
     public function test_can_list_sales(): void
@@ -226,7 +227,7 @@ class SalesTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonFragment([
-                'message' => 'Deleted'
+                'message' => 'Deleted',
             ]);
 
         $this->assertDatabaseMissing('sales', [
@@ -234,4 +235,3 @@ class SalesTest extends TestCase
         ]);
     }
 }
-

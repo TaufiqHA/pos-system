@@ -11,6 +11,7 @@ class Sales extends Model
 
     // Karena id menggunakan tipe data varchar (string)
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [

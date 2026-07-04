@@ -2,29 +2,32 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
-use Tests\TestCase;
-
 use App\Models\Branch;
+use App\Models\Category;
+use App\Models\Product;
+use App\Models\Purchases;
+use App\Models\Role;
 use App\Models\Suppliers;
 use App\Models\User;
-use App\Models\Purchases;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
+use Tests\TestCase;
 
 class PurchasesTest extends TestCase
 {
     use RefreshDatabase;
 
     private User $user;
+
     private Branch $branch;
+
     private Suppliers $supplier;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $adminRole = \App\Models\Role::firstOrCreate(['name' => 'admin'], ['id' => (string) \Illuminate\Support\Str::uuid()]);
+        $adminRole = Role::firstOrCreate(['name' => 'admin'], ['id' => (string) Str::uuid()]);
         $this->user = User::factory()->create(['role_id' => $adminRole->id]);
 
         $this->branch = Branch::create([
@@ -128,7 +131,7 @@ class PurchasesTest extends TestCase
                     'status',
                     'created_at',
                     'updated_at',
-                ]
+                ],
             ]);
 
         $this->assertDatabaseHas('purchases', [
@@ -247,7 +250,7 @@ class PurchasesTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonFragment([
-                'message' => 'Purchase berhasil dihapus'
+                'message' => 'Purchase berhasil dihapus',
             ]);
 
         $this->assertDatabaseMissing('purchases', [
@@ -257,12 +260,12 @@ class PurchasesTest extends TestCase
 
     public function test_storing_purchase_increases_stock_when_status_is_lunas(): void
     {
-        $category = \App\Models\Category::create([
+        $category = Category::create([
             'id' => (string) Str::uuid(),
             'name' => 'Elektronik',
         ]);
 
-        $product = \App\Models\Product::create([
+        $product = Product::create([
             'id' => (string) Str::uuid(),
             'category_id' => $category->id,
             'sku' => 'PROD-TEST001',
@@ -287,7 +290,7 @@ class PurchasesTest extends TestCase
                     'product_id' => $product->id,
                     'qty' => 10,
                     'price' => 2000.00,
-                ]
+                ],
             ],
         ];
 

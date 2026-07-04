@@ -2,9 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
+use App\Models\Branch;
+use App\Models\Product;
+use App\Models\ProductStock;
+use App\Models\PurchaseItem;
+use App\Models\PurchasePayment;
 use App\Models\Purchases;
+use App\Models\Suppliers;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class PurchasesController extends Controller
@@ -18,10 +25,10 @@ class PurchasesController extends Controller
             return response()->json($purchases);
         }
 
-        $suppliers = \App\Models\Suppliers::all();
-        $branches = \App\Models\Branch::all();
-        $users = \App\Models\User::all();
-        $products = \App\Models\Product::all();
+        $suppliers = Suppliers::all();
+        $branches = Branch::all();
+        $users = User::all();
+        $products = Product::all();
 
         return view('admin.purchases', compact('purchases', 'suppliers', 'branches', 'users', 'products'));
     }
@@ -46,7 +53,7 @@ class PurchasesController extends Controller
             'grand_total' => 'required|numeric|min:0',
             'status' => 'required|string|max:50',
             'payment_method' => 'nullable|string|in:TUNAI,TRANSFER,KREDIT',
-            
+
             // Validation for nested items
             'items' => 'nullable|array',
             'items.*.product_id' => 'required|exists:products,id',
@@ -58,9 +65,9 @@ class PurchasesController extends Controller
         $validated['id'] = (string) Str::uuid();
 
         // Generate unique invoice number
-        $invoice = 'INV-' . date('Ymd') . '-' . strtoupper(Str::random(6));
+        $invoice = 'INV-'.date('Ymd').'-'.strtoupper(Str::random(6));
         while (Purchases::where('invoice', $invoice)->exists()) {
-            $invoice = 'INV-' . date('Ymd') . '-' . strtoupper(Str::random(6));
+            $invoice = 'INV-'.date('Ymd').'-'.strtoupper(Str::random(6));
         }
         $validated['invoice'] = $invoice;
 
@@ -68,14 +75,14 @@ class PurchasesController extends Controller
         $validated['discount'] = $validated['discount'] ?? 0;
         $validated['tax'] = $validated['tax'] ?? 0;
 
-        $purchase = \Illuminate\Support\Facades\DB::transaction(function() use ($validated, $request) {
+        $purchase = DB::transaction(function () use ($validated, $request) {
             $purchase = Purchases::create($validated);
 
             if ($request->has('items') && is_array($request->items)) {
                 foreach ($request->items as $item) {
-                    $product = \App\Models\Product::find($item['product_id']);
+                    $product = Product::find($item['product_id']);
                     if ($product) {
-                        \App\Models\PurchaseItem::create([
+                        PurchaseItem::create([
                             'id' => (string) Str::uuid(),
                             'purchase_id' => $purchase->id,
                             'product_id' => $product->id,
@@ -89,14 +96,14 @@ class PurchasesController extends Controller
 
                         // Jika status pembelian LUNAS, tambah stok untuk branch terkait
                         if ($purchase->status === 'LUNAS') {
-                            $stockRecord = \App\Models\ProductStock::where('product_id', $product->id)
+                            $stockRecord = ProductStock::where('product_id', $product->id)
                                 ->where('branch_id', $purchase->branch_id)
                                 ->first();
 
                             if ($stockRecord) {
                                 $stockRecord->increment('stock', $item['qty']);
                             } else {
-                                \App\Models\ProductStock::create([
+                                ProductStock::create([
                                     'id' => (string) Str::uuid(),
                                     'product_id' => $product->id,
                                     'branch_id' => $purchase->branch_id,
@@ -115,7 +122,7 @@ class PurchasesController extends Controller
             $paymentStatus = ($paymentMethod === 'TUNAI' || $paymentMethod === 'TRANSFER') ? 'LUNAS' : 'BELUM BAYAR';
             $paidAt = ($paymentStatus === 'LUNAS') ? now() : null;
 
-            \App\Models\PurchasePayment::create([
+            PurchasePayment::create([
                 'id' => (string) Str::uuid(),
                 'purchase_id' => $purchase->id,
                 'method' => $paymentMethod,
@@ -165,7 +172,7 @@ class PurchasesController extends Controller
             'tax' => 'nullable|numeric|min:0',
             'grand_total' => 'required|numeric|min:0',
             'status' => 'required|string|max:50',
-            
+
             // Validation for nested items
             'items' => 'nullable|array',
             'items.*.product_id' => 'required|exists:products,id',
@@ -177,7 +184,7 @@ class PurchasesController extends Controller
         $validated['discount'] = $validated['discount'] ?? 0;
         $validated['tax'] = $validated['tax'] ?? 0;
 
-        \Illuminate\Support\Facades\DB::transaction(function() use ($purchase, $validated, $request) {
+        DB::transaction(function () use ($purchase, $validated, $request) {
             $purchase->update($validated);
 
             if ($request->has('items')) {
@@ -187,9 +194,9 @@ class PurchasesController extends Controller
                 // Add new items
                 if (is_array($request->items)) {
                     foreach ($request->items as $item) {
-                        $product = \App\Models\Product::find($item['product_id']);
+                        $product = Product::find($item['product_id']);
                         if ($product) {
-                            \App\Models\PurchaseItem::create([
+                            PurchaseItem::create([
                                 'id' => (string) Str::uuid(),
                                 'purchase_id' => $purchase->id,
                                 'product_id' => $product->id,

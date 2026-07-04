@@ -2,9 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class PurchasePayment extends Model
 {
@@ -12,6 +11,7 @@ class PurchasePayment extends Model
 
     // Set tipe primary key menjadi string karena kita pakai varchar
     protected $keyType = 'string';
+
     public $incrementing = false;
 
     // Field yang boleh diisi
@@ -29,6 +29,6 @@ class PurchasePayment extends Model
     public function purchase()
     {
         // Pastikan Anda memanggil class model yang benar untuk purchases
-        return $this->belongsTo(Purchases::class, 'purchase_id'); 
+        return $this->belongsTo(Purchases::class, 'purchase_id');
     }
 }

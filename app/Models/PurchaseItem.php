@@ -10,6 +10,7 @@ class PurchaseItem extends Model
 
     // Konfigurasi Primary Key tipe String (Varchar)
     protected $keyType = 'string';
+
     public $incrementing = false;
 
     protected $fillable = [
@@ -27,12 +28,12 @@ class PurchaseItem extends Model
     // Relasi ke Model Purchases
     public function purchase()
     {
-        return $this->belongsTo(\App\Models\Purchases::class, 'purchase_id');
+        return $this->belongsTo(Purchases::class, 'purchase_id');
     }
 
     // Relasi ke Model Product
     public function product()
     {
-        return $this->belongsTo(\App\Models\Product::class, 'product_id');
+        return $this->belongsTo(Product::class, 'product_id');
     }
 }

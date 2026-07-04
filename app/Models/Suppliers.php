@@ -11,6 +11,7 @@ class Suppliers extends Model
 
     // Pengaturan primary key string
     protected $keyType = 'string';
+
     public $incrementing = false;
 
     // Field yang boleh diisi

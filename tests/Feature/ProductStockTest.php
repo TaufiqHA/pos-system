@@ -6,9 +6,9 @@ use App\Models\Branch;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductStock;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -17,15 +17,18 @@ class ProductStockTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private Branch $branch;
+
     private Category $category;
+
     private Product $product;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $adminRole = \App\Models\Role::firstOrCreate(['name' => 'admin'], ['id' => (string) \Illuminate\Support\Str::uuid()]);
+        $adminRole = Role::firstOrCreate(['name' => 'admin'], ['id' => (string) Str::uuid()]);
         $this->user = User::factory()->create(['role_id' => $adminRole->id]);
 
         $this->branch = Branch::create([

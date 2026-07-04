@@ -2,33 +2,39 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Models\User;
 use App\Models\Branch;
-use App\Models\Suppliers;
 use App\Models\Category;
 use App\Models\Product;
-use App\Models\Purchases;
 use App\Models\PurchaseItem;
+use App\Models\Purchases;
+use App\Models\Role;
+use App\Models\Suppliers;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
+use Tests\TestCase;
 
 class PurchaseItemTest extends TestCase
 {
     use RefreshDatabase;
 
     private User $user;
+
     private Branch $branch;
+
     private Suppliers $supplier;
+
     private Category $category;
+
     private Product $product;
+
     private Purchases $purchase;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $adminRole = \App\Models\Role::firstOrCreate(['name' => 'admin'], ['id' => (string) \Illuminate\Support\Str::uuid()]);
+        $adminRole = Role::firstOrCreate(['name' => 'admin'], ['id' => (string) Str::uuid()]);
         $this->user = User::factory()->create(['role_id' => $adminRole->id]);
 
         $this->branch = Branch::create([
@@ -112,7 +118,7 @@ class PurchaseItemTest extends TestCase
                     'subtotal',
                     'created_at',
                     'updated_at',
-                ]
+                ],
             ]);
 
         $this->assertDatabaseHas('purchase_items', [
@@ -203,7 +209,7 @@ class PurchaseItemTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonFragment([
-                'message' => 'Purchase item berhasil dihapus'
+                'message' => 'Purchase item berhasil dihapus',
             ]);
 
         $this->assertDatabaseMissing('purchase_items', [

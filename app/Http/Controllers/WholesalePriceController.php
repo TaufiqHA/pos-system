@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Product;
 use App\Models\WholesalePrice;
 use Illuminate\Http\Request;
 
@@ -17,10 +18,10 @@ class WholesalePriceController extends Controller
             'price' => 'required|numeric|min:0',
         ]);
 
-        $product = \App\Models\Product::findOrFail($request->product_id);
+        $product = Product::findOrFail($request->product_id);
         if ($request->price < $product->buy_price) {
             return response()->json([
-                'message' => 'Harga grosir tidak boleh di bawah harga beli produk (Rp ' . number_format($product->buy_price, 0, ',', '.') . ')'
+                'message' => 'Harga grosir tidak boleh di bawah harga beli produk (Rp '.number_format($product->buy_price, 0, ',', '.').')',
             ], 422);
         }
 
@@ -28,7 +29,7 @@ class WholesalePriceController extends Controller
 
         return response()->json([
             'message' => 'Wholesale price berhasil ditambahkan',
-            'data' => $wholesalePrice
+            'data' => $wholesalePrice,
         ], 201); // Sesuaikan dengan response format aplikasi, bisa juga menggunakan redirect()
     }
 
@@ -47,10 +48,10 @@ class WholesalePriceController extends Controller
         $productId = $request->product_id ?? $wholesalePrice->product_id;
         $price = $request->price ?? $wholesalePrice->price;
 
-        $product = \App\Models\Product::findOrFail($productId);
+        $product = Product::findOrFail($productId);
         if ($price < $product->buy_price) {
             return response()->json([
-                'message' => 'Harga grosir tidak boleh di bawah harga beli produk (Rp ' . number_format($product->buy_price, 0, ',', '.') . ')'
+                'message' => 'Harga grosir tidak boleh di bawah harga beli produk (Rp '.number_format($product->buy_price, 0, ',', '.').')',
             ], 422);
         }
 
@@ -58,7 +59,7 @@ class WholesalePriceController extends Controller
 
         return response()->json([
             'message' => 'Wholesale price berhasil diperbarui',
-            'data' => $wholesalePrice
+            'data' => $wholesalePrice,
         ]);
     }
 
@@ -69,7 +70,7 @@ class WholesalePriceController extends Controller
         $wholesalePrice->delete();
 
         return response()->json([
-            'message' => 'Wholesale price berhasil dihapus'
+            'message' => 'Wholesale price berhasil dihapus',
         ]);
     }
 }

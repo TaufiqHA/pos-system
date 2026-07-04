@@ -32,6 +32,4 @@ class UserFactory extends Factory
             'status' => 'active',
         ];
     }
-
-
 }

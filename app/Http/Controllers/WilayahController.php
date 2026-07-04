@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Wilayah;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class WilayahController extends Controller
 {
@@ -28,7 +29,7 @@ class WilayahController extends Controller
         ]);
 
         if (empty($validated['id'])) {
-            $validated['id'] = (string) \Illuminate\Support\Str::uuid();
+            $validated['id'] = (string) Str::uuid();
         }
 
         $wilayah = Wilayah::create($validated);
@@ -36,7 +37,7 @@ class WilayahController extends Controller
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'Wilayah berhasil ditambahkan',
-                'data' => $wilayah
+                'data' => $wilayah,
             ], 201);
         }
 
@@ -47,6 +48,7 @@ class WilayahController extends Controller
     public function show($id)
     {
         $wilayah = Wilayah::findOrFail($id);
+
         return response()->json($wilayah);
     }
 
@@ -64,7 +66,7 @@ class WilayahController extends Controller
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'Wilayah berhasil diupdate',
-                'data' => $wilayah
+                'data' => $wilayah,
             ]);
         }
 
@@ -79,7 +81,7 @@ class WilayahController extends Controller
 
         if ($request->wantsJson()) {
             return response()->json([
-                'message' => 'Wilayah berhasil dihapus'
+                'message' => 'Wilayah berhasil dihapus',
             ]);
         }
 

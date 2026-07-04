@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Branch;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Role;
 use App\Models\User;
 use App\Models\WholesalePrice;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -16,17 +17,20 @@ class WholesalePriceTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private Branch $branch;
+
     private Category $category;
+
     private Product $product;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
-        $adminRole = \App\Models\Role::firstOrCreate(['name' => 'admin'], ['id' => (string) \Illuminate\Support\Str::uuid()]);
+
+        $adminRole = Role::firstOrCreate(['name' => 'admin'], ['id' => (string) Str::uuid()]);
         $this->user = User::factory()->create(['role_id' => $adminRole->id]);
-        
+
         $this->branch = Branch::create([
             'id' => (string) Str::uuid(),
             'name' => 'Cabang Bandung',
@@ -179,4 +183,3 @@ class WholesalePriceTest extends TestCase
         ]);
     }
 }
-

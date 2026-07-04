@@ -13,6 +13,7 @@ class RoleMiddlewareTest extends TestCase
     use RefreshDatabase;
 
     private Role $adminRole;
+
     private Role $cabangRole;
 
     protected function setUp(): void

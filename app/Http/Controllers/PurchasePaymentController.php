@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
 use App\Models\PurchasePayment;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class PurchasePaymentController extends Controller
@@ -24,6 +23,7 @@ class PurchasePaymentController extends Controller
         $validated['id'] = (string) Str::uuid();
 
         $payment = PurchasePayment::create($validated);
+
         return response()->json(['message' => 'Pembayaran berhasil ditambahkan', 'data' => $payment], 201);
     }
 
@@ -31,6 +31,7 @@ class PurchasePaymentController extends Controller
     public function show($id)
     {
         $payment = PurchasePayment::findOrFail($id);
+
         return response()->json($payment);
     }
 
@@ -48,6 +49,7 @@ class PurchasePaymentController extends Controller
         ]);
 
         $payment->update($validated);
+
         return response()->json(['message' => 'Pembayaran berhasil diupdate', 'data' => $payment]);
     }
 
@@ -56,6 +58,7 @@ class PurchasePaymentController extends Controller
     {
         $payment = PurchasePayment::findOrFail($id);
         $payment->delete();
+
         return response()->json(['message' => 'Pembayaran berhasil dihapus']);
     }
 }

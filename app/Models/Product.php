@@ -11,8 +11,11 @@ class Product extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'products';
+
     protected $primaryKey = 'id';
+
     public $incrementing = false; // Karena id menggunakan varchar (UUID)
+
     protected $keyType = 'string';
 
     protected $fillable = [

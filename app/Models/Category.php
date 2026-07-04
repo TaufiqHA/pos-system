@@ -10,8 +10,11 @@ class Category extends Model
     use HasFactory;
 
     protected $table = 'categories';
+
     protected $primaryKey = 'id';
+
     public $incrementing = false; // Karena id menggunakan varchar (UUID)
+
     protected $keyType = 'string';
 
     protected $fillable = [

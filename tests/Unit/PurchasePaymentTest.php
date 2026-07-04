@@ -2,27 +2,30 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Models\Branch;
 use App\Models\PurchasePayment;
 use App\Models\Purchases;
-use App\Models\Branch;
+use App\Models\Role;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
+use Tests\TestCase;
 
 class PurchasePaymentTest extends TestCase
 {
     use RefreshDatabase;
 
     private User $user;
+
     private Branch $branch;
+
     private Purchases $purchase;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $adminRole = \App\Models\Role::firstOrCreate(['name' => 'admin'], ['id' => (string) \Illuminate\Support\Str::uuid()]);
+        $adminRole = Role::firstOrCreate(['name' => 'admin'], ['id' => (string) Str::uuid()]);
         $this->user = User::factory()->create(['role_id' => $adminRole->id]);
 
         $this->branch = Branch::create([
@@ -82,10 +85,10 @@ class PurchasePaymentTest extends TestCase
             'status' => 'Paid',
         ]);
 
-        $response = $this->actingAs($this->user)->getJson('/admin/purchase-payments/' . $payment->id);
+        $response = $this->actingAs($this->user)->getJson('/admin/purchase-payments/'.$payment->id);
 
         $response->assertStatus(200)
-                 ->assertJsonFragment(['method' => 'Cash']);
+            ->assertJsonFragment(['method' => 'Cash']);
     }
 
     // Test Update
@@ -99,8 +102,8 @@ class PurchasePaymentTest extends TestCase
             'status' => 'Unpaid',
         ]);
 
-        $response = $this->actingAs($this->user)->putJson('/admin/purchase-payments/' . $payment->id, [
-            'status' => 'Paid'
+        $response = $this->actingAs($this->user)->putJson('/admin/purchase-payments/'.$payment->id, [
+            'status' => 'Paid',
         ]);
 
         $response->assertStatus(200);
@@ -121,7 +124,7 @@ class PurchasePaymentTest extends TestCase
             'status' => 'Paid',
         ]);
 
-        $response = $this->actingAs($this->user)->deleteJson('/admin/purchase-payments/' . $payment->id);
+        $response = $this->actingAs($this->user)->deleteJson('/admin/purchase-payments/'.$payment->id);
 
         $response->assertStatus(200);
         $this->assertDatabaseMissing('purchase_payments', [

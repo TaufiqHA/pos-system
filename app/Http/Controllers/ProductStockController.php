@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
 use App\Models\ProductStock;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class ProductStockController extends Controller
@@ -15,17 +14,19 @@ class ProductStockController extends Controller
     public function index(Request $request)
     {
         $query = ProductStock::with(['product', 'branch']);
-        
+
         if ($request->routeIs('admin.monitoring-stock')) {
             $userBranchId = auth()->user()->branch_id;
             if ($userBranchId) {
                 $query->where('branch_id', $userBranchId);
             }
             $stocks = $query->get();
+
             return view('admin.monitoringstock', compact('stocks'));
         }
-        
+
         $stocks = $query->get();
+
         return response()->json($stocks);
     }
 
@@ -49,10 +50,10 @@ class ProductStockController extends Controller
         }
 
         $stock = ProductStock::create($validated);
-        
+
         return response()->json([
-            'message' => 'Stock created successfully', 
-            'data' => $stock
+            'message' => 'Stock created successfully',
+            'data' => $stock,
         ], 201);
     }
 
@@ -62,6 +63,7 @@ class ProductStockController extends Controller
     public function show(string $id)
     {
         $stock = ProductStock::with(['product', 'branch'])->findOrFail($id);
+
         return response()->json($stock);
     }
 
@@ -71,7 +73,7 @@ class ProductStockController extends Controller
     public function update(Request $request, string $id)
     {
         $stock = ProductStock::findOrFail($id);
-        
+
         $validated = $request->validate([
             'product_id' => 'sometimes|string|exists:products,id',
             'branch_id' => 'sometimes|string|exists:branches,id',
@@ -81,14 +83,14 @@ class ProductStockController extends Controller
         ]);
 
         $stock->update($validated);
-        
+
         if ($request->has('_token')) {
             return redirect()->route('admin.monitoring-stock')->with('success', 'Stok produk berhasil diperbarui.');
         }
 
         return response()->json([
-            'message' => 'Stock updated successfully', 
-            'data' => $stock
+            'message' => 'Stock updated successfully',
+            'data' => $stock,
         ]);
     }
 
@@ -99,9 +101,9 @@ class ProductStockController extends Controller
     {
         $stock = ProductStock::findOrFail($id);
         $stock->delete();
-        
+
         return response()->json([
-            'message' => 'Stock deleted successfully'
+            'message' => 'Stock deleted successfully',
         ]);
     }
 }

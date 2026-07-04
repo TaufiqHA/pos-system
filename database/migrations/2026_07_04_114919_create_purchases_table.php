@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('purchases', function (Blueprint $table) {
             $table->string('id')->primary(); // id varchar [pk]
             $table->string('invoice')->unique(); // invoice varchar [unique]
-            
+
             // Definisikan kolom foreign key
             $table->string('supplier_id')->nullable();
             $table->string('branch_id');
@@ -24,14 +24,14 @@ return new class extends Migration
             $table->foreign('supplier_id')->references('id')->on('suppliers')->onDelete('set null');
             $table->foreign('branch_id')->references('id')->on('branches')->onDelete('cascade');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            
+
             $table->dateTime('date'); // date datetime
             $table->decimal('subtotal', 15, 2); // subtotal decimal
             $table->decimal('discount', 15, 2)->default(0); // discount decimal
             $table->decimal('tax', 15, 2)->default(0); // tax decimal
             $table->decimal('grand_total', 15, 2); // grand_total decimal
             $table->string('status'); // status varchar
-            
+
             $table->timestamps(); // created_at dan updated_at datetime
         });
     }

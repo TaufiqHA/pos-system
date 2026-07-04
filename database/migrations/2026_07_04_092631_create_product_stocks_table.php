@@ -13,14 +13,14 @@ return new class extends Migration
     {
         Schema::create('product_stocks', function (Blueprint $table) {
             $table->string('id')->primary(); // Tipe string/varchar untuk Primary Key
-            
+
             $table->string('product_id');
             $table->string('branch_id');
-            
+
             $table->integer('stock')->default(0);
             $table->integer('minimum_stock')->default(0);
             $table->decimal('average_cost', 15, 2)->default(0);
-            
+
             $table->timestamps();
 
             // Foreign keys constraints

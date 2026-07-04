@@ -13,7 +13,9 @@ class Wilayah extends Model
 
     // Konfigurasi primary key varchar (string)
     protected $primaryKey = 'id';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     // Daftar kolom yang bisa diisi mass-assignment

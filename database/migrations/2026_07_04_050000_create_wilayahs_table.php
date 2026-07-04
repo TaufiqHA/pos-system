@@ -13,13 +13,13 @@ return new class extends Migration
     {
         Schema::create('wilayahs', function (Blueprint $table) {
             // id varchar [pk]
-            $table->string('id')->primary(); 
-            
+            $table->string('id')->primary();
+
             // name varchar
-            $table->string('name'); 
-            
+            $table->string('name');
+
             // created_at dan updated_at datetime
-            $table->timestamps(); 
+            $table->timestamps();
         });
     }
 

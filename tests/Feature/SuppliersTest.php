@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Role;
 use App\Models\Suppliers;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -17,7 +18,7 @@ class SuppliersTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $adminRole = \App\Models\Role::firstOrCreate(['name' => 'admin'], ['id' => (string) \Illuminate\Support\Str::uuid()]);
+        $adminRole = Role::firstOrCreate(['name' => 'admin'], ['id' => (string) Str::uuid()]);
         $this->user = User::factory()->create(['role_id' => $adminRole->id]);
     }
 
@@ -72,7 +73,7 @@ class SuppliersTest extends TestCase
                     'notes',
                     'created_at',
                     'updated_at',
-                ]
+                ],
             ]);
 
         $this->assertDatabaseHas('suppliers', [
@@ -152,7 +153,7 @@ class SuppliersTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonFragment([
-                'message' => 'Supplier berhasil dihapus'
+                'message' => 'Supplier berhasil dihapus',
             ]);
 
         $this->assertDatabaseMissing('suppliers', [

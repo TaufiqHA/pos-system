@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Suppliers;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class SuppliersController extends Controller
@@ -13,7 +13,7 @@ class SuppliersController extends Controller
     {
         // Ambil semua data supplier dari database
         $suppliers = Suppliers::all();
-        
+
         if ($request->wantsJson()) {
             return response()->json($suppliers);
         }
@@ -41,13 +41,14 @@ class SuppliersController extends Controller
         ]);
 
         // Generate ID string (Contoh menggunakan UUID. Sesuaikan jika ada format khusus)
-        $validated['id'] = (string) Str::uuid(); 
+        $validated['id'] = (string) Str::uuid();
 
         $supplier = Suppliers::create($validated);
 
         if ($request->wantsJson()) {
             return response()->json(['message' => 'Supplier berhasil dibuat', 'data' => $supplier], 201);
         }
+
         return redirect()->route('suppliers.index')->with('success', 'Supplier berhasil dibuat');
     }
 
@@ -55,6 +56,7 @@ class SuppliersController extends Controller
     public function show($id)
     {
         $supplier = Suppliers::findOrFail($id);
+
         return response()->json($supplier);
     }
 
@@ -83,6 +85,7 @@ class SuppliersController extends Controller
         if ($request->wantsJson()) {
             return response()->json(['message' => 'Supplier berhasil diupdate', 'data' => $supplier]);
         }
+
         return redirect()->route('suppliers.index')->with('success', 'Supplier berhasil diupdate');
     }
 
@@ -95,6 +98,7 @@ class SuppliersController extends Controller
         if ($request->wantsJson()) {
             return response()->json(['message' => 'Supplier berhasil dihapus']);
         }
+
         return redirect()->route('suppliers.index')->with('success', 'Supplier berhasil dihapus');
     }
 }

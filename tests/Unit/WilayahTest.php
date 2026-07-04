@@ -2,9 +2,9 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\Wilayah;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class WilayahTest extends TestCase
 {
@@ -25,9 +25,9 @@ class WilayahTest extends TestCase
         $response = $this->getJson('/wilayah');
 
         $response->assertStatus(200)
-                 ->assertJsonCount(2)
-                 ->assertJsonFragment(['name' => 'Kota Bandung'])
-                 ->assertJsonFragment(['name' => 'DKI Jakarta']);
+            ->assertJsonCount(2)
+            ->assertJsonFragment(['name' => 'Kota Bandung'])
+            ->assertJsonFragment(['name' => 'DKI Jakarta']);
     }
 
     // Test untuk method 1: create
@@ -55,13 +55,13 @@ class WilayahTest extends TestCase
             'name' => 'Kota Bandung',
         ]);
 
-        $response = $this->getJson('/wilayah/' . $wilayah->id);
+        $response = $this->getJson('/wilayah/'.$wilayah->id);
 
         $response->assertStatus(200)
-                 ->assertJson([
-                     'id' => '32.73',
-                     'name' => 'Kota Bandung',
-                 ]);
+            ->assertJson([
+                'id' => '32.73',
+                'name' => 'Kota Bandung',
+            ]);
     }
 
     // Test untuk method 3: update
@@ -72,7 +72,7 @@ class WilayahTest extends TestCase
             'name' => 'Kota Bandung',
         ]);
 
-        $response = $this->putJson('/wilayah/' . $wilayah->id, [
+        $response = $this->putJson('/wilayah/'.$wilayah->id, [
             'name' => 'Kota Bandung Updated',
         ]);
 
@@ -91,7 +91,7 @@ class WilayahTest extends TestCase
             'name' => 'Kota Bandung',
         ]);
 
-        $response = $this->deleteJson('/wilayah/' . $wilayah->id);
+        $response = $this->deleteJson('/wilayah/'.$wilayah->id);
 
         $response->assertStatus(200);
         $this->assertDatabaseMissing('wilayahs', [
