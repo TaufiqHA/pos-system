@@ -176,35 +176,32 @@
         <div class="absolute bottom-10 left-10 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl pointer-events-none"></div>
 
         <!-- Header -->
-        <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 z-10">
+        <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 z-10">
             <div>
                 <h2 class="text-xl font-bold tracking-wide font-display text-white">DASHBOARD</h2>
                 <p class="text-xs text-gray-400 mt-0.5">Sistem Manajemen POS Lucifer</p>
             </div>
-            <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center gap-3">
                 <!-- Dynamic Local Time -->
-                <span class="text-gray-400 text-xs bg-gray-900/60 px-3.5 py-2 rounded-lg border border-gray-800 font-semibold" id="live-clock">
-                    Sabtu, 4 Juli 2026 • 15:28:11
+                <span class="text-gray-400 text-xs font-semibold" id="live-clock">
+                    Sabtu, 4 Juli 2026
                 </span>
-                <!-- Notification Bell Button -->
-                <button class="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center border border-gray-700 hover:bg-gray-700/80 transition text-gray-300 relative">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                    </svg>
-                    <!-- Red Indicator dot -->
-                    <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
-                </button>
-                <button class="px-5 py-2 rounded-full border border-green-400 text-green-400 font-bold text-xs tracking-wider hover:bg-green-400 hover:text-black transition">
-                    PERMINTAAN PO
-                </button>
-                <button class="px-5 py-2 rounded-full bg-[#B4F481] text-black font-bold text-xs tracking-wider hover:bg-[#a0dc72] transition flex items-center space-x-2">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    <span>UPLOAD PRODUK BARU</span>
-                </button>
+                
             </div>
         </header>
+
+        <!-- Quick Action Buttons -->
+        <div class="flex justify-end gap-3 mb-6 z-10">
+            <button class="px-5 py-2 rounded-full border border-green-400 text-green-400 font-bold text-xs tracking-wider hover:bg-green-400 hover:text-black transition">
+                PERMINTAAN PO
+            </button>
+            <button class="px-5 py-2 rounded-full bg-[#B4F481] text-black font-bold text-xs tracking-wider hover:bg-[#a0dc72] transition flex items-center space-x-2">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path>
+                </svg>
+                <span>UPLOAD PRODUK BARU</span>
+            </button>
+        </div>
 
         <!-- 4 Kotak Indikator Utama -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 z-10">
@@ -239,29 +236,29 @@
             <!-- Indikator 3: Hutang Cabang -->
             <div class="card p-5 rounded-xl hover:border-gray-500 transition shadow-lg shadow-black/20">
                 <div class="flex justify-between items-start mb-3">
-                    <p class="text-[10px] text-gray-400 font-bold tracking-wider">HUTANG CABANG</p>
-                    <div class="bg-blue-950/50 p-1.5 rounded-lg text-blue-400 border border-blue-800/40">
+                    <p class="text-[10px] text-gray-400 font-bold tracking-wider">HUTANG (DARI CABANG)</p>
+                    <div class="bg-red-950/50 p-1.5 rounded-lg text-red-400 border border-red-800/40">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </div>
                 </div>
-                <h3 class="text-2xl font-bold mb-2 text-blue-400 font-display">Rp 0</h3>
-                <p class="text-xs"><span class="text-blue-500 font-bold">Semua Cabang</span> <span class="text-gray-500">Tercatat aman</span></p>
+                <h3 class="text-2xl font-bold mb-2 text-red-400 font-display">Rp 55.000</h3>
+                <p class="text-xs"><span class="text-red-500 font-bold">Net Hutang</span> <span class="text-gray-500">Sisa saldo</span></p>
             </div>
 
             <!-- Indikator 4: Total SKU -->
             <div class="card p-5 rounded-xl hover:border-gray-500 transition shadow-lg shadow-black/20">
                 <div class="flex justify-between items-start mb-3">
-                    <p class="text-[10px] text-gray-400 font-bold tracking-wider">TOTAL SKU AKTIF</p>
-                    <div class="bg-purple-950/50 p-1.5 rounded-lg text-purple-400 border border-purple-800/40">
+                    <p class="text-[10px] text-gray-400 font-bold tracking-wider">TOTAL SKU PRODUK</p>
+                    <div class="bg-blue-950/50 p-1.5 rounded-lg text-blue-400 border border-blue-800/40">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                         </svg>
                     </div>
                 </div>
-                <h3 class="text-2xl font-bold mb-2 text-purple-400 font-display">12 SKU</h3>
-                <p class="text-xs"><span class="text-purple-400 font-bold">Semua Kategori</span> <span class="text-gray-500">Tersedia di katalog</span></p>
+                <h3 class="text-2xl font-bold mb-2 text-blue-400 font-display">1 Item</h3>
+                <p class="text-xs"><span class="text-blue-500 font-bold">5 Unit</span> <span class="text-gray-500">Siap jual</span></p>
             </div>
         </div>
 
@@ -377,7 +374,7 @@
             
             const clockEl = document.getElementById('live-clock');
             if (clockEl) {
-                clockEl.textContent = `${dateStr} • ${timeStr}`;
+                clockEl.textContent = dateStr;
             }
         }
         setInterval(updateClock, 1000);
