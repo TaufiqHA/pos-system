@@ -19,12 +19,17 @@ class Sales extends Model
         'invoice',
         'branch_id',
         'user_id',
+        'create_by',
         'date',
         'subtotal',
         'discount',
         'tax',
         'grand_total',
         'status',
+    ];
+
+    protected $casts = [
+        'date' => 'datetime',
     ];
 
     // Relasi ke tabel branches

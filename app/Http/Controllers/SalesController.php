@@ -71,6 +71,7 @@ class SalesController extends Controller
 
         $validated['discount'] = $validated['discount'] ?? 0;
         $validated['tax'] = $validated['tax'] ?? 0;
+        $validated['create_by'] = auth()->id();
 
         $sale = DB::transaction(function () use ($validated, $request) {
             $sale = Sales::create($validated);
@@ -143,6 +144,28 @@ class SalesController extends Controller
         ])->findOrFail($id);
 
         return response()->json($sale);
+    }
+
+    /**
+     * Display sales for the current branch (cabang).
+     */
+    public function cabangIndex(Request $request)
+    {
+        $branchId = auth()->user()->branch_id;
+        $sales = Sales::with(['branch.users', 'user', 'salesItems', 'salesPayments'])
+            ->where('branch_id', $branchId)
+            ->where('create_by', auth()->id())
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        if ($request->wantsJson()) {
+            return response()->json($sales);
+        }
+
+        $branches = Branch::where('id', $branchId)->get();
+        $products = Product::all();
+        return view('cabang.penjualan', compact('sales', 'branches', 'products'));
+        
     }
 
     public function edit($id)

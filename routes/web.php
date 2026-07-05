@@ -72,7 +72,7 @@ Route::prefix('admin')->middleware(['auth', 'role.admin'])->group(function () {
     Route::resource('suppliers', SuppliersController::class);
     Route::resource('users', UserController::class);
     Route::resource('purchases', PurchasesController::class);
-    Route::resource('sales', SalesController::class);
+
 
     // Wholesale Prices Routes
     Route::post('/wholesale-prices', [WholesalePriceController::class, 'store'])->name('wholesale-prices.store');
@@ -90,19 +90,9 @@ Route::prefix('admin')->middleware(['auth', 'role.admin'])->group(function () {
         'store', 'show', 'update', 'destroy',
     ]);
 
-    // Route untuk Sales Item
-    Route::prefix('sales-items')->group(function () {
-        Route::post('/', [SalesItemController::class, 'store'])->name('sales-items.store');
-        Route::get('/{id}', [SalesItemController::class, 'show'])->name('sales-items.show');
-        Route::put('/{id}', [SalesItemController::class, 'update'])->name('sales-items.update');
-        Route::delete('/{id}', [SalesItemController::class, 'destroy'])->name('sales-items.destroy');
-    });
+    
 
-    // Route untuk Sales Payment
-    Route::post('/sales-payments', [SalesPaymentController::class, 'create'])->name('admin.sales-payments.create');
-    Route::get('/sales-payments/{id}', [SalesPaymentController::class, 'show'])->name('admin.sales-payments.show');
-    Route::put('/sales-payments/{id}', [SalesPaymentController::class, 'update'])->name('admin.sales-payments.update');
-    Route::delete('/sales-payments/{id}', [SalesPaymentController::class, 'delete'])->name('admin.sales-payments.delete');
+    
 });
 
 // Cabang Dashboard Routes
@@ -117,6 +107,8 @@ Route::prefix('cabang')->middleware(['auth', 'role.cabang'])->group(function () 
     })->name('cabang.dashboard');
 
     Route::get('/monitoring-stok', [ProductStockController::class, 'monitoringStok'])->name('cabang.monitoring-stok');
+        // Penjualan Cabang Route
+        Route::get('/penjualan', [SalesController::class, 'cabangIndex'])->name('cabang.penjualan');
     Route::put('/monitoring-stok/{id}', [ProductStockController::class, 'updateCabangStock'])->name('cabang.monitoring-stok.update');
     Route::resource('stock-histories', StockHistoriesController::class);
 
@@ -143,6 +135,22 @@ Route::prefix('auth')->group(function () {
         Route::resource('purchase-orders', PurchaseOrdersController::class);
         Route::delete('purchase-orders/{id}/delete', [PurchaseOrdersController::class, 'delete'])->name('purchase-orders.delete');
         Route::resource('deliveries', DeliveriesController::class);
+    // Sales Routes
+    Route::resource('sales', SalesController::class);
+
+    // Sales Items routes
+    Route::prefix('sales-items')->group(function () {
+        Route::post('/', [SalesItemController::class, 'store'])->name('sales-items.store');
+        Route::get('/{id}', [SalesItemController::class, 'show'])->name('sales-items.show');
+        Route::put('/{id}', [SalesItemController::class, 'update'])->name('sales-items.update');
+        Route::delete('/{id}', [SalesItemController::class, 'destroy'])->name('sales-items.destroy');
+    });
+
+    // Sales Payments routes
+        Route::post('/sales-payments', [SalesPaymentController::class, 'create'])->name('sales-payments.store');
+    Route::get('/sales-payments/{id}', [SalesPaymentController::class, 'show'])->name('sales-payments.show');
+    Route::put('/sales-payments/{id}', [SalesPaymentController::class, 'update'])->name('sales-payments.update');
+        Route::delete('/sales-payments/{id}', [SalesPaymentController::class, 'delete'])->name('sales-payments.destroy');
     });
 });
 

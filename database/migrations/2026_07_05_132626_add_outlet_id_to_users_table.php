@@ -11,13 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('outlet_id')->nullable()->after('status');
-            $table->foreign('outlet_id')
-                ->references('id')
-                ->on('outlets')
-                ->onDelete('set null');
-        });
+// Migration for outlet_id handled in base users table; no action needed
     }
 
     /**
@@ -25,9 +19,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropForeign(['outlet_id']);
-            $table->dropColumn('outlet_id');
-        });
+// No down actions needed for outlet_id column
     }
 };

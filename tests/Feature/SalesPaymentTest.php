@@ -57,16 +57,16 @@ class SalesPaymentTest extends TestCase
 
     public function test_unauthenticated_user_cannot_access_sales_payments(): void
     {
-        $response = $this->postJson('/admin/sales-payments', []);
+        $response = $this->postJson(route('sales-payments.store'), []);
         $response->assertStatus(401);
 
-        $response = $this->getJson('/admin/sales-payments/some-id');
+        $response = $this->getJson(route('sales-payments.show', 'some-id'));
         $response->assertStatus(401);
 
-        $response = $this->putJson('/admin/sales-payments/some-id', []);
+        $response = $this->putJson(route('sales-payments.update', 'some-id'), []);
         $response->assertStatus(401);
 
-        $response = $this->deleteJson('/admin/sales-payments/some-id');
+        $response = $this->deleteJson(route('sales-payments.destroy', 'some-id'));
         $response->assertStatus(401);
     }
 
@@ -83,7 +83,7 @@ class SalesPaymentTest extends TestCase
             'paid_at' => '2026-07-04 23:00:00',
         ];
 
-        $response = $this->actingAs($this->user)->postJson('/admin/sales-payments', $payload);
+        $response = $this->actingAs($this->user)->postJson(route('sales-payments.store'), $payload);
 
         $response->assertStatus(201)
             ->assertJsonFragment([
@@ -109,7 +109,7 @@ class SalesPaymentTest extends TestCase
             'status' => '',
         ];
 
-        $response = $this->actingAs($this->user)->postJson('/admin/sales-payments', $payload);
+        $response = $this->actingAs($this->user)->postJson(route('sales-payments.store'), $payload);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['id', 'sale_id', 'method', 'amount', 'status']);
@@ -128,7 +128,7 @@ class SalesPaymentTest extends TestCase
             'paid_at' => '2026-07-04 23:00:00',
         ]);
 
-        $response = $this->actingAs($this->user)->getJson("/admin/sales-payments/{$paymentId}");
+        $response = $this->actingAs($this->user)->getJson(route('sales-payments.show', $paymentId));
 
         $response->assertStatus(200)
             ->assertJsonFragment([
@@ -155,7 +155,7 @@ class SalesPaymentTest extends TestCase
             'amount' => 5500000.00,
         ];
 
-        $response = $this->actingAs($this->user)->putJson("/admin/sales-payments/{$paymentId}", $payload);
+        $response = $this->actingAs($this->user)->putJson(route('sales-payments.update', $paymentId), $payload);
 
         $response->assertStatus(200)
             ->assertJsonFragment([
@@ -184,7 +184,7 @@ class SalesPaymentTest extends TestCase
             'paid_at' => '2026-07-04 23:00:00',
         ]);
 
-        $response = $this->actingAs($this->user)->deleteJson("/admin/sales-payments/{$paymentId}");
+        $response = $this->actingAs($this->user)->deleteJson(route('sales-payments.destroy', $paymentId));
 
         $response->assertStatus(200)
             ->assertJsonFragment([

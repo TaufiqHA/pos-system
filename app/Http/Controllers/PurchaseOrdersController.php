@@ -171,6 +171,7 @@ class PurchaseOrdersController extends Controller
                         'invoice' => $invoice,
                         'branch_id' => $purchaseOrder->branch_id,
                         'user_id' => $purchaseOrder->user_id,
+                        'create_by' => auth()->id(),
                         'date' => now()->format('Y-m-d H:i:s'),
                         'subtotal' => $notesData['subtotal'] ?? 0,
                         'discount' => $notesData['discount'] ?? 0,

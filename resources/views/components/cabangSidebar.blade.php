@@ -93,8 +93,8 @@
             </div>
             <ul id="transaksi-menu"
                 class="text-gray-400 space-y-2 ml-4 border-l border-gray-800 pl-4 text-xs transition-all duration-200">
-                <li class="hover:text-white cursor-pointer transition">
-                    <a href="#" class="block w-full">Penjualan</a>
+                <li class="{{ request()->routeIs('cabang.penjualan') ? 'text-[#B4F481] font-bold' : '' }} hover:text-white cursor-pointer transition">
+                     <a href="{{ route('cabang.penjualan') }}" class="block w-full">Penjualan</a>
                 </li>
                 <li
                     class="hover:text-white cursor-pointer transition {{ request()->routeIs('purchase-orders.index') && request('action') !== 'create' ? 'text-[#B4F481] font-bold' : '' }}">

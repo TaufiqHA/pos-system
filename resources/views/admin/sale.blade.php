@@ -836,7 +836,7 @@
             })) : [];
             renderItems('edit');
 
-            document.getElementById('edit-form').action = `/admin/sales/${sale.id}`;
+            document.getElementById('edit-form').action = `/auth/sales/${sale.id}`;
             document.getElementById('edit-modal').classList.remove('hidden');
         }
         function closeEditModal() {

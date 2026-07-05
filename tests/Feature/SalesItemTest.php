@@ -77,16 +77,16 @@ class SalesItemTest extends TestCase
 
     public function test_unauthenticated_user_cannot_access_sales_items(): void
     {
-        $response = $this->postJson('/admin/sales-items', []);
+        $response = $this->postJson(route('sales-items.store'), []);
         $response->assertStatus(401);
 
-        $response = $this->getJson('/admin/sales-items/some-id');
+        $response = $this->getJson(route('sales-items.show', 'some-id'));
         $response->assertStatus(401);
 
-        $response = $this->putJson('/admin/sales-items/some-id', []);
+        $response = $this->putJson(route('sales-items.update', 'some-id'), []);
         $response->assertStatus(401);
 
-        $response = $this->deleteJson('/admin/sales-items/some-id');
+        $response = $this->deleteJson(route('sales-items.destroy', 'some-id'));
         $response->assertStatus(401);
     }
 
@@ -107,7 +107,7 @@ class SalesItemTest extends TestCase
             'is_wholesale' => false,
         ];
 
-        $response = $this->actingAs($this->user)->postJson('/admin/sales-items', $payload);
+        $response = $this->actingAs($this->user)->postJson(route('sales-items.store'), $payload);
 
         $response->assertStatus(201)
             ->assertJsonFragment([
@@ -137,7 +137,7 @@ class SalesItemTest extends TestCase
         ];
 
         try {
-            $response = $this->actingAs($this->user)->postJson('/admin/sales-items', $payload);
+            $response = $this->actingAs($this->user)->postJson(route('sales-items.store'), $payload);
 
             $response->assertStatus(422)
                 ->assertJsonValidationErrors(['id', 'sale_id', 'product_id', 'sku', 'product_name', 'unit', 'qty', 'price', 'cost', 'subtotal']);
@@ -163,7 +163,7 @@ class SalesItemTest extends TestCase
             'is_wholesale' => false,
         ]);
 
-        $response = $this->actingAs($this->user)->getJson("/admin/sales-items/{$itemId}");
+        $response = $this->actingAs($this->user)->getJson(route('sales-items.show', $itemId));
 
         $response->assertStatus(200)
             ->assertJsonFragment([
@@ -194,7 +194,7 @@ class SalesItemTest extends TestCase
             'subtotal' => 12000000,
         ];
 
-        $response = $this->actingAs($this->user)->putJson("/admin/sales-items/{$itemId}", $payload);
+        $response = $this->actingAs($this->user)->putJson(route('sales-items.update', $itemId), $payload);
 
         $response->assertStatus(200)
             ->assertJsonFragment([
@@ -227,7 +227,7 @@ class SalesItemTest extends TestCase
             'is_wholesale' => false,
         ]);
 
-        $response = $this->actingAs($this->user)->deleteJson("/admin/sales-items/{$itemId}");
+        $response = $this->actingAs($this->user)->deleteJson(route('sales-items.destroy', $itemId));
 
         $response->assertStatus(200)
             ->assertJsonFragment([
