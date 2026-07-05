@@ -19,6 +19,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\WholesalePriceController;
 use App\Http\Controllers\WilayahController;
 use App\Http\Middleware\AuthCheck;
+use App\Models\Deliveries;
 use App\Models\Product;
 use App\Models\PurchaseOrders;
 use Illuminate\Support\Facades\Route;
@@ -105,8 +106,11 @@ Route::prefix('admin')->middleware(['auth', 'role.admin'])->group(function () {
 Route::prefix('cabang')->middleware(['auth', 'role.cabang'])->group(function () {
     Route::get('/dashboard', function () {
         $products = Product::orderBy('name')->get();
+        $deliveries = Deliveries::whereHas('sale', function ($query) {
+            $query->where('branch_id', auth()->user()->branch_id);
+        })->with(['sale.salesItems'])->orderBy('created_at', 'desc')->get();
 
-        return view('cabang.dashboard', compact('products'));
+        return view('cabang.dashboard', compact('products', 'deliveries'));
     })->name('cabang.dashboard');
 });
 

@@ -21,6 +21,10 @@
             class="w-full sm:w-auto flex items-center justify-center px-5 py-2 rounded-full border border-green-400 text-green-400 font-bold text-xs tracking-wider hover:bg-green-400 hover:text-black transition cursor-pointer">
             PO KE PUSAT
         </button>
+        <button onclick="openDeliveryModal()"
+            class="w-full sm:w-auto flex items-center justify-center px-5 py-2 rounded-full border border-blue-400 text-blue-400 font-bold text-xs tracking-wider hover:bg-blue-400 hover:text-black transition cursor-pointer">
+            STATUS PENGIRIMAN
+        </button>
         <button
             class="w-full sm:w-auto justify-center px-5 py-2 rounded-full bg-[#B4F481] text-black font-bold text-xs tracking-wider hover:bg-[#a0dc72] transition flex items-center space-x-2">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -452,6 +456,137 @@
         </div>
     </div>
 
+    <!-- ================= MODAL BOX: STATUS PENGIRIMAN ================= -->
+    <div id="delivery-modal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="card max-w-4xl w-full p-6 rounded-2xl shadow-2xl relative border border-gray-800 max-h-[90vh] overflow-y-auto">
+            <!-- Tombol Close (X) -->
+            <button onclick="closeDeliveryModal()"
+                class="absolute top-4 right-4 text-gray-400 hover:text-white transition cursor-pointer">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+
+            <!-- Header Modal -->
+            <div class="mb-6">
+                <h3 class="text-base font-bold tracking-wide font-display text-white">Status Pengiriman</h3>
+                <p class="text-[11px] text-gray-400 mt-1">Daftar pengiriman barang dari pusat ke cabang Anda</p>
+            </div>
+
+             <!-- Table Daftar Pengiriman -->
+            <div class="bg-gray-900/40 rounded-xl overflow-hidden">
+                <table class="w-full text-left text-gray-300 border-collapse">
+                    <thead>
+                        <tr class="border-b border-gray-800 text-gray-400 text-[10px] uppercase tracking-wider bg-gray-900/60">
+                            <th class="py-3 px-4 font-semibold">Invoice Penjualan</th>
+                            <th class="py-3 px-4 font-semibold">Status</th>
+                            <th class="py-3 px-4 font-semibold">Waktu Kirim</th>
+                            <th class="py-3 px-4 font-semibold">Waktu Diterima</th>
+                            <th class="py-3 px-4 font-semibold text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($deliveries as $delivery)
+                            <tr class="border-b border-gray-800 hover:bg-gray-800/30 transition">
+                                <td class="py-3 px-4 font-bold text-white font-mono">
+                                    {{ $delivery->sale?->invoice ?? '-' }}
+                                </td>
+                                <td class="py-3 px-4">
+                                    <span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold
+                                        @if($delivery->status === 'DITERIMA') bg-green-500/20 text-green-400
+                                        @elseif($delivery->status === 'DIKIRIM') bg-blue-500/20 text-blue-400
+                                        @elseif($delivery->status === 'PENDING') bg-yellow-500/20 text-yellow-400
+                                        @else bg-red-500/20 text-red-400 @endif">
+                                        {{ strtoupper($delivery->status) }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 text-gray-400 font-medium">
+                                    {{ $delivery->sent_at ? $delivery->sent_at->format('d-m-Y H:i') : '-' }}
+                                </td>
+                                <td class="py-3 px-4 text-gray-400 font-medium">
+                                    {{ $delivery->received_at ? $delivery->received_at->format('d-m-Y H:i') : '-' }}
+                                </td>
+                                <td class="py-3 px-4 text-center">
+                                    @if($delivery->status === 'DIKIRIM')
+                                        <button onclick='openDeliveryDetailModal(@json($delivery))' 
+                                            class="bg-green-500 hover:bg-green-400 text-black font-bold px-3 py-1 rounded-full text-[10px] transition cursor-pointer">
+                                            Terima Barang
+                                        </button>
+                                    @else
+                                        <span class="text-gray-500 font-medium text-[10px]">-</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="py-8 text-center text-gray-500 font-medium">Belum ada pengiriman dari pusat</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL BOX: DETAIL PENGIRIMAN ================= -->
+    <div id="delivery-detail-modal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="card max-w-3xl w-full p-6 rounded-2xl shadow-2xl relative border border-gray-800 max-h-[90vh] overflow-y-auto">
+            <!-- Tombol Close (X) -->
+            <button onclick="closeDeliveryDetailModal()"
+                class="absolute top-4 right-4 text-gray-400 hover:text-white transition cursor-pointer">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+
+            <!-- Header Modal -->
+            <div class="mb-6">
+                <h3 class="text-base font-bold tracking-wide font-display text-white">Detail Pesanan & Pengiriman</h3>
+                <p class="text-[11px] text-gray-400 mt-1">
+                    Invoice: <span id="detail-invoice" class="font-bold text-white font-mono"></span> | 
+                    Driver: <span id="detail-driver" class="font-bold text-white"></span>
+                </p>
+            </div>
+
+            <!-- Table Detail Items -->
+            <div class="bg-gray-900/40 rounded-xl overflow-hidden mb-6">
+                <table class="w-full text-left text-gray-300 border-collapse">
+                    <thead>
+                        <tr class="border-b border-gray-800 text-gray-400 text-[10px] uppercase tracking-wider bg-gray-900/60">
+                            <th class="py-3 px-4 font-semibold w-12">No</th>
+                            <th class="py-3 px-4 font-semibold">Produk</th>
+                            <th class="py-3 px-4 font-semibold">SKU</th>
+                            <th class="py-3 px-4 font-semibold">Qty</th>
+                            <th class="py-3 px-4 font-semibold">Harga</th>
+                            <th class="py-3 px-4 font-semibold">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="detail-items-body">
+                        <!-- Dynamic items -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Total & Action Buttons -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-gray-850">
+                <div class="text-left w-full sm:w-auto">
+                    <p class="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">Grand Total</p>
+                    <p id="detail-grand-total" class="text-lg font-bold text-[#B4F481] font-display"></p>
+                </div>
+                <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+                    <button type="button" onclick="closeDeliveryDetailModal()"
+                        class="text-gray-400 hover:text-white font-semibold py-2 px-5 rounded-xl hover:bg-gray-800 transition cursor-pointer text-xs">
+                        Kembali
+                    </button>
+                    <button type="button" id="btn-confirm-receive"
+                        class="bg-green-500 hover:bg-green-400 text-black font-bold py-2 px-6 rounded-xl transition shadow-lg shadow-green-500/20 cursor-pointer text-xs">
+                        Terima Barang
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Fungsi untuk membuka dan menutup Modal PO
         let poItems = [];
@@ -462,6 +597,84 @@
 
         function closePoModal() {
             document.getElementById('po-modal').classList.add('hidden');
+        }
+
+        function openDeliveryModal() {
+            document.getElementById('delivery-modal').classList.remove('hidden');
+        }
+
+        function closeDeliveryModal() {
+            document.getElementById('delivery-modal').classList.add('hidden');
+        }
+
+        function openDeliveryDetailModal(delivery) {
+            closeDeliveryModal();
+            
+            document.getElementById('detail-invoice').innerText = delivery.sale?.invoice || '-';
+            document.getElementById('detail-driver').innerText = delivery.driver_name || 'Belum Ditentukan';
+            
+            const tbody = document.getElementById('detail-items-body');
+            tbody.innerHTML = '';
+            
+            let total = 0;
+            const items = delivery.sale?.sales_items || delivery.sale?.salesItems || [];
+            items.forEach((item, index) => {
+                const subtotal = item.qty * item.price;
+                total += subtotal;
+                
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-gray-800 text-[11px]';
+                tr.innerHTML = `
+                    <td class="py-3 px-4 text-gray-400 font-semibold">${index + 1}</td>
+                    <td class="py-3 px-4 font-bold text-white">${item.product_name}</td>
+                    <td class="py-3 px-4 text-gray-300 font-mono">${item.sku}</td>
+                    <td class="py-3 px-4 text-white">${item.qty} ${item.unit || 'pcs'}</td>
+                    <td class="py-3 px-4 text-white">Rp ${item.price.toLocaleString('id-ID')}</td>
+                    <td class="py-3 px-4 font-bold text-[#B4F481]">Rp ${subtotal.toLocaleString('id-ID')}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            document.getElementById('detail-grand-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
+            
+            document.getElementById('btn-confirm-receive').setAttribute('onclick', `executeReceive('${delivery.id}')`);
+            
+            document.getElementById('delivery-detail-modal').classList.remove('hidden');
+        }
+
+        function closeDeliveryDetailModal() {
+            document.getElementById('delivery-detail-modal').classList.add('hidden');
+            openDeliveryModal();
+        }
+
+        async function executeReceive(deliveryId) {
+            if (!confirm('Apakah Anda yakin barang sudah diterima?')) return;
+            
+            try {
+                const response = await fetch(`/auth/deliveries/${deliveryId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        status: 'DITERIMA',
+                        received_at: new Date().toISOString()
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Status pengiriman berhasil diperbarui menjadi DITERIMA.');
+                    window.location.reload();
+                } else {
+                    const data = await response.json();
+                    alert('Gagal memperbarui status: ' + (data.message || 'Error'));
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Terjadi kesalahan koneksi.');
+            }
         }
 
         function formatCurrency(value) {

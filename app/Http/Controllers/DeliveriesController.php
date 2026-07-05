@@ -75,6 +75,10 @@ class DeliveriesController extends Controller
             $validated['sent_at'] = now();
         }
 
+        if ($validated['status'] === 'DITERIMA' && empty($validated['received_at'])) {
+            $validated['received_at'] = now();
+        }
+
         $delivery->update($validated);
 
         if ($request->wantsJson()) {
