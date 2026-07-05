@@ -74,6 +74,21 @@
             </ul>
         </div>
 
+        <!-- Menu Kategori: Manajemen User -->
+        <div class="space-y-2">
+            <div class="flex justify-between items-center {{ request()->routeIs('users.*') ? 'text-white' : 'text-gray-400' }} px-2 cursor-pointer hover:text-white transition" onclick="toggleDropdown('user-menu', 'user-icon')">
+                <span class="text-[10px] font-bold tracking-wider uppercase">Manajemen User</span>
+                <svg id="user-icon" class="w-3 h-3 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </div>
+            <ul id="user-menu" class="text-gray-400 space-y-2 ml-4 border-l border-gray-800 pl-4 text-xs transition-all duration-200">
+                <li class="hover:text-white transition {{ request()->routeIs('users.*') ? 'text-[#B4F481] font-semibold' : '' }}">
+                    <a href="{{ route('users.index') }}" class="block w-full">Daftar User</a>
+                </li>
+            </ul>
+        </div>
+
         <!-- Menu Kategori: Data Cabang -->
         <div class="space-y-2">
             <div class="flex justify-between items-center {{ request()->routeIs('wilayah.*') || request()->routeIs('branches.*') || request()->routeIs('suppliers.*') ? 'text-white' : 'text-gray-400' }} px-2 cursor-pointer hover:text-white transition" onclick="toggleDropdown('cabang-menu', 'cabang-icon')">

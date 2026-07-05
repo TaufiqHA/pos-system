@@ -13,6 +13,7 @@ use App\Http\Controllers\SalesController;
 use App\Http\Controllers\SalesItemController;
 use App\Http\Controllers\SalesPaymentController;
 use App\Http\Controllers\SuppliersController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\WholesalePriceController;
 use App\Http\Controllers\WilayahController;
 use App\Http\Middleware\AuthCheck;
@@ -57,6 +58,7 @@ Route::prefix('admin')->middleware(['auth', 'role.admin'])->group(function () {
     Route::resource('products', ProductController::class);
     Route::resource('product-stocks', ProductStockController::class);
     Route::resource('suppliers', SuppliersController::class);
+    Route::resource('users', UserController::class);
     Route::resource('purchases', PurchasesController::class);
     Route::resource('sales', SalesController::class);
 
