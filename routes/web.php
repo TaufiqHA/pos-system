@@ -20,6 +20,7 @@ use App\Http\Controllers\SuppliersController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WholesalePriceController;
 use App\Http\Controllers\WilayahController;
+use App\Http\Controllers\OutletsController;
 use App\Http\Middleware\AuthCheck;
 use App\Models\Deliveries;
 use App\Models\Product;
@@ -118,6 +119,9 @@ Route::prefix('cabang')->middleware(['auth', 'role.cabang'])->group(function () 
     Route::get('/monitoring-stok', [ProductStockController::class, 'monitoringStok'])->name('cabang.monitoring-stok');
     Route::put('/monitoring-stok/{id}', [ProductStockController::class, 'updateCabangStock'])->name('cabang.monitoring-stok.update');
     Route::resource('stock-histories', StockHistoriesController::class);
+
+    // Outlets Routes
+    Route::resource('outlets', OutletsController::class);
 
     // Product Branch Prices Routes
     Route::get('/product-branch-prices', [ProductBranchPricesController::class, 'index'])->name('product-branch-prices.index');

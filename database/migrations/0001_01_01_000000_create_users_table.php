@@ -21,12 +21,14 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('password');
             $table->string('status');
+            $table->string('outlet_id')->nullable();
             $table->timestamps();
             $table->softDeletes();
 
             $table->foreign('role_id')->references('id')->on('roles')->onDelete('set null');
             $table->foreign('branch_id')->references('id')->on('branches')->onDelete('set null');
             $table->foreign('parent_id')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('outlet_id')->references('id')->on('outlets')->onDelete('set null');
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

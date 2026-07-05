@@ -44,4 +44,9 @@ class Branch extends Model
     {
         return $this->hasMany(StockHistories::class, 'branch_id');
     }
+
+    public function outlets()
+    {
+        return $this->hasMany(Outlets::class, 'branch_id');
+    }
 }

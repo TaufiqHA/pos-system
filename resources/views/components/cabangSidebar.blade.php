@@ -125,9 +125,9 @@
             </div>
             <ul id="cabang-menu"
                 class="text-gray-400 space-y-2 ml-4 border-l border-gray-800 pl-4 text-xs transition-all duration-200">
-                <li class="hover:text-white cursor-pointer transition">
-                    <a href="#" class="block w-full">Outlet</a>
-                </li>
+                <li class="{{ request()->routeIs('outlets.index') ? 'text-[#B4F481] font-bold' : '' }} hover:text-white cursor-pointer transition">
+    <a href="{{ route('outlets.index') }}" class="block w-full">Outlet</a>
+</li>
             </ul>
         </div>
 
