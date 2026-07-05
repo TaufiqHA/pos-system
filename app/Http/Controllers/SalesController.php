@@ -2,91 +2,199 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
+use App\Models\Product;
 use App\Models\Sales;
+use App\Models\SalesItem;
+use App\Models\SalesPayment;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class SalesController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $sales = Sales::with(['branch', 'user'])->get();
+        $sales = Sales::with(['branch', 'user', 'salesItems', 'salesPayments'])->orderBy('created_at', 'desc')->get();
 
-        // Return berupa view atau response JSON, sesuaikan dengan kebutuhan aplikasi
-        return response()->json($sales);
+        if ($request->wantsJson()) {
+            return response()->json($sales);
+        }
+
+        $products = Product::all();
+        $branches = Branch::whereDoesntHave('users', function ($query) {
+            $query->whereHas('role', function ($q) {
+                $q->where('name', 'admin');
+            });
+        })->get();
+
+        return view('admin.sale', compact('sales', 'products', 'branches'));
+    }
+
+    public function create()
+    {
+        return redirect()->route('sales.index', ['action' => 'create']);
     }
 
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'invoice' => 'required|string|unique:sales',
-            'branch_id' => 'required|string|exists:branches,id',
-            'user_id' => 'required|string|exists:users,id',
+        $validated = $request->validate([
+            'invoice' => 'sometimes|string|unique:sales',
+            'branch_id' => 'required|exists:branches,id',
+            'user_id' => 'required|exists:users,id',
             'date' => 'required|date',
-            'subtotal' => 'required|numeric',
-            'discount' => 'required|numeric',
-            'tax' => 'required|numeric',
-            'grand_total' => 'required|numeric',
-            'status' => 'required|string',
+            'subtotal' => 'required|numeric|min:0',
+            'discount' => 'nullable|numeric|min:0',
+            'tax' => 'nullable|numeric|min:0',
+            'grand_total' => 'required|numeric|min:0',
+            'status' => 'required|string|max:50',
+            'payment_method' => 'nullable|string|in:TUNAI,TRANSFER,KREDIT',
+            'items' => 'nullable|array',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.qty' => 'required|integer|min:1',
+            'items.*.price' => 'required|numeric|min:0',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'The given data was invalid.',
-                'errors' => $validator->errors(),
-            ], 422);
+        $validated['id'] = (string) Str::uuid();
+
+        if (! isset($validated['invoice'])) {
+            $invoice = 'SLS-'.date('Ymd').'-'.strtoupper(Str::random(6));
+            while (Sales::where('invoice', $invoice)->exists()) {
+                $invoice = 'SLS-'.date('Ymd').'-'.strtoupper(Str::random(6));
+            }
+            $validated['invoice'] = $invoice;
         }
-        $validatedData = $validator->validated();
 
-        $validatedData['id'] = Str::uuid()->toString();
+        $validated['discount'] = $validated['discount'] ?? 0;
+        $validated['tax'] = $validated['tax'] ?? 0;
 
-        $sale = Sales::create($validatedData);
+        $sale = DB::transaction(function () use ($validated, $request) {
+            $sale = Sales::create($validated);
 
-        return response()->json($sale, 201);
+            if ($request->has('items') && is_array($request->items)) {
+                foreach ($request->items as $item) {
+                    $product = Product::find($item['product_id']);
+                    if ($product) {
+                        SalesItem::create([
+                            'id' => (string) Str::uuid(),
+                            'sale_id' => $sale->id,
+                            'product_id' => $product->id,
+                            'sku' => $product->sku,
+                            'product_name' => $product->name,
+                            'unit' => $product->unit ?? 'pcs',
+                            'qty' => $item['qty'],
+                            'price' => $item['price'],
+                            'cost' => $product->buy_price,
+                            'subtotal' => $item['qty'] * $item['price'],
+                            'is_wholesale' => false,
+                        ]);
+                    }
+                }
+            }
+
+            $paymentMethod = $request->input('payment_method', 'TUNAI');
+            $paymentStatus = ($paymentMethod === 'TUNAI' || $paymentMethod === 'TRANSFER') ? 'LUNAS' : 'BELUM BAYAR';
+            $paidAt = ($paymentStatus === 'LUNAS') ? now() : null;
+
+            SalesPayment::create([
+                'id' => (string) Str::uuid(),
+                'sale_id' => $sale->id,
+                'method' => $paymentMethod,
+                'amount' => $sale->grand_total,
+                'status' => $paymentStatus,
+                'paid_at' => $paidAt,
+            ]);
+
+            return $sale;
+        });
+
+        if ($request->wantsJson()) {
+            return response()->json($sale, 201);
+        }
+
+        return redirect()->route('sales.index')->with('success', 'Penjualan berhasil dibuat');
     }
 
     public function show(string $id)
     {
-        $sale = Sales::with(['branch', 'user'])->findOrFail($id);
+        $sale = Sales::with(['branch', 'user', 'salesItems', 'salesPayments'])->findOrFail($id);
 
         return response()->json($sale);
+    }
+
+    public function edit($id)
+    {
+        return redirect()->route('sales.index', ['action' => 'edit', 'id' => $id]);
     }
 
     public function update(Request $request, string $id)
     {
         $sale = Sales::findOrFail($id);
 
-        $validator = Validator::make($request->all(), [
-            'invoice' => 'required|string|unique:sales,invoice,'.$id,
-            'branch_id' => 'required|string|exists:branches,id',
-            'user_id' => 'required|string|exists:users,id',
+        $validated = $request->validate([
+            'invoice' => 'sometimes|string|unique:sales,invoice,'.$id,
+            'branch_id' => 'required|exists:branches,id',
+            'user_id' => 'required|exists:users,id',
             'date' => 'required|date',
-            'subtotal' => 'required|numeric',
-            'discount' => 'required|numeric',
-            'tax' => 'required|numeric',
-            'grand_total' => 'required|numeric',
-            'status' => 'required|string',
+            'subtotal' => 'required|numeric|min:0',
+            'discount' => 'nullable|numeric|min:0',
+            'tax' => 'nullable|numeric|min:0',
+            'grand_total' => 'required|numeric|min:0',
+            'status' => 'required|string|max:50',
+            'items' => 'nullable|array',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.qty' => 'required|integer|min:1',
+            'items.*.price' => 'required|numeric|min:0',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'The given data was invalid.',
-                'errors' => $validator->errors(),
-            ], 422);
+        $validated['discount'] = $validated['discount'] ?? 0;
+        $validated['tax'] = $validated['tax'] ?? 0;
+
+        DB::transaction(function () use ($sale, $validated, $request) {
+            $sale->update($validated);
+
+            if ($request->has('items')) {
+                $sale->salesItems()->delete();
+
+                if (is_array($request->items)) {
+                    foreach ($request->items as $item) {
+                        $product = Product::find($item['product_id']);
+                        if ($product) {
+                            SalesItem::create([
+                                'id' => (string) Str::uuid(),
+                                'sale_id' => $sale->id,
+                                'product_id' => $product->id,
+                                'sku' => $product->sku,
+                                'product_name' => $product->name,
+                                'unit' => $product->unit ?? 'pcs',
+                                'qty' => $item['qty'],
+                                'price' => $item['price'],
+                                'cost' => $product->buy_price,
+                                'subtotal' => $item['qty'] * $item['price'],
+                                'is_wholesale' => false,
+                            ]);
+                        }
+                    }
+                }
+            }
+        });
+
+        if ($request->wantsJson()) {
+            return response()->json($sale->fresh());
         }
-        $validatedData = $validator->validated();
 
-        $sale->update($validatedData);
-
-        return response()->json($sale);
+        return redirect()->route('sales.index')->with('success', 'Penjualan berhasil diupdate');
     }
 
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
         $sale = Sales::findOrFail($id);
         $sale->delete();
 
-        return response()->json(['message' => 'Deleted']);
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Deleted']);
+        }
+
+        return redirect()->route('sales.index')->with('success', 'Penjualan berhasil dihapus');
     }
 }

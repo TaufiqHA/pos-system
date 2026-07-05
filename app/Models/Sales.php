@@ -38,4 +38,14 @@ class Sales extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+    public function salesItems()
+    {
+        return $this->hasMany(SalesItem::class, 'sale_id');
+    }
+
+    public function salesPayments()
+    {
+        return $this->hasMany(SalesPayment::class, 'sale_id');
+    }
 }
