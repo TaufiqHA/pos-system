@@ -47,6 +47,15 @@ class PurchaseOrdersApprovalTest extends TestCase
             'phone' => '08123456789',
         ]);
 
+        Branch::create([
+            'id' => 'BRC-001',
+            'name' => 'Gudang Pusat',
+            'address' => 'Jl. Pusat No. 1',
+            'phone' => '08111111111',
+            'wilayah_id' => null,
+            'notes' => 'Gudang Pusat',
+        ]);
+
         $this->cabangUser = User::factory()->create([
             'role_id' => $cabangRole->id,
             'branch_id' => $this->branch->id,

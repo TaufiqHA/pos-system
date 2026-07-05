@@ -43,6 +43,15 @@ class DeliveriesTest extends TestCase
             'notes' => 'Catatan Cabang',
         ]);
 
+        Branch::create([
+            'id' => 'BRC-001',
+            'name' => 'Gudang Pusat',
+            'address' => 'Jl. Pusat No. 1',
+            'phone' => '08111111111',
+            'wilayah_id' => null,
+            'notes' => 'Gudang Pusat',
+        ]);
+
         $this->user = User::factory()->create([
             'role_id' => $adminRole->id,
             'branch_id' => $this->branch->id,
@@ -329,7 +338,14 @@ class DeliveriesTest extends TestCase
         ]);
 
         // Approve PO to automatically create sales and delivery
-        $this->actingAs($this->user)->putJson(route('purchase-orders.update', $purchaseOrder->id), [
+        // We act as an admin user belonging to Gudang Pusat (BRC-001)
+        $adminRole = Role::firstOrCreate(['name' => 'admin'], ['id' => (string) Str::uuid()]);
+        $adminPusat = User::factory()->create([
+            'role_id' => $adminRole->id,
+            'branch_id' => 'BRC-001',
+        ]);
+
+        $this->actingAs($adminPusat)->putJson(route('purchase-orders.update', $purchaseOrder->id), [
             'branch_id' => $this->branch->id,
             'user_id' => $this->user->id,
             'status' => 'Approved',
@@ -353,6 +369,9 @@ class DeliveriesTest extends TestCase
 
         // Verify delivery status changed
         $this->assertEquals('DITERIMA', $delivery->fresh()->status);
+
+        // Verify purchase order status is Completed
+        $this->assertEquals('Completed', $purchaseOrder->fresh()->status);
 
         // Verify product stock is created and updated correctly
         $stock = ProductStock::where('product_id', $product->id)

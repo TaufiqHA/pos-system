@@ -95,10 +95,13 @@ class DeliveriesController extends Controller
                 if ($branchId && $delivery->sale_id) {
                     $items = [];
                     $purchaseOrder = PurchaseOrders::where('sale_id', $delivery->sale_id)->first();
-                    if ($purchaseOrder && $purchaseOrder->notes) {
-                        $notesData = json_decode($purchaseOrder->notes, true);
-                        if (isset($notesData['items']) && is_array($notesData['items'])) {
-                            $items = $notesData['items'];
+                    if ($purchaseOrder) {
+                        $purchaseOrder->update(['status' => 'Completed']);
+                        if ($purchaseOrder->notes) {
+                            $notesData = json_decode($purchaseOrder->notes, true);
+                            if (isset($notesData['items']) && is_array($notesData['items'])) {
+                                $items = $notesData['items'];
+                            }
                         }
                     }
 

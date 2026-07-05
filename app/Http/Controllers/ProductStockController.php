@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\ProductStock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -104,6 +105,82 @@ class ProductStockController extends Controller
 
         return response()->json([
             'message' => 'Stock deleted successfully',
+        ]);
+    }
+
+    /**
+     * Cabang: Monitoring stok produk di cabang saat ini
+     */
+    public function monitoringStok(Request $request)
+    {
+        $user = auth()->user();
+        $branchId = $user->branch_id;
+
+        $query = ProductStock::with(['product.category', 'branch'])
+            ->where('branch_id', $branchId);
+
+        // Search filter (name or SKU)
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->whereHas('product', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('sku', 'like', "%{$search}%");
+            });
+        }
+
+        // Category filter
+        if ($request->filled('category_id')) {
+            $categoryId = $request->input('category_id');
+            $query->whereHas('product', function ($q) use ($categoryId) {
+                $q->where('category_id', $categoryId);
+            });
+        }
+
+        // Status filter (menipis / aman)
+        if ($request->filled('status')) {
+            $status = $request->input('status');
+            if ($status === 'menipis') {
+                $query->whereColumn('stock', '<=', 'minimum_stock');
+            } elseif ($status === 'aman') {
+                $query->whereColumn('stock', '>', 'minimum_stock');
+            }
+        }
+
+        $stocks = $query->get();
+        $categories = Category::orderBy('name')->get();
+
+        if ($request->wantsJson()) {
+            return response()->json($stocks);
+        }
+
+        return view('cabang.monitoring-stok', compact('stocks', 'categories'));
+    }
+
+    /**
+     * Cabang: Update stok produk cabang
+     */
+    public function updateCabangStock(Request $request, string $id)
+    {
+        $user = auth()->user();
+        $stock = ProductStock::where('id', $id)
+            ->where('branch_id', $user->branch_id)
+            ->firstOrFail();
+
+        $validated = $request->validate([
+            'stock' => 'required|integer|min:0',
+            'minimum_stock' => 'required|integer|min:0',
+            'average_cost' => 'required|numeric|min:0',
+        ]);
+
+        $stock->update($validated);
+
+        if ($request->has('_token')) {
+            return redirect()->route('cabang.monitoring-stok')->with('success', 'Stok produk cabang berhasil diperbarui.');
+        }
+
+        return response()->json([
+            'message' => 'Stock updated successfully',
+            'data' => $stock,
         ]);
     }
 }

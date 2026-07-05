@@ -25,13 +25,6 @@
             class="w-full sm:w-auto flex items-center justify-center px-5 py-2 rounded-full border border-blue-400 text-blue-400 font-bold text-xs tracking-wider hover:bg-blue-400 hover:text-black transition cursor-pointer">
             STATUS PENGIRIMAN
         </button>
-        <button
-            class="w-full sm:w-auto justify-center px-5 py-2 rounded-full bg-[#B4F481] text-black font-bold text-xs tracking-wider hover:bg-[#a0dc72] transition flex items-center space-x-2">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path>
-            </svg>
-            <span>TRANSAKSI BARU</span>
-        </button>
     </div>
 
     <!-- 4 Kotak Indikator Utama Cabang -->
@@ -457,8 +450,10 @@
     </div>
 
     <!-- ================= MODAL BOX: STATUS PENGIRIMAN ================= -->
-    <div id="delivery-modal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="card max-w-4xl w-full p-6 rounded-2xl shadow-2xl relative border border-gray-800 max-h-[90vh] overflow-y-auto">
+    <div id="delivery-modal"
+        class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div
+            class="card max-w-4xl w-full p-6 rounded-2xl shadow-2xl relative border border-gray-800 max-h-[90vh] overflow-y-auto">
             <!-- Tombol Close (X) -->
             <button onclick="closeDeliveryModal()"
                 class="absolute top-4 right-4 text-gray-400 hover:text-white transition cursor-pointer">
@@ -473,11 +468,12 @@
                 <p class="text-[11px] text-gray-400 mt-1">Daftar pengiriman barang dari pusat ke cabang Anda</p>
             </div>
 
-             <!-- Table Daftar Pengiriman -->
+            <!-- Table Daftar Pengiriman -->
             <div class="bg-gray-900/40 rounded-xl overflow-hidden">
                 <table class="w-full text-left text-gray-300 border-collapse">
                     <thead>
-                        <tr class="border-b border-gray-800 text-gray-400 text-[10px] uppercase tracking-wider bg-gray-900/60">
+                        <tr
+                            class="border-b border-gray-800 text-gray-400 text-[10px] uppercase tracking-wider bg-gray-900/60">
                             <th class="py-3 px-4 font-semibold">Invoice Penjualan</th>
                             <th class="py-3 px-4 font-semibold">Status</th>
                             <th class="py-3 px-4 font-semibold">Waktu Kirim</th>
@@ -493,10 +489,10 @@
                                 </td>
                                 <td class="py-3 px-4">
                                     <span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold
-                                        @if($delivery->status === 'DITERIMA') bg-green-500/20 text-green-400
-                                        @elseif($delivery->status === 'DIKIRIM') bg-blue-500/20 text-blue-400
-                                        @elseif($delivery->status === 'PENDING') bg-yellow-500/20 text-yellow-400
-                                        @else bg-red-500/20 text-red-400 @endif">
+                                                @if($delivery->status === 'DITERIMA') bg-green-500/20 text-green-400
+                                                @elseif($delivery->status === 'DIKIRIM') bg-blue-500/20 text-blue-400
+                                                @elseif($delivery->status === 'PENDING') bg-yellow-500/20 text-yellow-400
+                                                @else bg-red-500/20 text-red-400 @endif">
                                         {{ strtoupper($delivery->status) }}
                                     </span>
                                 </td>
@@ -508,7 +504,7 @@
                                 </td>
                                 <td class="py-3 px-4 text-center">
                                     @if($delivery->status === 'DIKIRIM')
-                                        <button onclick='openDeliveryDetailModal(@json($delivery))' 
+                                        <button onclick='openDeliveryDetailModal(@json($delivery))'
                                             class="bg-green-500 hover:bg-green-400 text-black font-bold px-3 py-1 rounded-full text-[10px] transition cursor-pointer">
                                             Terima Barang
                                         </button>
@@ -519,7 +515,8 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="py-8 text-center text-gray-500 font-medium">Belum ada pengiriman dari pusat</td>
+                                <td colspan="6" class="py-8 text-center text-gray-500 font-medium">Belum ada pengiriman dari
+                                    pusat</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -529,8 +526,10 @@
     </div>
 
     <!-- ================= MODAL BOX: DETAIL PENGIRIMAN ================= -->
-    <div id="delivery-detail-modal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="card max-w-3xl w-full p-6 rounded-2xl shadow-2xl relative border border-gray-800 max-h-[90vh] overflow-y-auto">
+    <div id="delivery-detail-modal"
+        class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div
+            class="card max-w-3xl w-full p-6 rounded-2xl shadow-2xl relative border border-gray-800 max-h-[90vh] overflow-y-auto">
             <!-- Tombol Close (X) -->
             <button onclick="closeDeliveryDetailModal()"
                 class="absolute top-4 right-4 text-gray-400 hover:text-white transition cursor-pointer">
@@ -543,7 +542,7 @@
             <div class="mb-6">
                 <h3 class="text-base font-bold tracking-wide font-display text-white">Detail Pesanan & Pengiriman</h3>
                 <p class="text-[11px] text-gray-400 mt-1">
-                    Invoice: <span id="detail-invoice" class="font-bold text-white font-mono"></span> | 
+                    Invoice: <span id="detail-invoice" class="font-bold text-white font-mono"></span> |
                     Driver: <span id="detail-driver" class="font-bold text-white"></span>
                 </p>
             </div>
@@ -552,7 +551,8 @@
             <div class="bg-gray-900/40 rounded-xl overflow-hidden mb-6">
                 <table class="w-full text-left text-gray-300 border-collapse">
                     <thead>
-                        <tr class="border-b border-gray-800 text-gray-400 text-[10px] uppercase tracking-wider bg-gray-900/60">
+                        <tr
+                            class="border-b border-gray-800 text-gray-400 text-[10px] uppercase tracking-wider bg-gray-900/60">
                             <th class="py-3 px-4 font-semibold w-12">No</th>
                             <th class="py-3 px-4 font-semibold">Produk</th>
                             <th class="py-3 px-4 font-semibold">SKU</th>
@@ -609,36 +609,36 @@
 
         function openDeliveryDetailModal(delivery) {
             closeDeliveryModal();
-            
+
             document.getElementById('detail-invoice').innerText = delivery.sale?.invoice || '-';
             document.getElementById('detail-driver').innerText = delivery.driver_name || 'Belum Ditentukan';
-            
+
             const tbody = document.getElementById('detail-items-body');
             tbody.innerHTML = '';
-            
+
             let total = 0;
             const items = delivery.sale?.sales_items || delivery.sale?.salesItems || [];
             items.forEach((item, index) => {
                 const subtotal = item.qty * item.price;
                 total += subtotal;
-                
+
                 const tr = document.createElement('tr');
                 tr.className = 'border-b border-gray-800 text-[11px]';
                 tr.innerHTML = `
-                    <td class="py-3 px-4 text-gray-400 font-semibold">${index + 1}</td>
-                    <td class="py-3 px-4 font-bold text-white">${item.product_name}</td>
-                    <td class="py-3 px-4 text-gray-300 font-mono">${item.sku}</td>
-                    <td class="py-3 px-4 text-white">${item.qty} ${item.unit || 'pcs'}</td>
-                    <td class="py-3 px-4 text-white">Rp ${item.price.toLocaleString('id-ID')}</td>
-                    <td class="py-3 px-4 font-bold text-[#B4F481]">Rp ${subtotal.toLocaleString('id-ID')}</td>
-                `;
+                        <td class="py-3 px-4 text-gray-400 font-semibold">${index + 1}</td>
+                        <td class="py-3 px-4 font-bold text-white">${item.product_name}</td>
+                        <td class="py-3 px-4 text-gray-300 font-mono">${item.sku}</td>
+                        <td class="py-3 px-4 text-white">${item.qty} ${item.unit || 'pcs'}</td>
+                        <td class="py-3 px-4 text-white">Rp ${item.price.toLocaleString('id-ID')}</td>
+                        <td class="py-3 px-4 font-bold text-[#B4F481]">Rp ${subtotal.toLocaleString('id-ID')}</td>
+                    `;
                 tbody.appendChild(tr);
             });
-            
+
             document.getElementById('detail-grand-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
-            
+
             document.getElementById('btn-confirm-receive').setAttribute('onclick', `executeReceive('${delivery.id}')`);
-            
+
             document.getElementById('delivery-detail-modal').classList.remove('hidden');
         }
 
@@ -649,7 +649,7 @@
 
         async function executeReceive(deliveryId) {
             if (!confirm('Apakah Anda yakin barang sudah diterima?')) return;
-            
+
             try {
                 const response = await fetch(`/auth/deliveries/${deliveryId}`, {
                     method: 'PUT',
@@ -776,27 +776,27 @@
                 const tr = document.createElement('tr');
                 tr.className = 'border-b border-gray-800';
                 tr.innerHTML = `
-                                    <td class="py-3 px-4">
-                                        <div class="font-bold text-white">${item.name}</div>
-                                        <div class="text-[10px] text-gray-400">SKU: ${item.sku}</div>
-                                    </td>
-                                    <td class="py-3 px-4 text-white">${item.qty}</td>
-                                    <td class="py-3 px-4 text-white">Rp ${item.price.toLocaleString('id-ID')}</td>
-                                    <td class="py-3 px-4 text-white">Rp ${itemSubtotal.toLocaleString('id-ID')}</td>
-                                    <td class="py-3 px-4 text-center">
-                                        <button type="button" onclick="removePoItem(${index})" class="text-red-400 hover:text-red-300 font-bold transition">Hapus</button>
-                                    </td>
-                                `;
+                                        <td class="py-3 px-4">
+                                            <div class="font-bold text-white">${item.name}</div>
+                                            <div class="text-[10px] text-gray-400">SKU: ${item.sku}</div>
+                                        </td>
+                                        <td class="py-3 px-4 text-white">${item.qty}</td>
+                                        <td class="py-3 px-4 text-white">Rp ${item.price.toLocaleString('id-ID')}</td>
+                                        <td class="py-3 px-4 text-white">Rp ${itemSubtotal.toLocaleString('id-ID')}</td>
+                                        <td class="py-3 px-4 text-center">
+                                            <button type="button" onclick="removePoItem(${index})" class="text-red-400 hover:text-red-300 font-bold transition">Hapus</button>
+                                        </td>
+                                    `;
                 tbody.appendChild(tr);
 
                 // Append hidden inputs for standard form submission
                 hiddenContainer.innerHTML += `
-                                    <input type="hidden" name="items[${index}][product_id]" value="${item.product_id}">
-                                    <input type="hidden" name="items[${index}][name]" value="${item.name}">
-                                    <input type="hidden" name="items[${index}][sku]" value="${item.sku}">
-                                    <input type="hidden" name="items[${index}][qty]" value="${item.qty}">
-                                    <input type="hidden" name="items[${index}][price]" value="${item.price}">
-                                `;
+                                        <input type="hidden" name="items[${index}][product_id]" value="${item.product_id}">
+                                        <input type="hidden" name="items[${index}][name]" value="${item.name}">
+                                        <input type="hidden" name="items[${index}][sku]" value="${item.sku}">
+                                        <input type="hidden" name="items[${index}][qty]" value="${item.qty}">
+                                        <input type="hidden" name="items[${index}][price]" value="${item.price}">
+                                    `;
             });
 
             document.getElementById('po-subtotal').value = subtotal;

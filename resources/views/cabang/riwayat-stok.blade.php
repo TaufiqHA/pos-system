@@ -1,7 +1,7 @@
 @extends('layouts.cabang')
 
 @section('title', 'Monitoring Riwayat Stok - Lucifer POS')
-@section('page_title', 'MONITORING STOK')
+@section('page_title', 'RIWAYAT STOK')
 @section('page_subtitle', 'Pantau dan telusuri riwayat pergerakan keluar-masuk stok barang')
 
 @section('content')
@@ -50,13 +50,13 @@
                             </td>
                             <td class="py-4 px-4">
                                 <span class="inline-flex items-center gap-1.5 py-0.5 px-2 rounded-full text-[10px] font-semibold 
-                                        @if(strtoupper($history->type) === 'IN') bg-green-500/10 text-[#B4F481] border border-green-500/20
-                                        @elseif(strtoupper($history->type) === 'OUT') bg-red-500/10 text-red-400 border border-red-500/20
-                                        @else bg-blue-500/10 text-blue-400 border border-blue-500/20 @endif">
+                                                @if(strtoupper($history->type) === 'IN') bg-green-500/10 text-[#B4F481] border border-green-500/20
+                                                @elseif(strtoupper($history->type) === 'OUT') bg-red-500/10 text-red-400 border border-red-500/20
+                                                @else bg-blue-500/10 text-blue-400 border border-blue-500/20 @endif">
                                     <span class="w-1.5 h-1.5 rounded-full 
-                                            @if(strtoupper($history->type) === 'IN') bg-[#B4F481]
-                                            @elseif(strtoupper($history->type) === 'OUT') bg-red-400
-                                            @else bg-blue-400 @endif"></span>
+                                                    @if(strtoupper($history->type) === 'IN') bg-[#B4F481]
+                                                    @elseif(strtoupper($history->type) === 'OUT') bg-red-400
+                                                    @else bg-blue-400 @endif"></span>
                                     {{ strtoupper($history->type) }}
                                 </span>
                             </td>

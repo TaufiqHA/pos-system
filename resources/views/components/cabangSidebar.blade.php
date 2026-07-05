@@ -59,8 +59,8 @@
             </div>
             <ul id="produk-menu"
                 class="text-gray-400 space-y-2 ml-4 border-l border-gray-800 pl-4 text-xs transition-all duration-200">
-                <li class="hover:text-white transition">
-                    <a href="#" class="block w-full">Monitoring Stok</a>
+                <li class="hover:text-white transition {{ request()->routeIs('cabang.monitoring-stok') ? 'text-[#B4F481] font-bold' : '' }}">
+                    <a href="{{ route('cabang.monitoring-stok') }}" class="block w-full">Monitoring Stok</a>
                 </li>
                 <li
                     class="hover:text-white transition {{ request()->routeIs('stock-histories.index') ? 'text-[#B4F481] font-bold' : '' }}">

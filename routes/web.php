@@ -114,6 +114,8 @@ Route::prefix('cabang')->middleware(['auth', 'role.cabang'])->group(function () 
         return view('cabang.dashboard', compact('products', 'deliveries'));
     })->name('cabang.dashboard');
 
+    Route::get('/monitoring-stok', [ProductStockController::class, 'monitoringStok'])->name('cabang.monitoring-stok');
+    Route::put('/monitoring-stok/{id}', [ProductStockController::class, 'updateCabangStock'])->name('cabang.monitoring-stok.update');
     Route::resource('stock-histories', StockHistoriesController::class);
 });
 
