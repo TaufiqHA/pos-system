@@ -59,15 +59,17 @@
             </div>
             <ul id="produk-menu"
                 class="text-gray-400 space-y-2 ml-4 border-l border-gray-800 pl-4 text-xs transition-all duration-200">
-                <li class="hover:text-white transition {{ request()->routeIs('cabang.monitoring-stok') ? 'text-[#B4F481] font-bold' : '' }}">
+                <li
+                    class="hover:text-white transition {{ request()->routeIs('cabang.monitoring-stok') ? 'text-[#B4F481] font-bold' : '' }}">
                     <a href="{{ route('cabang.monitoring-stok') }}" class="block w-full">Monitoring Stok</a>
                 </li>
                 <li
                     class="hover:text-white transition {{ request()->routeIs('stock-histories.index') ? 'text-[#B4F481] font-bold' : '' }}">
                     <a href="{{ route('stock-histories.index') }}" class="block w-full">Riwayat Stok</a>
                 </li>
-                <li class="hover:text-white transition">
-                    <a href="#" class="block w-full">Atur Harga Cabang</a>
+                <li
+                    class="hover:text-white transition {{ request()->routeIs('product-branch-prices.index') ? 'text-[#B4F481] font-bold' : '' }}">
+                    <a href="{{ route('product-branch-prices.index') }}" class="block w-full">Atur Harga Cabang</a>
                 </li>
             </ul>
         </div>
@@ -97,11 +99,6 @@
                 <li
                     class="hover:text-white cursor-pointer transition {{ request()->routeIs('purchase-orders.index') && request('action') !== 'create' ? 'text-[#B4F481] font-bold' : '' }}">
                     <a href="{{ route('purchase-orders.index') }}" class="block w-full">Daftar PO</a>
-                </li>
-                <li
-                    class="hover:text-white cursor-pointer transition {{ request()->routeIs('purchase-orders.index') && request('action') === 'create' ? 'text-[#B4F481] font-bold' : '' }}">
-                    <a href="{{ route('purchase-orders.index', ['action' => 'create']) }}" class="block w-full">PO Ke
-                        Pusat</a>
                 </li>
                 <li class="hover:text-white cursor-pointer transition">
                     <a href="#" class="block w-full">Pengiriman</a>

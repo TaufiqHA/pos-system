@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DeliveriesController;
+use App\Http\Controllers\ProductBranchPricesController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductStockController;
 use App\Http\Controllers\PurchaseItemController;
@@ -117,6 +118,13 @@ Route::prefix('cabang')->middleware(['auth', 'role.cabang'])->group(function () 
     Route::get('/monitoring-stok', [ProductStockController::class, 'monitoringStok'])->name('cabang.monitoring-stok');
     Route::put('/monitoring-stok/{id}', [ProductStockController::class, 'updateCabangStock'])->name('cabang.monitoring-stok.update');
     Route::resource('stock-histories', StockHistoriesController::class);
+
+    // Product Branch Prices Routes
+    Route::get('/product-branch-prices', [ProductBranchPricesController::class, 'index'])->name('product-branch-prices.index');
+    Route::post('/product-branch-prices', [ProductBranchPricesController::class, 'create'])->name('product-branch-prices.create');
+    Route::get('/product-branch-prices/{id}', [ProductBranchPricesController::class, 'show'])->name('product-branch-prices.show');
+    Route::put('/product-branch-prices/{id}', [ProductBranchPricesController::class, 'update'])->name('product-branch-prices.update');
+    Route::delete('/product-branch-prices/{id}', [ProductBranchPricesController::class, 'delete'])->name('product-branch-prices.delete');
 });
 
 // Auth Routes

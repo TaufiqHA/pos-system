@@ -49,6 +49,12 @@ class Product extends Model
         return $this->hasMany(WholesalePrice::class, 'product_id', 'id');
     }
 
+    // Relasi: Produk memiliki banyak harga cabang
+    public function branchPrices()
+    {
+        return $this->hasMany(ProductBranchPrices::class, 'product_id', 'id');
+    }
+
     // Relasi ke model StockHistories (One to Many)
     public function stockHistories()
     {

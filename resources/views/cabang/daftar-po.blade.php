@@ -16,13 +16,6 @@
         </div>
     @endif
 
-    <div class="flex flex-col sm:flex-row justify-end gap-3 mb-6 z-10">
-        <button onclick="openPoModal()"
-            class="w-full sm:w-auto flex items-center justify-center px-5 py-2.5 rounded-full border border-green-400 text-green-400 font-bold text-xs tracking-wider hover:bg-green-400 hover:text-black transition cursor-pointer">
-            PO KE PUSAT
-        </button>
-    </div>
-
     <!-- Tabel Riwayat Purchase Order -->
     <div class="card p-6 rounded-2xl shadow-xl z-10 mb-8">
         <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
@@ -30,6 +23,13 @@
                 <div class="w-1.5 h-5 bg-[#B4F481] rounded-full"></div>
                 <h3 class="font-bold text-sm tracking-wide font-display text-white">RIWAYAT PURCHASE ORDER</h3>
             </div>
+            <button onclick="openPoModal()"
+                class="w-full sm:w-auto justify-center bg-[#B4F481] hover:bg-green-400 text-black font-semibold text-xs py-2.5 px-4 rounded-xl transition flex items-center gap-2 shadow-lg shadow-[#B4F481]/20 cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                PO KE PUSAT
+            </button>
         </div>
 
         <div class="overflow-x-auto">
