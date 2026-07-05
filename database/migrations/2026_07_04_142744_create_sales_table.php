@@ -22,11 +22,14 @@ return new class extends Migration
             $table->decimal('tax', 15, 2)->default(0);
             $table->decimal('grand_total', 15, 2);
             $table->string('status');
+            $table->uuid('create_by')->nullable();
             $table->timestamps();
 
             // Relasi Foreign Key
             $table->foreign('branch_id')->references('id')->on('branches')->onDelete('cascade');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('create_by')->references('id')->on('users')->onDelete('set null');
+
         });
     }
 
