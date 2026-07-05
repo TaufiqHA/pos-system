@@ -77,11 +77,11 @@
                 <li class="hover:text-white cursor-pointer transition">
                     <a href="#" class="block w-full">Penjualan</a>
                 </li>
-                <li class="hover:text-white cursor-pointer transition">
-                    <a href="#" class="block w-full">Daftar PO</a>
+                <li class="hover:text-white cursor-pointer transition {{ request()->routeIs('purchase-orders.index') && request('action') !== 'create' ? 'text-[#B4F481] font-bold' : '' }}">
+                    <a href="{{ route('purchase-orders.index') }}" class="block w-full">Daftar PO</a>
                 </li>
-                <li class="hover:text-white cursor-pointer transition">
-                    <a href="#" class="block w-full">PO Ke Pusat</a>
+                <li class="hover:text-white cursor-pointer transition {{ request()->routeIs('purchase-orders.index') && request('action') === 'create' ? 'text-[#B4F481] font-bold' : '' }}">
+                    <a href="{{ route('purchase-orders.index', ['action' => 'create']) }}" class="block w-full">PO Ke Pusat</a>
                 </li>
                 <li class="hover:text-white cursor-pointer transition">
                     <a href="#" class="block w-full">Pengiriman</a>

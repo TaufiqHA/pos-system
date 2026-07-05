@@ -226,7 +226,7 @@
     }
 
     function openEditModal(delivery) {
-        document.getElementById('edit-form').action = `/admin/deliveries/${delivery.id}`;
+        document.getElementById('edit-form').action = `/auth/deliveries/${delivery.id}`;
         document.getElementById('edit-status').value = delivery.status;
         document.getElementById('edit-sent_at').value = toDatetimeLocal(delivery.sent_at);
         document.getElementById('edit-received_at').value = toDatetimeLocal(delivery.received_at);

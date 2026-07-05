@@ -2,8 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Deliveries;
+use App\Models\Product;
 use App\Models\PurchaseOrders;
+use App\Models\Sales;
+use App\Models\SalesItem;
+use App\Models\SalesPayment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class PurchaseOrdersController extends Controller
@@ -13,12 +19,23 @@ class PurchaseOrdersController extends Controller
      */
     public function index(Request $request)
     {
-        $purchaseOrders = PurchaseOrders::with(['branch', 'user', 'sale'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $user = auth()->user();
+        $query = PurchaseOrders::with(['branch', 'user', 'sale']);
+
+        if ($user->role && $user->role->name === 'cabang') {
+            $query->where('branch_id', $user->branch_id);
+        }
+
+        $purchaseOrders = $query->orderBy('created_at', 'desc')->get();
 
         if ($request->wantsJson()) {
             return response()->json($purchaseOrders);
+        }
+
+        if ($user->role && $user->role->name === 'cabang') {
+            $products = Product::orderBy('name')->get();
+
+            return view('cabang.daftar-po', compact('purchaseOrders', 'products'));
         }
 
         return view('admin.purchase_orders.index', compact('purchaseOrders'));
@@ -122,7 +139,90 @@ class PurchaseOrdersController extends Controller
             unset($validated['po_number']); // Don't overwrite with empty
         }
 
+        // If it's a standard Form submit, serialize structured fields into notes
+        if (! $request->wantsJson() && ! $request->has('notes')) {
+            $notesData = [
+                'user_notes' => $request->input('user_notes'),
+                'subtotal' => $request->input('subtotal'),
+                'discount' => $request->input('discount'),
+                'tax' => $request->input('tax'),
+                'grand_total' => $request->input('grand_total'),
+                'payment_method' => $request->input('payment_method'),
+                'items' => $request->input('items', []),
+            ];
+            $validated['notes'] = json_encode($notesData);
+        }
+
         $purchaseOrder->update($validated);
+
+        if ($purchaseOrder->status === 'Approved' && empty($purchaseOrder->sale_id)) {
+            $notesData = json_decode($purchaseOrder->notes, true);
+            if ($notesData) {
+                $invoice = 'INV-'.date('Ymd').'-'.strtoupper(Str::random(6));
+                while (Sales::where('invoice', $invoice)->exists()) {
+                    $invoice = 'SLS-'.date('Ymd').'-'.strtoupper(Str::random(6));
+                }
+
+                DB::transaction(function () use ($purchaseOrder, $notesData, $invoice) {
+                    $sale = Sales::create([
+                        'id' => (string) Str::uuid(),
+                        'invoice' => $invoice,
+                        'branch_id' => $purchaseOrder->branch_id,
+                        'user_id' => $purchaseOrder->user_id,
+                        'date' => now()->format('Y-m-d H:i:s'),
+                        'subtotal' => $notesData['subtotal'] ?? 0,
+                        'discount' => $notesData['discount'] ?? 0,
+                        'tax' => $notesData['tax'] ?? 0,
+                        'grand_total' => $notesData['grand_total'] ?? 0,
+                        'status' => 'LUNAS',
+                    ]);
+
+                    $items = $notesData['items'] ?? [];
+                    foreach ($items as $item) {
+                        $product = Product::find($item['product_id']);
+                        if ($product) {
+                            SalesItem::create([
+                                'id' => (string) Str::uuid(),
+                                'sale_id' => $sale->id,
+                                'product_id' => $product->id,
+                                'sku' => $product->sku,
+                                'product_name' => $product->name,
+                                'unit' => $product->unit ?? 'pcs',
+                                'qty' => $item['qty'],
+                                'price' => $item['price'],
+                                'cost' => $product->buy_price,
+                                'subtotal' => $item['qty'] * $item['price'],
+                                'is_wholesale' => false,
+                            ]);
+                        }
+                    }
+
+                    $paymentMethod = $notesData['payment_method'] ?? 'TUNAI';
+                    $paymentStatus = ($paymentMethod === 'TUNAI' || $paymentMethod === 'TRANSFER') ? 'LUNAS' : 'BELUM BAYAR';
+                    $paidAt = $paymentStatus === 'LUNAS' ? now() : null;
+
+                    SalesPayment::create([
+                        'id' => (string) Str::uuid(),
+                        'sale_id' => $sale->id,
+                        'method' => $paymentMethod,
+                        'amount' => $sale->grand_total,
+                        'status' => $paymentStatus,
+                        'paid_at' => $paidAt,
+                    ]);
+
+                    Deliveries::create([
+                        'id' => (string) Str::uuid(),
+                        'sale_id' => $sale->id,
+                        'driver_name' => 'Belum Ditentukan',
+                        'status' => 'PENDING',
+                        'sent_at' => null,
+                        'received_at' => null,
+                    ]);
+
+                    $purchaseOrder->update(['sale_id' => $sale->id]);
+                });
+            }
+        }
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -131,7 +231,7 @@ class PurchaseOrdersController extends Controller
             ]);
         }
 
-        return redirect()->route('purchase-orders.index')->with('success', 'Purchase Order berhasil diupdate');
+        return redirect()->back()->with('success', 'Purchase Order berhasil diupdate');
     }
 
     /**

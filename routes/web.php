@@ -20,6 +20,7 @@ use App\Http\Controllers\WholesalePriceController;
 use App\Http\Controllers\WilayahController;
 use App\Http\Middleware\AuthCheck;
 use App\Models\Product;
+use App\Models\PurchaseOrders;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -52,7 +53,11 @@ Route::delete('/branches/{id}', [BranchController::class, 'destroy'])->name(
 // Admin Dashboard Routes
 Route::prefix('admin')->middleware(['auth', 'role.admin'])->group(function () {
     Route::get('/dashboard', function () {
-        return view('admin.dashboard');
+        $purchaseOrders = PurchaseOrders::whereHas('user', function ($query) {
+            $query->where('parent_id', auth()->id());
+        })->with(['branch', 'user'])->orderBy('created_at', 'desc')->get();
+
+        return view('admin.dashboard', compact('purchaseOrders'));
     })->name('admin.dashboard');
     Route::get('/monitoring-stock', [ProductStockController::class, 'index'])->name('admin.monitoring-stock');
 
@@ -64,7 +69,6 @@ Route::prefix('admin')->middleware(['auth', 'role.admin'])->group(function () {
     Route::resource('users', UserController::class);
     Route::resource('purchases', PurchasesController::class);
     Route::resource('sales', SalesController::class);
-    Route::resource('deliveries', DeliveriesController::class);
 
     // Wholesale Prices Routes
     Route::post('/wholesale-prices', [WholesalePriceController::class, 'store'])->name('wholesale-prices.store');
@@ -117,6 +121,7 @@ Route::prefix('auth')->group(function () {
 
         Route::resource('purchase-orders', PurchaseOrdersController::class);
         Route::delete('purchase-orders/{id}/delete', [PurchaseOrdersController::class, 'delete'])->name('purchase-orders.delete');
+        Route::resource('deliveries', DeliveriesController::class);
     });
 });
 
