@@ -52,4 +52,9 @@ class Purchases extends Model
     {
         return $this->hasMany(PurchasePayment::class, 'purchase_id');
     }
+
+    public function stockHistories()
+    {
+        return $this->morphMany(StockHistories::class, 'reference');
+    }
 }

@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Deliveries;
 use App\Models\Product;
+use App\Models\ProductStock;
 use App\Models\PurchaseOrders;
 use App\Models\Sales;
 use App\Models\SalesItem;
 use App\Models\SalesPayment;
+use App\Models\StockHistories;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -193,6 +195,44 @@ class PurchaseOrdersController extends Controller
                                 'cost' => $product->buy_price,
                                 'subtotal' => $item['qty'] * $item['price'],
                                 'is_wholesale' => false,
+                            ]);
+
+                            // Kurangi stok Gudang Pusat
+                            $pusatBranchId = auth()->user()->branch_id ?? 'BRC-001';
+                            $qty = $item['qty'];
+
+                            $pusatStock = ProductStock::where('product_id', $product->id)
+                                ->where('branch_id', $pusatBranchId)
+                                ->first();
+
+                            $previousStock = 0;
+                            if ($pusatStock) {
+                                $previousStock = $pusatStock->stock;
+                                $pusatStock->decrement('stock', $qty);
+                            } else {
+                                $pusatStock = ProductStock::create([
+                                    'id' => (string) Str::uuid(),
+                                    'product_id' => $product->id,
+                                    'branch_id' => $pusatBranchId,
+                                    'stock' => -$qty,
+                                    'minimum_stock' => 0,
+                                    'average_cost' => $product->buy_price,
+                                ]);
+                            }
+                            $newStock = $previousStock - $qty;
+
+                            // Catat ke StockHistories
+                            StockHistories::create([
+                                'id' => (string) Str::uuid(),
+                                'product_id' => $product->id,
+                                'branch_id' => $pusatBranchId,
+                                'type' => 'OUT',
+                                'qty' => $qty,
+                                'previous_stock' => $previousStock,
+                                'new_stock' => $newStock,
+                                'reference_type' => PurchaseOrders::class,
+                                'reference_id' => $purchaseOrder->id,
+                                'user_id' => auth()->id() ?? $purchaseOrder->user_id,
                             ]);
                         }
                     }

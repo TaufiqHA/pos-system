@@ -3,7 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\Branch;
+use App\Models\Category;
 use App\Models\Deliveries;
+use App\Models\Product;
+use App\Models\ProductStock;
+use App\Models\PurchaseOrders;
 use App\Models\Role;
 use App\Models\Sales;
 use App\Models\User;
@@ -279,5 +283,88 @@ class DeliveriesTest extends TestCase
         $this->assertDatabaseMissing('deliveries', [
             'id' => $delivery->id,
         ]);
+    }
+
+    public function test_updating_delivery_status_to_diterima_automatically_updates_product_stocks(): void
+    {
+        $category = Category::create([
+            'id' => (string) Str::uuid(),
+            'name' => 'Elektronik',
+        ]);
+
+        $product = Product::create([
+            'id' => (string) Str::uuid(),
+            'category_id' => $category->id,
+            'sku' => 'SKU-TEST-999',
+            'name' => 'Test Product PO',
+            'buy_price' => 50000,
+            'sell_price' => 60000,
+        ]);
+
+        $notesData = [
+            'user_notes' => 'Catatan PO',
+            'subtotal' => 100000,
+            'discount' => 0,
+            'tax' => 0,
+            'grand_total' => 100000,
+            'payment_method' => 'KREDIT',
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'name' => $product->name,
+                    'sku' => $product->sku,
+                    'qty' => 2,
+                    'price' => 50000,
+                ],
+            ],
+        ];
+
+        $purchaseOrder = PurchaseOrders::create([
+            'id' => (string) Str::uuid(),
+            'po_number' => 'PO-TEST-REC-001',
+            'branch_id' => $this->branch->id,
+            'user_id' => $this->user->id,
+            'status' => 'Pending',
+            'notes' => json_encode($notesData),
+        ]);
+
+        // Approve PO to automatically create sales and delivery
+        $this->actingAs($this->user)->putJson(route('purchase-orders.update', $purchaseOrder->id), [
+            'branch_id' => $this->branch->id,
+            'user_id' => $this->user->id,
+            'status' => 'Approved',
+        ]);
+
+        // Find the created delivery
+        $freshPo = $purchaseOrder->fresh();
+        $this->assertNotNull($freshPo->sale_id);
+
+        $delivery = Deliveries::where('sale_id', $freshPo->sale_id)->firstOrFail();
+        $this->assertEquals('PENDING', $delivery->status);
+
+        // Confirm delivery status to DITERIMA
+        $payload = [
+            'status' => 'DITERIMA',
+            'received_at' => '2026-07-05 15:00:00',
+        ];
+
+        $response = $this->actingAs($this->user)->putJson(route('deliveries.update', $delivery->id), $payload);
+        $response->assertStatus(200);
+
+        // Verify delivery status changed
+        $this->assertEquals('DITERIMA', $delivery->fresh()->status);
+
+        // Verify product stock is created and updated correctly
+        $stock = ProductStock::where('product_id', $product->id)
+            ->where('branch_id', $this->branch->id)
+            ->first();
+
+        $this->assertNotNull($stock);
+        $this->assertEquals(2, $stock->stock);
+
+        // Test that updating delivery again (or another event) doesn't double-increment
+        $response = $this->actingAs($this->user)->putJson(route('deliveries.update', $delivery->id), $payload);
+        $response->assertStatus(200);
+        $this->assertEquals(2, $stock->fresh()->stock);
     }
 }

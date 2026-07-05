@@ -14,6 +14,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\SalesItemController;
 use App\Http\Controllers\SalesPaymentController;
+use App\Http\Controllers\StockHistoriesController;
 use App\Http\Controllers\SuppliersController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WholesalePriceController;
@@ -112,6 +113,8 @@ Route::prefix('cabang')->middleware(['auth', 'role.cabang'])->group(function () 
 
         return view('cabang.dashboard', compact('products', 'deliveries'));
     })->name('cabang.dashboard');
+
+    Route::resource('stock-histories', StockHistoriesController::class);
 });
 
 // Auth Routes

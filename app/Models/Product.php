@@ -48,4 +48,10 @@ class Product extends Model
     {
         return $this->hasMany(WholesalePrice::class, 'product_id', 'id');
     }
+
+    // Relasi ke model StockHistories (One to Many)
+    public function stockHistories()
+    {
+        return $this->hasMany(StockHistories::class, 'product_id');
+    }
 }

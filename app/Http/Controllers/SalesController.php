@@ -16,7 +16,7 @@ class SalesController extends Controller
 {
     public function index(Request $request)
     {
-        $sales = Sales::with(['branch', 'user', 'salesItems', 'salesPayments'])
+        $sales = Sales::with(['branch.users', 'user', 'salesItems', 'salesPayments'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -136,7 +136,7 @@ class SalesController extends Controller
     public function show(string $id)
     {
         $sale = Sales::with([
-            'branch',
+            'branch.users',
             'user',
             'salesItems',
             'salesPayments',

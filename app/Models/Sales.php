@@ -53,4 +53,9 @@ class Sales extends Model
     {
         return $this->hasOne(Deliveries::class, 'sale_id');
     }
+
+    public function stockHistories()
+    {
+        return $this->morphMany(StockHistories::class, 'reference');
+    }
 }
