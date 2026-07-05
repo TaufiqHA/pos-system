@@ -1,5 +1,5 @@
 <!-- ================= SIDEBAR KIRI ================= -->
-<aside 
+<aside
     class="sidebar w-64 flex flex-col justify-between h-full border-r border-gray-800 flex-shrink-0 fixed lg:relative inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out lg:translate-x-0"
     :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
 >
@@ -57,7 +57,7 @@
 
         <!-- Menu Kategori: Transaksi -->
         <div class="space-y-2">
-            <div class="flex justify-between items-center {{ request()->routeIs('purchases.*') || request()->routeIs('sales.*') ? 'text-white' : 'text-gray-400' }} px-2 cursor-pointer hover:text-white transition" onclick="toggleDropdown('transaksi-menu', 'transaksi-icon')">
+            <div class="flex justify-between items-center {{ request()->routeIs('purchases.*') || request()->routeIs('sales.*') || request()->routeIs('deliveries.*') ? 'text-white' : 'text-gray-400' }} px-2 cursor-pointer hover:text-white transition" onclick="toggleDropdown('transaksi-menu', 'transaksi-icon')">
                 <span class="text-[10px] font-bold tracking-wider uppercase">Transaksi</span>
                 <svg id="transaksi-icon" class="w-3 h-3 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -70,7 +70,9 @@
                 <li class="hover:text-white transition {{ request()->routeIs('purchases.*') ? 'text-[#B4F481] font-semibold' : '' }}">
                     <a href="{{ route('purchases.index') }}" class="block w-full">Pembelian</a>
                 </li>
-                <li class="hover:text-white cursor-pointer transition">Pengiriman</li>
+                <li class="hover:text-white transition {{ request()->routeIs('deliveries.*') ? 'text-[#B4F481] font-semibold' : '' }}">
+                    <a href="{{ route('deliveries.index') }}" class="block w-full">Pengiriman</a>
+                </li>
             </ul>
         </div>
 
@@ -104,7 +106,7 @@
                 <li class="hover:text-white transition {{ request()->routeIs('branches.*') ? 'text-[#B4F481] font-semibold' : '' }}">
                     <a href="{{ route('branches.index') }}" class="block w-full">Daftar Cabang</a>
                 </li>
-                <li class="hover:text-white cursor-pointer transition">Stok Cabang</li>
+                <li class="hover:text-white cursor-pointer transition">Laporan Cabang</li>
                 <li class="hover:text-white transition {{ request()->routeIs('suppliers.*') ? 'text-[#B4F481] font-semibold' : '' }}">
                     <a href="{{ route('suppliers.index') }}" class="block w-full">Daftar Supplier</a>
                 </li>
@@ -152,8 +154,8 @@
 </aside>
 
 <!-- Overlay / Backdrop saat sidebar terbuka di layar kecil -->
-<div 
-    x-show="sidebarOpen" 
+<div
+    x-show="sidebarOpen"
     x-transition:enter="transition-opacity ease-out duration-300"
     x-transition:enter-start="opacity-0"
     x-transition:enter-end="opacity-100"

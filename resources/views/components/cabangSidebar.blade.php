@@ -1,5 +1,5 @@
 <!-- ================= SIDEBAR CABANG ================= -->
-<aside 
+<aside
     class="sidebar w-64 flex flex-col justify-between h-full border-r border-gray-800 flex-shrink-0 fixed lg:relative inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out lg:translate-x-0"
     :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
 >
@@ -27,8 +27,8 @@
     <!-- Navigasi Menu -->
     <nav class="flex-1 px-4 space-y-4 overflow-y-auto pb-4">
         <!-- Dashboard -->
-        <a href="#" class="block text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl p-3 flex items-center space-x-3 transition cursor-pointer">
-            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <a href=" {{ route('cabang.dashboard') }} " class="block {{ request()->routeIs('cabang.dashboard') ? 'bg-indigo-950/60 text-white border border-indigo-700/50 shadow-md shadow-indigo-950/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/50' }} rounded-xl p-3 flex items-center space-x-3 transition cursor-pointer">
+            <svg class="w-5 h-5 {{ request()->routeIs('cabang.dashboard') ? 'text-[#B4F481]' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
             </svg>
             <span class="font-medium text-sm">Dashboard</span>
@@ -159,8 +159,8 @@
 </aside>
 
 <!-- Overlay / Backdrop saat sidebar terbuka di layar kecil -->
-<div 
-    x-show="sidebarOpen" 
+<div
+    x-show="sidebarOpen"
     x-transition:enter="transition-opacity ease-out duration-300"
     x-transition:enter-start="opacity-0"
     x-transition:enter-end="opacity-100"
