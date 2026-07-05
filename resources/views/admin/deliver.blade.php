@@ -23,7 +23,6 @@
                 <tr class="border-b border-gray-800 text-gray-400 text-xs font-bold uppercase tracking-wider">
                     <th class="pb-3 pl-4 pr-4">No</th>
                     <th class="pb-3 px-4">Invoice Penjualan</th>
-                    <th class="pb-3 px-4">Nama Driver</th>
                     <th class="pb-3 px-4">Status</th>
                     <th class="pb-3 px-4">Dikirim</th>
                     <th class="pb-3 px-4">Diterima</th>
@@ -35,7 +34,6 @@
                     <tr class="hover:bg-gray-800/30 transition">
                         <td class="py-4 pl-4 pr-4 font-semibold text-gray-400">{{ $loop->iteration }}</td>
                         <td class="py-4 px-4 font-semibold text-white font-mono">{{ $delivery->sale?->invoice ?? '-' }}</td>
-                        <td class="py-4 px-4 text-white">{{ $delivery->driver_name }}</td>
                         <td class="py-4 px-4">
                             <span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold
                                 @if($delivery->status === 'DITERIMA') bg-green-500/20 text-green-400
@@ -67,7 +65,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="py-8 text-center text-gray-500">Belum ada data pengiriman terdaftar.</td>
+                        <td colspan="6" class="py-8 text-center text-gray-500">Belum ada data pengiriman terdaftar.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -91,16 +89,11 @@
             @method('PUT')
 
             <div class="space-y-1">
-                <label for="edit-sale_id" class="block font-bold text-gray-300">Penjualan (Opsional)</label>
-                <select name="sale_id" id="edit-sale_id" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400">
-                    <option value="">-- Tanpa Penjualan --</option>
-                </select>
+                <label for="edit-sale_invoice" class="block font-bold text-gray-300">Penjualan (Tidak dapat diubah)</label>
+                <input type="text" id="edit-sale_invoice" readonly class="w-full bg-gray-800 border border-gray-850 text-gray-400 rounded-xl p-3 focus:outline-none cursor-not-allowed">
             </div>
 
-            <div class="space-y-1">
-                <label for="edit-driver_name" class="block font-bold text-gray-300">Nama Driver <span class="text-red-500">*</span></label>
-                <input type="text" name="driver_name" id="edit-driver_name" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400" required>
-            </div>
+
 
             <div class="space-y-1">
                 <label for="edit-status" class="block font-bold text-gray-300">Status <span class="text-red-500">*</span></label>
@@ -156,10 +149,7 @@
                     <p class="text-gray-500 font-bold uppercase tracking-wider text-[9px]">Invoice Penjualan</p>
                     <p id="detail-invoice" class="text-white font-mono font-bold mt-0.5 text-xs select-all"></p>
                 </div>
-                <div>
-                    <p class="text-gray-500 font-bold uppercase tracking-wider text-[9px]">Nama Driver</p>
-                    <p id="detail-driver" class="text-white mt-0.5 font-semibold"></p>
-                </div>
+
                 <div>
                     <p class="text-gray-500 font-bold uppercase tracking-wider text-[9px]">Status</p>
                     <span id="detail-status" class="inline-block px-2.5 py-1 rounded text-[10px] font-bold mt-1 uppercase"></span>
@@ -204,6 +194,18 @@
                 }, 500);
             }, 3000);
         }
+
+        const statusSelect = document.getElementById('edit-status');
+        if (statusSelect) {
+            statusSelect.addEventListener('change', function() {
+                if (this.value === 'DIKIRIM') {
+                    const sentAtInput = document.getElementById('edit-sent_at');
+                    if (sentAtInput && !sentAtInput.value) {
+                        sentAtInput.value = toDatetimeLocal(new Date());
+                    }
+                }
+            });
+        }
     });
 
     function formatDateTime(dateStr) {
@@ -225,27 +227,13 @@
 
     function openEditModal(delivery) {
         document.getElementById('edit-form').action = `/admin/deliveries/${delivery.id}`;
-        document.getElementById('edit-driver_name').value = delivery.driver_name;
         document.getElementById('edit-status').value = delivery.status;
         document.getElementById('edit-sent_at').value = toDatetimeLocal(delivery.sent_at);
         document.getElementById('edit-received_at').value = toDatetimeLocal(delivery.received_at);
 
-        const editSaleSelect = document.getElementById('edit-sale_id');
-        editSaleSelect.innerHTML = '<option value="">-- Tanpa Penjualan --</option>';
-        allSales.forEach(sale => {
-            const option = document.createElement('option');
-            option.value = sale.id;
-            option.textContent = sale.invoice;
-            if (delivery.sale_id === sale.id) option.selected = true;
-            editSaleSelect.appendChild(option);
-        });
-
-        if (delivery.sale_id && !allSales.find(s => s.id === delivery.sale_id) && delivery.sale) {
-            const option = document.createElement('option');
-            option.value = delivery.sale_id;
-            option.textContent = delivery.sale.invoice;
-            option.selected = true;
-            editSaleSelect.appendChild(option);
+        const invoiceInput = document.getElementById('edit-sale_invoice');
+        if (invoiceInput) {
+            invoiceInput.value = delivery.sale ? delivery.sale.invoice : 'Tanpa Penjualan';
         }
 
         document.getElementById('edit-modal').classList.remove('hidden');
@@ -258,7 +246,6 @@
     function openDetailModal(delivery) {
         document.getElementById('detail-id').textContent = delivery.id;
         document.getElementById('detail-invoice').textContent = delivery.sale ? delivery.sale.invoice : '-';
-        document.getElementById('detail-driver').textContent = delivery.driver_name;
         document.getElementById('detail-sent_at').textContent = formatDateTime(delivery.sent_at);
         document.getElementById('detail-received_at').textContent = formatDateTime(delivery.received_at);
 

@@ -104,9 +104,17 @@ class SalesTest extends TestCase
                 'updated_at',
             ]);
 
+        $saleId = $response->json('id');
+
         $this->assertDatabaseHas('sales', [
             'invoice' => 'INV-20260704-0002',
             'status' => 'pending',
+        ]);
+
+        $this->assertDatabaseHas('deliveries', [
+            'sale_id' => $saleId,
+            'driver_name' => 'Belum Ditentukan',
+            'status' => 'PENDING',
         ]);
     }
 

@@ -7,6 +7,7 @@ use App\Http\Controllers\DeliveriesController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductStockController;
 use App\Http\Controllers\PurchaseItemController;
+use App\Http\Controllers\PurchaseOrdersController;
 use App\Http\Controllers\PurchasePaymentController;
 use App\Http\Controllers\PurchasesController;
 use App\Http\Controllers\RoleController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\WholesalePriceController;
 use App\Http\Controllers\WilayahController;
 use App\Http\Middleware\AuthCheck;
+use App\Models\Product;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -98,7 +100,9 @@ Route::prefix('admin')->middleware(['auth', 'role.admin'])->group(function () {
 // Cabang Dashboard Routes
 Route::prefix('cabang')->middleware(['auth', 'role.cabang'])->group(function () {
     Route::get('/dashboard', function () {
-        return view('cabang.dashboard');
+        $products = Product::orderBy('name')->get();
+
+        return view('cabang.dashboard', compact('products'));
     })->name('cabang.dashboard');
 });
 
@@ -110,6 +114,9 @@ Route::prefix('auth')->group(function () {
     Route::middleware('auth')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/logout', [AuthController::class, 'logout']);
+
+        Route::resource('purchase-orders', PurchaseOrdersController::class);
+        Route::delete('purchase-orders/{id}/delete', [PurchaseOrdersController::class, 'delete'])->name('purchase-orders.delete');
     });
 });
 

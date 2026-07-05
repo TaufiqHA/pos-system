@@ -69,6 +69,7 @@ class BranchController extends Controller
         $user->branch_id = $branchId;
         $user->role_id = $cabangRole?->id;
         $user->status = 'active';
+        $user->parent_id = auth()->id();
         $user->save();
 
         return redirect()->back()->with('success', 'Branch dan Akun berhasil dibuat.');

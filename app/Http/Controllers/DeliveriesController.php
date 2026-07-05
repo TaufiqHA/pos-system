@@ -31,13 +31,17 @@ class DeliveriesController extends Controller
     {
         $validated = $request->validate([
             'sale_id' => 'nullable|exists:sales,id',
-            'driver_name' => 'required|string|max:255',
             'status' => 'required|string|max:50',
             'sent_at' => 'nullable|date',
             'received_at' => 'nullable|date',
         ]);
 
         $validated['id'] = (string) Str::uuid();
+        $validated['driver_name'] = 'Belum Ditentukan';
+
+        if ($validated['status'] === 'DIKIRIM' && empty($validated['sent_at'])) {
+            $validated['sent_at'] = now();
+        }
 
         $delivery = Deliveries::create($validated);
 
@@ -60,12 +64,16 @@ class DeliveriesController extends Controller
         $delivery = Deliveries::findOrFail($id);
 
         $validated = $request->validate([
-            'sale_id' => 'nullable|exists:sales,id',
-            'driver_name' => 'required|string|max:255',
             'status' => 'required|string|max:50',
             'sent_at' => 'nullable|date',
             'received_at' => 'nullable|date',
         ]);
+
+        $validated['driver_name'] = 'Belum Ditentukan';
+
+        if ($validated['status'] === 'DIKIRIM' && empty($validated['sent_at'])) {
+            $validated['sent_at'] = now();
+        }
 
         $delivery->update($validated);
 

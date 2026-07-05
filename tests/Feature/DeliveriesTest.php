@@ -88,7 +88,6 @@ class DeliveriesTest extends TestCase
     {
         $payload = [
             'sale_id' => $this->sale->id,
-            'driver_name' => 'Andi',
             'status' => 'DIKIRIM',
             'sent_at' => '2026-07-05 12:00:00',
             'received_at' => null,
@@ -109,7 +108,7 @@ class DeliveriesTest extends TestCase
             ]);
 
         $this->assertDatabaseHas('deliveries', [
-            'driver_name' => 'Andi',
+            'driver_name' => 'Belum Ditentukan',
             'status' => 'DIKIRIM',
         ]);
     }
@@ -117,7 +116,6 @@ class DeliveriesTest extends TestCase
     public function test_can_store_delivery_without_sale(): void
     {
         $payload = [
-            'driver_name' => 'Candra',
             'status' => 'PENDING',
         ];
 
@@ -126,7 +124,7 @@ class DeliveriesTest extends TestCase
         $response->assertStatus(201);
 
         $this->assertDatabaseHas('deliveries', [
-            'driver_name' => 'Candra',
+            'driver_name' => 'Belum Ditentukan',
             'sale_id' => null,
         ]);
     }
@@ -140,7 +138,7 @@ class DeliveriesTest extends TestCase
         $response = $this->actingAs($this->user)->postJson(route('deliveries.store'), $payload);
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['driver_name', 'status']);
+            ->assertJsonValidationErrors(['status']);
     }
 
     public function test_can_show_delivery(): void
@@ -176,7 +174,6 @@ class DeliveriesTest extends TestCase
 
         $payload = [
             'sale_id' => $this->sale->id,
-            'driver_name' => 'Eko Updated',
             'status' => 'DITERIMA',
             'sent_at' => '2026-07-05 12:00:00',
             'received_at' => '2026-07-05 15:00:00',
@@ -186,15 +183,79 @@ class DeliveriesTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonFragment([
-                'driver_name' => 'Eko Updated',
+                'driver_name' => 'Belum Ditentukan',
                 'status' => 'DITERIMA',
             ]);
 
         $this->assertDatabaseHas('deliveries', [
             'id' => $delivery->id,
-            'driver_name' => 'Eko Updated',
+            'driver_name' => 'Belum Ditentukan',
             'status' => 'DITERIMA',
         ]);
+    }
+
+    public function test_update_delivery_ignores_sale_id_change(): void
+    {
+        $delivery = Deliveries::create([
+            'id' => (string) Str::uuid(),
+            'sale_id' => $this->sale->id,
+            'driver_name' => 'Eko',
+            'status' => 'PENDING',
+            'sent_at' => null,
+            'received_at' => null,
+        ]);
+
+        $anotherSale = Sales::create([
+            'id' => (string) Str::uuid(),
+            'invoice' => 'INV-TEST-002',
+            'branch_id' => $this->branch->id,
+            'user_id' => $this->user->id,
+            'date' => '2026-07-05 10:00:00',
+            'subtotal' => 50000.00,
+            'discount' => 0,
+            'tax' => 0,
+            'grand_total' => 50000.00,
+            'status' => 'completed',
+        ]);
+
+        $payload = [
+            'sale_id' => $anotherSale->id, // Attempt to change sale_id
+            'status' => 'PENDING',
+        ];
+
+        $response = $this->actingAs($this->user)->putJson(route('deliveries.update', $delivery->id), $payload);
+
+        $response->assertStatus(200);
+
+        // Verify sale_id remains unchanged
+        $this->assertDatabaseHas('deliveries', [
+            'id' => $delivery->id,
+            'sale_id' => $this->sale->id,
+        ]);
+    }
+
+    public function test_update_delivery_status_to_dikirim_sets_sent_at(): void
+    {
+        $delivery = Deliveries::create([
+            'id' => (string) Str::uuid(),
+            'sale_id' => $this->sale->id,
+            'driver_name' => 'Eko',
+            'status' => 'PENDING',
+            'sent_at' => null,
+            'received_at' => null,
+        ]);
+
+        $payload = [
+            'status' => 'DIKIRIM',
+        ];
+
+        $response = $this->actingAs($this->user)->putJson(route('deliveries.update', $delivery->id), $payload);
+
+        $response->assertStatus(200);
+
+        $freshDelivery = $delivery->fresh();
+        $this->assertEquals('DIKIRIM', $freshDelivery->status);
+        $this->assertNotNull($freshDelivery->sent_at);
     }
 
     public function test_can_delete_delivery(): void
