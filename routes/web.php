@@ -134,6 +134,11 @@ Route::prefix('cabang')->middleware(['auth', 'role.cabang'])->group(function () 
     Route::get('/product-branch-prices/{id}', [ProductBranchPricesController::class, 'show'])->name('product-branch-prices.show');
     Route::put('/product-branch-prices/{id}', [ProductBranchPricesController::class, 'update'])->name('product-branch-prices.update');
     Route::delete('/product-branch-prices/{id}', [ProductBranchPricesController::class, 'delete'])->name('product-branch-prices.delete');
+
+    // Wholesale Prices Routes for Cabang
+    Route::post('/wholesale-prices', [WholesalePriceController::class, 'store'])->name('cabang.wholesale-prices.store');
+    Route::put('/wholesale-prices/{id}', [WholesalePriceController::class, 'update'])->name('cabang.wholesale-prices.update');
+    Route::delete('/wholesale-prices/{id}', [WholesalePriceController::class, 'destroy'])->name('cabang.wholesale-prices.destroy');
 });
 
 // Auth Routes

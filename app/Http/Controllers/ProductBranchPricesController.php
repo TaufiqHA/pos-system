@@ -16,9 +16,15 @@ class ProductBranchPricesController extends Controller
 
         $query = Product::whereHas('productStocks', function ($q) use ($branchId) {
             $q->where('branch_id', $branchId);
-        })->with(['category', 'branchPrices' => function ($q) use ($branchId) {
-            $q->where('branch_id', $branchId);
-        }]);
+        })->with([
+            'category',
+            'branchPrices' => function ($q) use ($branchId) {
+                $q->where('branch_id', $branchId);
+            },
+            'wholesalePrices' => function ($q) use ($branchId) {
+                $q->where('branch_id', $branchId);
+            },
+        ]);
 
         // Search filter (name or SKU)
         if ($request->filled('search')) {
@@ -64,6 +70,7 @@ class ProductBranchPricesController extends Controller
             'product_id' => 'required|string|exists:products,id',
             'branch_id' => 'required|string|exists:branches,id',
             'sell_price' => 'required|numeric|min:0',
+            'is_wholesale' => 'sometimes|boolean',
         ]);
 
         // Validasi agar harga jual tidak di bawah harga beli
@@ -93,7 +100,17 @@ class ProductBranchPricesController extends Controller
             return redirect()->back()->withErrors(['product_id' => 'Harga cabang untuk produk dan cabang ini sudah ada.']);
         }
 
-        $price = ProductBranchPrices::create($validated);
+        if ($request->has('is_wholesale')) {
+            $product->update([
+                'is_wholesale' => (bool) $request->input('is_wholesale'),
+            ]);
+        }
+
+        $price = ProductBranchPrices::create([
+            'product_id' => $validated['product_id'],
+            'branch_id' => $validated['branch_id'],
+            'sell_price' => $validated['sell_price'],
+        ]);
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -136,6 +153,7 @@ class ProductBranchPricesController extends Controller
             'product_id' => 'sometimes|required|string|exists:products,id',
             'branch_id' => 'sometimes|required|string|exists:branches,id',
             'sell_price' => 'sometimes|required|numeric|min:0',
+            'is_wholesale' => 'sometimes|boolean',
         ]);
 
         $productId = $request->product_id ?? $priceRecord->product_id;
@@ -172,7 +190,17 @@ class ProductBranchPricesController extends Controller
             }
         }
 
-        $priceRecord->update($validated);
+        if ($request->has('is_wholesale')) {
+            $product->update([
+                'is_wholesale' => (bool) $request->input('is_wholesale'),
+            ]);
+        }
+
+        $priceRecord->update([
+            'product_id' => $productId,
+            'branch_id' => $branchId,
+            'sell_price' => $sellPrice,
+        ]);
 
         if ($request->wantsJson()) {
             return response()->json([

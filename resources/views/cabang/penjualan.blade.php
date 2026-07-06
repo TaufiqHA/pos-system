@@ -123,32 +123,50 @@
                     </div>
                 </div>
                 <h4 class="text-xs font-bold text-white mb-2 uppercase tracking-wider">Item Penjualan</h4>
-                <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 mb-3">
-                    <div class="sm:col-span-2">
-                        <select id="create-item-product" onchange="updateProductPrice('create')"
-                            class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-2.5 focus:outline-none focus:border-green-400">
-                            <option value="">-- Pilih Produk --</option>
-                            @foreach($products as $product)
-                                @php
-                                    $branchPrice = $product->branchPrices->first();
-                                    $sellPrice = $branchPrice ? $branchPrice->sell_price : $product->sell_price;
-                                @endphp
-                                <option value="{{ $product->id }}" data-price="{{ $sellPrice }}">{{ $product->name }}
-                                    ({{ $product->sku }})</option>
-                            @endforeach
-                        </select>
+                <div class="space-y-2 mb-3">
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <div class="flex-1">
+                            <select id="create-item-product" onchange="updateProductPrice('create')"
+                                class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-2.5 focus:outline-none focus:border-green-400">
+                                <option value="">-- Pilih Produk --</option>
+                                @foreach($products as $product)
+                                    @php
+                                        $branchPrice = $product->branchPrices->first();
+                                        $sellPrice = $branchPrice ? $branchPrice->sell_price : $product->sell_price;
+                                        $wholesalePrices = $product->wholesalePrices->where('branch_id', auth()->user()->branch_id)->values();
+                                    @endphp
+                                    <option value="{{ $product->id }}" 
+                                        data-price="{{ $sellPrice }}"
+                                        data-wholesale='{{ json_encode($wholesalePrices) }}'>
+                                        {{ $product->name }} ({{ $product->sku }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="w-full sm:w-24">
+                            <input type="number" id="create-item-qty" placeholder="Qty" min="1"
+                                class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-2.5 focus:outline-none focus:border-green-400">
+                        </div>
+                        <div class="w-full sm:w-28 flex items-center gap-2 bg-gray-900 border border-gray-800 rounded-xl p-2.5">
+                            <input type="checkbox" id="create-use-wholesale"
+                                class="w-4 h-4 rounded text-[#B4F481] bg-gray-950 border-gray-800 focus:ring-0 accent-[#B4F481] cursor-pointer">
+                            <label for="create-use-wholesale" class="text-gray-300 font-bold cursor-pointer select-none">Grosir</label>
+                        </div>
+                        <div id="create-wholesale-select-container" class="hidden w-full sm:w-48">
+                            <select id="create-wholesale-price-select"
+                                class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-2.5 focus:outline-none focus:border-green-400">
+                                <option value="">-- Pilih Tingkat Grosir --</option>
+                            </select>
+                        </div>
+                        <div class="w-full sm:w-32 flex gap-2">
+                            <input type="text" id="create-item-price" placeholder="Harga"
+                                class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-2.5 focus:outline-none cursor-not-allowed"
+                                readonly>
+                            <button type="button" onclick="addItem('create')"
+                                class="bg-[#B4F481] hover:bg-green-400 text-black px-4 rounded-xl font-bold cursor-pointer">+</button>
+                        </div>
                     </div>
-                    <div>
-                        <input type="number" id="create-item-qty" placeholder="Qty" min="1"
-                            class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-2.5 focus:outline-none focus:border-green-400">
-                    </div>
-                    <div class="flex gap-2">
-                        <input type="text" id="create-item-price" placeholder="Harga"
-                            class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-2.5 focus:outline-none cursor-not-allowed"
-                            readonly>
-                        <button type="button" onclick="addItem('create')"
-                            class="bg-[#B4F481] hover:bg-green-400 text-black px-3.5 rounded-xl font-bold cursor-pointer">+</button>
-                    </div>
+                    <div id="create-wholesale-info" class="hidden text-[11px] text-[#B4F481] bg-[#B4F481]/10 border border-[#B4F481]/30 p-2.5 rounded-xl flex flex-wrap gap-2 items-center"></div>
                 </div>
                 <div class="overflow-x-auto max-h-[150px] overflow-y-auto mb-4 border border-gray-800 rounded-xl">
                     <table class="w-full text-left border-collapse text-[11px]">
@@ -395,16 +413,122 @@
             recalcCreate();
         }
 
-        function updateProductPrice(prefix) {
-            const productSelect = document.getElementById(`${prefix}-item-product`);
+        function parseRupiahNumber(value) {
+            if (!value) return 0;
+            return parseFloat(value.replace(/\./g, '')) || 0;
+        }
+
+        function updateWholesalePricesSelect(prefix) {
+            const select = document.getElementById(`${prefix}-item-product`);
+            const selectedOption = select.options[select.selectedIndex];
+            const useWholesaleCheckbox = document.getElementById(`${prefix}-use-wholesale`);
+            const selectContainer = document.getElementById(`${prefix}-wholesale-select-container`);
+            const wholesaleSelect = document.getElementById(`${prefix}-wholesale-price-select`);
+
+            // Reset select options
+            wholesaleSelect.innerHTML = '<option value="">-- Pilih Tingkat Grosir --</option>';
+
+            if (selectedOption && selectedOption.value && useWholesaleCheckbox.checked) {
+                const wholesaleStr = selectedOption.getAttribute('data-wholesale');
+                let wholesalePrices = [];
+                try {
+                    wholesalePrices = JSON.parse(wholesaleStr) || [];
+                } catch(e) {}
+
+                if (wholesalePrices.length > 0) {
+                    selectContainer.classList.remove('hidden');
+                    wholesalePrices.sort((a, b) => a.min_qty - b.min_qty);
+                    wholesalePrices.forEach(wp => {
+                        const opt = document.createElement('option');
+                        opt.value = wp.min_qty;
+                        opt.setAttribute('data-price', wp.price);
+                        opt.textContent = `Min. ${wp.min_qty} - Rp ${formatRupiahNumber(wp.price)}`;
+                        wholesaleSelect.appendChild(opt);
+                    });
+                } else {
+                    selectContainer.classList.add('hidden');
+                }
+            } else {
+                selectContainer.classList.add('hidden');
+            }
+        }
+
+        function updatePriceBasedOnQty(prefix) {
+            const select = document.getElementById(`${prefix}-item-product`);
+            const selectedOption = select.options[select.selectedIndex];
+            const qtyInput = document.getElementById(`${prefix}-item-qty`);
             const priceInput = document.getElementById(`${prefix}-item-price`);
-            const selectedOption = productSelect.options[productSelect.selectedIndex];
+            const infoDiv = document.getElementById(`${prefix}-wholesale-info`);
+            const useWholesaleCheckbox = document.getElementById(`${prefix}-use-wholesale`);
+            const wholesaleSelect = document.getElementById(`${prefix}-wholesale-price-select`);
+
             if (selectedOption && selectedOption.value) {
-                const price = parseFloat(selectedOption.dataset.price) || 0;
-                priceInput.value = formatRupiahNumber(price);
+                const defaultPrice = parseFloat(selectedOption.getAttribute('data-price')) || 0;
+                const qty = parseInt(qtyInput.value) || 0;
+                const useWholesale = useWholesaleCheckbox.checked;
+
+                const wholesaleStr = selectedOption.getAttribute('data-wholesale');
+                let wholesalePrices = [];
+                try {
+                    wholesalePrices = JSON.parse(wholesaleStr) || [];
+                } catch(e) {
+                    wholesalePrices = [];
+                }
+
+                // Find if any wholesale price matches the qty
+                let appliedPrice = defaultPrice;
+                let activeWholesale = null;
+
+                if (useWholesale) {
+                    // Sort descending to check from highest threshold
+                    wholesalePrices.sort((a, b) => b.min_qty - a.min_qty);
+
+                    for (let wp of wholesalePrices) {
+                        if (qty >= wp.min_qty) {
+                            appliedPrice = wp.price;
+                            activeWholesale = wp;
+                            break;
+                        }
+                    }
+                }
+
+                priceInput.value = formatRupiahNumber(appliedPrice);
+
+                // Synchronize the wholesale select value
+                if (activeWholesale) {
+                    wholesaleSelect.value = activeWholesale.min_qty;
+                } else {
+                    wholesaleSelect.value = "";
+                }
+
+                // Update info div text
+                if (wholesalePrices.length > 0 && useWholesale) {
+                    infoDiv.classList.remove('hidden');
+                    let infoHtml = '<strong>Tersedia Harga Grosir:</strong> ';
+                    // Sort ascending for display
+                    const displayWp = [...wholesalePrices].sort((a, b) => a.min_qty - b.min_qty);
+                    const wpTexts = displayWp.map(wp => {
+                        const isApplied = activeWholesale && activeWholesale.min_qty === wp.min_qty;
+                        const style = isApplied ? 'text-black font-extrabold bg-[#B4F481] px-2 py-0.5 rounded shadow' : 'text-[#B4F481] opacity-75';
+                        return `<span class="${style}">Min. ${wp.min_qty} = Rp ${formatRupiahNumber(wp.price)}</span>`;
+                    });
+                    infoHtml += wpTexts.join(' | ');
+                    infoDiv.innerHTML = infoHtml;
+                } else {
+                    infoDiv.classList.add('hidden');
+                    infoDiv.innerHTML = '';
+                }
             } else {
                 priceInput.value = '';
+                infoDiv.classList.add('hidden');
+                infoDiv.innerHTML = '';
+                wholesaleSelect.value = "";
             }
+        }
+
+        function updateProductPrice(prefix) {
+            updateWholesalePricesSelect(prefix);
+            updatePriceBasedOnQty(prefix);
         }
 
         function renameFormInputs(prefix) {
@@ -428,7 +552,7 @@
             const productId = productSelect.value;
             if (!productId) return;
             const productText = productSelect.options[productSelect.selectedIndex].text;
-            const price = parseFloat(productSelect.options[productSelect.selectedIndex].dataset.price) || 0;
+            const price = parseRupiahNumber(priceInput.value);
             const qty = parseInt(qtyInput.value) || 1;
             const subtotal = price * qty;
             if (noItemsRow) noItemsRow.remove();
@@ -451,6 +575,12 @@
             productSelect.value = '';
             qtyInput.value = '';
             priceInput.value = '';
+
+            // Reset wholesale options
+            const useWholesaleCheckbox = document.getElementById(`${prefix}-use-wholesale`);
+            if (useWholesaleCheckbox) useWholesaleCheckbox.checked = false;
+            updateWholesalePricesSelect(prefix);
+            updatePriceBasedOnQty(prefix);
         }
 
         function recalcCreate() {
@@ -491,6 +621,39 @@
             const grandTotalVal = parseFloat(document.getElementById('create-grand_total').value) || 0;
             if (grandTotalDisp) {
                 grandTotalDisp.value = formatRupiahNumber(grandTotalVal);
+            }
+
+            // Add wholesale event listeners for create form
+            const prodSelect = document.getElementById('create-item-product');
+            const qtyIn = document.getElementById('create-item-qty');
+            const useWholesaleCheckbox = document.getElementById('create-use-wholesale');
+            const wholesaleSelect = document.getElementById('create-wholesale-price-select');
+
+            if (prodSelect) {
+                prodSelect.addEventListener('change', function() {
+                    updateProductPrice('create');
+                });
+            }
+            if (qtyIn) {
+                qtyIn.addEventListener('input', function() {
+                    updatePriceBasedOnQty('create');
+                });
+            }
+            if (useWholesaleCheckbox) {
+                useWholesaleCheckbox.addEventListener('change', function() {
+                    updateWholesalePricesSelect('create');
+                    updatePriceBasedOnQty('create');
+                });
+            }
+            if (wholesaleSelect) {
+                wholesaleSelect.addEventListener('change', function() {
+                    const selectedOption = this.options[this.selectedIndex];
+                    const qtyField = document.getElementById('create-item-qty');
+                    if (selectedOption && selectedOption.value) {
+                        qtyField.value = parseInt(selectedOption.value);
+                    }
+                    updatePriceBasedOnQty('create');
+                });
             }
         });
         function updateStatusFromPaymentMethod(prefix) {

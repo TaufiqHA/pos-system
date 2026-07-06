@@ -234,9 +234,14 @@ class SalesController extends Controller
         $branches = Branch::where('id', $branchId)->get();
         $products = Product::whereHas('productStocks', function ($query) use ($branchId) {
             $query->where('branch_id', $branchId);
-        })->with(['branchPrices' => function ($query) use ($branchId) {
-            $query->where('branch_id', $branchId);
-        }])->orderBy('name')->get();
+        })->with([
+            'branchPrices' => function ($query) use ($branchId) {
+                $query->where('branch_id', $branchId);
+            },
+            'wholesalePrices' => function ($query) use ($branchId) {
+                $query->where('branch_id', $branchId);
+            },
+        ])->orderBy('name')->get();
         $outlets = Outlets::where('branch_id', $branchId)->orderBy('name')->get();
 
         return view('cabang.penjualan', compact('sales', 'branches', 'products', 'outlets'));
