@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\Deliveries;
+use App\Models\Outlets;
 use App\Models\Product;
 use App\Models\Sales;
 use App\Models\SalesItem;
@@ -17,6 +18,7 @@ class SalesController extends Controller
     public function index(Request $request)
     {
         $sales = Sales::with(['branch.users', 'user', 'salesItems', 'salesPayments'])
+            ->where('create_by', auth()->id())
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -44,6 +46,7 @@ class SalesController extends Controller
         $validated = $request->validate([
             'invoice' => 'sometimes|string|unique:sales',
             'branch_id' => 'required|exists:branches,id',
+            'outlet_id' => 'nullable|exists:outlets,id',
             'user_id' => 'required|exists:users,id',
             'date' => 'required|date',
             'subtotal' => 'required|numeric|min:0',
@@ -118,6 +121,7 @@ class SalesController extends Controller
                 'sale_id' => $sale->id,
                 'driver_name' => 'Belum Ditentukan',
                 'status' => 'PENDING',
+                'created_by' => auth()->id() ?? $sale->user_id,
                 'sent_at' => null,
                 'received_at' => null,
             ]);
@@ -154,7 +158,7 @@ class SalesController extends Controller
         $branchId = auth()->user()->branch_id;
         $sales = Sales::with(['branch.users', 'user', 'salesItems', 'salesPayments'])
             ->where('branch_id', $branchId)
-            ->where('create_by', auth()->id())
+            ->where('create_by', auth()->user()->id)
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -163,10 +167,14 @@ class SalesController extends Controller
         }
 
         $branches = Branch::where('id', $branchId)->get();
-        $products = Product::all();
+        $products = Product::whereHas('productStocks', function ($query) use ($branchId) {
+            $query->where('branch_id', $branchId);
+        })->with(['branchPrices' => function ($query) use ($branchId) {
+            $query->where('branch_id', $branchId);
+        }])->orderBy('name')->get();
+        $outlets = Outlets::where('branch_id', $branchId)->orderBy('name')->get();
 
-        return view('cabang.penjualan', compact('sales', 'branches', 'products'));
-
+        return view('cabang.penjualan', compact('sales', 'branches', 'products', 'outlets'));
     }
 
     public function edit($id)
@@ -184,6 +192,7 @@ class SalesController extends Controller
         $validated = $request->validate([
             'invoice' => 'sometimes|string|unique:sales,invoice,'.$id,
             'branch_id' => 'required|exists:branches,id',
+            'outlet_id' => 'nullable|exists:outlets,id',
             'user_id' => 'required|exists:users,id',
             'date' => 'required|date',
             'subtotal' => 'required|numeric|min:0',

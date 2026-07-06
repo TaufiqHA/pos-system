@@ -14,7 +14,9 @@ class ProductBranchPricesController extends Controller
         $user = auth()->user();
         $branchId = $user->branch_id;
 
-        $query = Product::with(['category', 'branchPrices' => function ($q) use ($branchId) {
+        $query = Product::whereHas('productStocks', function ($q) use ($branchId) {
+            $q->where('branch_id', $branchId);
+        })->with(['category', 'branchPrices' => function ($q) use ($branchId) {
             $q->where('branch_id', $branchId);
         }]);
 

@@ -19,6 +19,7 @@ class Deliveries extends Model
         'sale_id',
         'driver_name',
         'status',
+        'created_by',
         'sent_at',
         'received_at',
     ];
@@ -31,5 +32,10 @@ class Deliveries extends Model
     public function sale(): BelongsTo
     {
         return $this->belongsTo(Sales::class, 'sale_id');
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 }

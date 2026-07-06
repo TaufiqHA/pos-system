@@ -43,6 +43,7 @@ class DeliveriesController extends Controller
 
         $validated['id'] = (string) Str::uuid();
         $validated['driver_name'] = 'Belum Ditentukan';
+        $validated['created_by'] = auth()->id();
 
         if ($validated['status'] === 'DIKIRIM' && empty($validated['sent_at'])) {
             $validated['sent_at'] = now();

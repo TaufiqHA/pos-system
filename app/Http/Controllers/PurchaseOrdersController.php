@@ -256,6 +256,7 @@ class PurchaseOrdersController extends Controller
                         'sale_id' => $sale->id,
                         'driver_name' => 'Belum Ditentukan',
                         'status' => 'PENDING',
+                        'created_by' => auth()->id() ?? $purchaseOrder->user_id,
                         'sent_at' => null,
                         'received_at' => null,
                     ]);

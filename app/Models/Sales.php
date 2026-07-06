@@ -18,6 +18,7 @@ class Sales extends Model
         'id',
         'invoice',
         'branch_id',
+        'outlet_id',
         'user_id',
         'create_by',
         'date',
@@ -36,6 +37,12 @@ class Sales extends Model
     public function branch()
     {
         return $this->belongsTo(Branch::class, 'branch_id');
+    }
+
+    // Relasi ke tabel outlets
+    public function outlet()
+    {
+        return $this->belongsTo(Outlets::class, 'outlet_id');
     }
 
     // Relasi ke tabel users

@@ -90,14 +90,28 @@
                         <input type="datetime-local" name="date" id="create-date" value="{{ old('date') ?? now()->format('Y-m-d\TH:i') }}" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400" required>
                         @error('date')<p class="text-red-500 text-[10px] mt-1">{{ $message }}</p>@enderror
                     </div>
+                    <div class="space-y-1">
+                        <label for="create-outlet" class="block font-bold text-gray-300">Outlet Tujuan</label>
+                        <select name="outlet_id" id="create-outlet" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400">
+                            <option value="">-- Pilih Outlet --</option>
+                            @foreach($outlets as $outlet)
+                                <option value="{{ $outlet->id }}" {{ old('outlet_id') == $outlet->id ? 'selected' : '' }}>{{ $outlet->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('outlet_id')<p class="text-red-500 text-[10px] mt-1">{{ $message }}</p>@enderror
+                    </div>
                 </div>
                 <h4 class="text-xs font-bold text-white mb-2 uppercase tracking-wider">Item Penjualan</h4>
                 <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 mb-3">
                     <div class="sm:col-span-2">
-                        <select id="create-item-product" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-2.5 focus:outline-none focus:border-green-400">
+                        <select id="create-item-product" onchange="updateProductPrice('create')" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-2.5 focus:outline-none focus:border-green-400">
                             <option value="">-- Pilih Produk --</option>
                             @foreach($products as $product)
-                                <option value="{{ $product->id }}" data-price="{{ $product->sell_price ?? $product->buy_price }}">{{ $product->name }} ({{ $product->sku }})</option>
+                                @php
+                                    $branchPrice = $product->branchPrices->first();
+                                    $sellPrice = $branchPrice ? $branchPrice->sell_price : $product->sell_price;
+                                @endphp
+                                <option value="{{ $product->id }}" data-price="{{ $sellPrice }}">{{ $product->name }} ({{ $product->sku }})</option>
                             @endforeach
                         </select>
                     </div>
@@ -132,17 +146,19 @@
                         <input type="hidden" name="subtotal" id="create-subtotal" value="{{ old('subtotal') ?? 0 }}">
                     </div>
                     <div class="space-y-1">
-                        <label for="create-discount" class="block font-bold text-gray-300">Diskon</label>
-                        <input type="number" name="discount" id="create-discount" value="{{ old('discount') ?? 0 }}" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400" min="0">
+                        <label for="create-discount-display" class="block font-bold text-gray-300">Diskon</label>
+                        <input type="text" id="create-discount-display" value="{{ old('discount') ?? 0 }}" oninput="formatRupiahInput(this); updateHiddenVal(this, 'create-discount')" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400">
+                        <input type="hidden" name="discount" id="create-discount" value="{{ old('discount') ?? 0 }}">
                     </div>
                     <div class="space-y-1">
-                        <label for="create-tax" class="block font-bold text-gray-300">Pajak</label>
-                        <input type="number" name="tax" id="create-tax" value="{{ old('tax') ?? 0 }}" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400" min="0">
+                        <label for="create-tax-display" class="block font-bold text-gray-300">Pajak</label>
+                        <input type="text" id="create-tax-display" value="{{ old('tax') ?? 0 }}" oninput="formatRupiahInput(this); updateHiddenVal(this, 'create-tax')" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400">
+                        <input type="hidden" name="tax" id="create-tax" value="{{ old('tax') ?? 0 }}">
                     </div>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="space-y-1">
-                        <label for="create-grand_total-display" class="block font-bold text-gray-300">Total <span class="text-red-5">*</span></label>
+                        <label for="create-grand_total-display" class="block font-bold text-gray-300">Total <span class="text-red-500">*</span></label>
                         <input type="text" id="create-grand_total-display" value="{{ old('grand_total') ?? '0' }}" class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-3 focus:outline-none cursor-not-allowed" readonly required>
                         <input type="hidden" name="grand_total" id="create-grand_total" value="{{ old('grand_total') ?? 0 }}">
                     </div>
@@ -167,6 +183,37 @@
     <script>
         function openCreateModal() { document.getElementById('create-modal').classList.remove('hidden'); }
         function closeCreateModal() { document.getElementById('create-modal').classList.add('hidden'); }
+        function formatRupiahNumber(num) {
+            return num.toLocaleString('id-ID').replace(/,/g, '.');
+        }
+
+        function formatRupiahInput(element) {
+            let value = element.value.replace(/[^0-9]/g, '');
+            if (value) {
+                element.value = parseInt(value, 10).toLocaleString('id-ID').replace(/,/g, '.');
+            } else {
+                element.value = '';
+            }
+        }
+
+        function updateHiddenVal(displayEl, hiddenId) {
+            const val = displayEl.value.replace(/\./g, '');
+            document.getElementById(hiddenId).value = parseFloat(val) || 0;
+            recalcCreate();
+        }
+
+        function updateProductPrice(prefix) {
+            const productSelect = document.getElementById(`${prefix}-item-product`);
+            const priceInput = document.getElementById(`${prefix}-item-price`);
+            const selectedOption = productSelect.options[productSelect.selectedIndex];
+            if (selectedOption && selectedOption.value) {
+                const price = parseFloat(selectedOption.dataset.price) || 0;
+                priceInput.value = formatRupiahNumber(price);
+            } else {
+                priceInput.value = '';
+            }
+        }
+
         function addItem(prefix) {
             const productSelect = document.getElementById(`${prefix}-item-product`);
             const qtyInput = document.getElementById(`${prefix}-item-qty`);
@@ -176,17 +223,16 @@
             const productId = productSelect.value;
             if (!productId) return;
             const productText = productSelect.options[productSelect.selectedIndex].text;
-            const price = productSelect.options[productSelect.selectedIndex].dataset.price || 0;
+            const price = parseFloat(productSelect.options[productSelect.selectedIndex].dataset.price) || 0;
             const qty = parseInt(qtyInput.value) || 1;
             const subtotal = price * qty;
-            priceInput.value = price;
             if (noItemsRow) noItemsRow.remove();
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td class="p-2">${productText}</td>
                 <td class="p-2 text-center">${qty}</td>
-                <td class="p-2 text-right">${price}</td>
-                <td class="p-2 text-right">${subtotal}</td>
+                <td class="p-2 text-right">${formatRupiahNumber(price)}</td>
+                <td class="p-2 text-right" data-raw-subtotal="${subtotal}">${formatRupiahNumber(subtotal)}</td>
                 <td class="p-2 text-center"><button type="button" onclick="this.closest('tr').remove(); recalc${prefix.charAt(0).toUpperCase()+prefix.slice(1)}();">✕</button></td>
             `;
             itemsBody.appendChild(row);
@@ -195,13 +241,14 @@
             qtyInput.value = '';
             priceInput.value = '';
         }
+
         function recalcCreate() {
             const rows = document.querySelectorAll('#create-items-body tr');
             let subtotal = 0;
             rows.forEach(row => {
-                const cells = row.querySelectorAll('td');
-                if (cells.length >= 4) {
-                    const sub = parseFloat(cells[3].textContent) || 0;
+                const subEl = row.querySelector('td[data-raw-subtotal]');
+                if (subEl) {
+                    const sub = parseFloat(subEl.dataset.rawSubtotal) || 0;
                     subtotal += sub;
                 }
             });
@@ -209,12 +256,32 @@
             const tax = parseFloat(document.getElementById('create-tax').value) || 0;
             const total = subtotal - discount + tax;
             document.getElementById('create-subtotal').value = subtotal;
-            document.getElementById('create-subtotal-display').value = subtotal;
+            document.getElementById('create-subtotal-display').value = formatRupiahNumber(subtotal);
             document.getElementById('create-grand_total').value = total;
-            document.getElementById('create-grand_total-display').value = total;
+            document.getElementById('create-grand_total-display').value = formatRupiahNumber(total);
         }
-        document.getElementById('create-discount').addEventListener('input', recalcCreate);
-        document.getElementById('create-tax').addEventListener('input', recalcCreate);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initial formatting on load
+            const discountDisp = document.getElementById('create-discount-display');
+            if (discountDisp && discountDisp.value) {
+                formatRupiahInput(discountDisp);
+            }
+            const taxDisp = document.getElementById('create-tax-display');
+            if (taxDisp && taxDisp.value) {
+                formatRupiahInput(taxDisp);
+            }
+            const subtotalDisp = document.getElementById('create-subtotal-display');
+            const subtotalVal = parseFloat(document.getElementById('create-subtotal').value) || 0;
+            if (subtotalDisp) {
+                subtotalDisp.value = formatRupiahNumber(subtotalVal);
+            }
+            const grandTotalDisp = document.getElementById('create-grand_total-display');
+            const grandTotalVal = parseFloat(document.getElementById('create-grand_total').value) || 0;
+            if (grandTotalDisp) {
+                grandTotalDisp.value = formatRupiahNumber(grandTotalVal);
+            }
+        });
         function updateStatusFromPaymentMethod(prefix) {
             const method = document.getElementById(`${prefix}-payment_method`).value;
             const statusField = document.getElementById(`${prefix}-status`);

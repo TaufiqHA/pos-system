@@ -123,6 +123,7 @@ class DeliveriesTest extends TestCase
         $this->assertDatabaseHas('deliveries', [
             'driver_name' => 'Belum Ditentukan',
             'status' => 'DIKIRIM',
+            'created_by' => $this->user->id,
         ]);
     }
 

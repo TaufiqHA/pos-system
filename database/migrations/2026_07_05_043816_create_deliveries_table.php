@@ -13,11 +13,13 @@ return new class extends Migration
             $table->string('sale_id')->nullable();
             $table->string('driver_name');
             $table->string('status');
+            $table->string('created_by')->nullable();
             $table->dateTime('sent_at')->nullable();
             $table->dateTime('received_at')->nullable();
             $table->timestamps();
 
             $table->foreign('sale_id')->references('id')->on('sales')->onDelete('cascade');
+            $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
         });
     }
 
