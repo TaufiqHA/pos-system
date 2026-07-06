@@ -141,6 +141,13 @@ Route::prefix('cabang')->middleware(['auth', 'role.cabang'])->group(function () 
     Route::delete('/wholesale-prices/{id}', [WholesalePriceController::class, 'destroy'])->name('cabang.wholesale-prices.destroy');
 });
 
+// Outlet Dashboard Routes
+Route::prefix('outlet')->middleware(['auth', 'role.outlet'])->group(function () {
+    Route::get('/dashboard', function () {
+        return view('outlet.dashboard');
+    })->name('outlet.dashboard');
+});
+
 // Auth Routes
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);

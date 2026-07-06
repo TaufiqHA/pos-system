@@ -33,6 +33,10 @@ class AuthController extends Controller
                 return redirect()->intended('/cabang/dashboard');
             }
 
+            if ($user->role && $user->role->name === 'outlet') {
+                return redirect()->intended('/outlet/dashboard');
+            }
+
             return redirect()->intended('/admin/dashboard');
         }
 

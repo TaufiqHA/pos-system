@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\CabangMiddleware;
+use App\Http\Middleware\OutletMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role.admin' => AdminMiddleware::class,
             'role.cabang' => CabangMiddleware::class,
+            'role.outlet' => OutletMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
