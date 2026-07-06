@@ -6,8 +6,12 @@
 
 @section('content')
     @if(session('success'))
-        <div id="success-alert" class="mb-4 bg-green-500/10 border border-green-500/30 text-green-400 p-4 rounded-xl text-xs flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <div id="success-alert"
+            class="mb-4 bg-green-500/10 border border-green-500/30 text-green-400 p-4 rounded-xl text-xs flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
             {{ session('success') }}
         </div>
     @endif
@@ -16,19 +20,21 @@
         <div class="flex justify-between items-center mb-6">
             <div></div>
             <div class="flex items-center gap-3">
-                    <button onclick="window.location='{{ route('purchase-orders.index') }}'" class="w-full sm:w-auto justify-center border border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white font-semibold text-xs py-2.5 px-4 rounded-xl transition flex items-center gap-2 cursor-pointer">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                        Daftar PO
-                    </button>
-                    <button onclick="openCreateModal()"
-                        class="w-full sm:w-auto justify-center bg-[#B4F481] hover:bg-green-400 text-black font-semibold text-xs py-2.5 px-4 rounded-xl transition flex items-center gap-2 shadow-lg shadow-[#B4F481]/20 cursor-pointer">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                        </svg>
-                        Tambah Penjualan
-                    </button>
+                <button onclick="window.location='{{ route('purchase-orders.index') }}'"
+                    class="w-full sm:w-auto justify-center border border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white font-semibold text-xs py-2.5 px-4 rounded-xl transition flex items-center gap-2 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Daftar PO
+                </button>
+                <button onclick="openCreateModal()"
+                    class="w-full sm:w-auto justify-center bg-[#B4F481] hover:bg-green-400 text-black font-semibold text-xs py-2.5 px-4 rounded-xl transition flex items-center gap-2 shadow-lg shadow-[#B4F481]/20 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Tambah Penjualan
+                </button>
             </div>
         </div>
 
@@ -38,7 +44,7 @@
                     <tr class="border-b border-gray-800 text-gray-400 text-xs font-bold uppercase tracking-wider">
                         <th class="pb-3 pl-4 pr-4">Tanggal</th>
                         <th class="pb-3 px-4">Invoice</th>
-                        <th class="pb-3 px-4">Kasir</th>
+                        <th class="pb-3 px-4">Outlet</th>
                         <th class="pb-3 px-4 text-right">Total</th>
                         <th class="pb-3 px-4 text-center">Status</th>
                         <th class="pb-3 pl-4 pr-4 text-center">Aksi</th>
@@ -49,20 +55,25 @@
                         <tr class="hover:bg-gray-800/30 transition-colors">
                             <td class="py-4 pl-4 pr-4 whitespace-nowrap">{{ $sale->date->format('d M Y') }}</td>
                             <td class="py-4 px-4">{{ $sale->invoice }}</td>
-                            <td class="py-4 px-4">{{ $sale->user->name ?? '—' }}</td>
-                            <td class="py-4 px-4 text-right font-semibold">Rp {{ number_format($sale->grand_total, 0, ',', '.') }}</td>
+                            <td class="py-4 px-4">{{ $sale->outlet->name ?? '—' }}</td>
+                            <td class="py-4 px-4 text-right font-semibold">Rp
+                                {{ number_format($sale->grand_total, 0, ',', '.') }}</td>
                             <td class="py-4 px-4 text-center">
-                                <span class="inline-block px-2 py-1 text-xs rounded-full {{ $sale->status == 'completed' ? 'bg-green-600/30 text-green-300' : ($sale->status == 'pending' ? 'bg-yellow-600/30 text-yellow-300' : 'bg-red-600/30 text-red-300') }}">
-                                    {{ ucfirst($sale->status) }}
+                                <span class="inline-block px-2.5 py-0.5 rounded text-[10px] font-semibold
+                                            @if(in_array(strtolower($sale->status), ['completed', 'lunas'])) bg-green-500/20 text-green-400
+                                            @elseif(in_array(strtolower($sale->status), ['pending', 'belum bayar'])) bg-yellow-500/20 text-yellow-400
+                                            @else bg-red-500/20 text-red-400 @endif">
+                                    {{ strtoupper($sale->status) }}
                                 </span>
                             </td>
                             <td class="py-4 pl-4 pr-4 text-center">
-                                <a href="{{ route('sales.show', $sale->id) }}" class="text-indigo-400 hover:text-indigo-200 transition-colors text-sm">Detail</a>
+                                <button onclick="openDetailModal('{{ $sale->id }}')"
+                                    class="text-indigo-400 hover:text-indigo-200 transition-colors text-sm cursor-pointer bg-transparent border-0 p-0">Detail</button>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="py-8 text-center text-gray-400">Tidak ada data penjualan.</td>
+                            <td colspan="7" class="py-8 text-center text-gray-400">Tidak ada data penjualan.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -71,10 +82,14 @@
     </div>
 
     <!-- ================= MODAL BOX: TAMBAH PENJUALAN ================= -->
-    <div id="create-modal" class="fixed inset-0 z-50 {{ $errors->any() && !old('_method') ? '' : 'hidden' }} bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="card max-w-2xl w-full p-6 rounded-2xl shadow-2xl relative border border-gray-800 max-h-[90vh] overflow-y-auto">
+    <div id="create-modal"
+        class="fixed inset-0 z-50 {{ $errors->any() && !old('_method') ? '' : 'hidden' }} bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div
+            class="card max-w-2xl w-full p-6 rounded-2xl shadow-2xl relative border border-gray-800 max-h-[90vh] overflow-y-auto">
             <button onclick="closeCreateModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white transition">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
             </button>
             <div class="mb-6">
                 <h3 class="text-base font-bold tracking-wide font-display text-white">Tambah Penjualan Baru</h3>
@@ -86,16 +101,22 @@
                 <input type="hidden" name="user_id" value="{{ auth()->user()->id }}">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="space-y-1">
-                        <label for="create-date" class="block font-bold text-gray-300">Tanggal Transaksi <span class="text-red-500">*</span></label>
-                        <input type="datetime-local" name="date" id="create-date" value="{{ old('date') ?? now()->format('Y-m-d\TH:i') }}" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400" required>
+                        <label for="create-date" class="block font-bold text-gray-300">Tanggal Transaksi <span
+                                class="text-red-500">*</span></label>
+                        <input type="datetime-local" name="date" id="create-date"
+                            value="{{ old('date') ?? now()->format('Y-m-d\TH:i') }}"
+                            class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400"
+                            required>
                         @error('date')<p class="text-red-500 text-[10px] mt-1">{{ $message }}</p>@enderror
                     </div>
                     <div class="space-y-1">
                         <label for="create-outlet" class="block font-bold text-gray-300">Outlet Tujuan</label>
-                        <select name="outlet_id" id="create-outlet" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400">
+                        <select name="outlet_id" id="create-outlet"
+                            class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400">
                             <option value="">-- Pilih Outlet --</option>
                             @foreach($outlets as $outlet)
-                                <option value="{{ $outlet->id }}" {{ old('outlet_id') == $outlet->id ? 'selected' : '' }}>{{ $outlet->name }}</option>
+                                <option value="{{ $outlet->id }}" {{ old('outlet_id') == $outlet->id ? 'selected' : '' }}>
+                                    {{ $outlet->name }}</option>
                             @endforeach
                         </select>
                         @error('outlet_id')<p class="text-red-500 text-[10px] mt-1">{{ $message }}</p>@enderror
@@ -104,23 +125,29 @@
                 <h4 class="text-xs font-bold text-white mb-2 uppercase tracking-wider">Item Penjualan</h4>
                 <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 mb-3">
                     <div class="sm:col-span-2">
-                        <select id="create-item-product" onchange="updateProductPrice('create')" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-2.5 focus:outline-none focus:border-green-400">
+                        <select id="create-item-product" onchange="updateProductPrice('create')"
+                            class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-2.5 focus:outline-none focus:border-green-400">
                             <option value="">-- Pilih Produk --</option>
                             @foreach($products as $product)
                                 @php
                                     $branchPrice = $product->branchPrices->first();
                                     $sellPrice = $branchPrice ? $branchPrice->sell_price : $product->sell_price;
                                 @endphp
-                                <option value="{{ $product->id }}" data-price="{{ $sellPrice }}">{{ $product->name }} ({{ $product->sku }})</option>
+                                <option value="{{ $product->id }}" data-price="{{ $sellPrice }}">{{ $product->name }}
+                                    ({{ $product->sku }})</option>
                             @endforeach
                         </select>
                     </div>
                     <div>
-                        <input type="number" id="create-item-qty" placeholder="Qty" min="1" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-2.5 focus:outline-none focus:border-green-400">
+                        <input type="number" id="create-item-qty" placeholder="Qty" min="1"
+                            class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-2.5 focus:outline-none focus:border-green-400">
                     </div>
                     <div class="flex gap-2">
-                        <input type="text" id="create-item-price" placeholder="Harga" class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-2.5 focus:outline-none cursor-not-allowed" readonly>
-                        <button type="button" onclick="addItem('create')" class="bg-[#B4F481] hover:bg-green-400 text-black px-3.5 rounded-xl font-bold cursor-pointer">+</button>
+                        <input type="text" id="create-item-price" placeholder="Harga"
+                            class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-2.5 focus:outline-none cursor-not-allowed"
+                            readonly>
+                        <button type="button" onclick="addItem('create')"
+                            class="bg-[#B4F481] hover:bg-green-400 text-black px-3.5 rounded-xl font-bold cursor-pointer">+</button>
                     </div>
                 </div>
                 <div class="overflow-x-auto max-h-[150px] overflow-y-auto mb-4 border border-gray-800 rounded-xl">
@@ -135,36 +162,53 @@
                             </tr>
                         </thead>
                         <tbody id="create-items-body" class="divide-y divide-gray-800 text-gray-300">
-                            <tr id="create-no-items"><td colspan="5" class="p-4 text-center text-gray-500">Belum ada item ditambahkan</td></tr>
+                            <tr id="create-no-items">
+                                <td colspan="5" class="p-4 text-center text-gray-500">Belum ada item ditambahkan</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div class="space-y-1">
-                        <label for="create-subtotal-display" class="block font-bold text-gray-300">Subtotal <span class="text-red-500">*</span></label>
-                        <input type="text" id="create-subtotal-display" value="{{ old('subtotal') ?? '0' }}" class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-3 focus:outline-none cursor-not-allowed" readonly required>
+                        <label for="create-subtotal-display" class="block font-bold text-gray-300">Subtotal <span
+                                class="text-red-500">*</span></label>
+                        <input type="text" id="create-subtotal-display" value="{{ old('subtotal') ?? '0' }}"
+                            class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-3 focus:outline-none cursor-not-allowed"
+                            readonly required>
                         <input type="hidden" name="subtotal" id="create-subtotal" value="{{ old('subtotal') ?? 0 }}">
                     </div>
                     <div class="space-y-1">
                         <label for="create-discount-display" class="block font-bold text-gray-300">Diskon</label>
-                        <input type="text" id="create-discount-display" value="{{ old('discount') ?? 0 }}" oninput="formatRupiahInput(this); updateHiddenVal(this, 'create-discount')" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400">
+                        <input type="text" id="create-discount-display" value="{{ old('discount') ?? 0 }}"
+                            oninput="formatRupiahInput(this); updateHiddenVal(this, 'create-discount')"
+                            class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400">
                         <input type="hidden" name="discount" id="create-discount" value="{{ old('discount') ?? 0 }}">
                     </div>
                     <div class="space-y-1">
                         <label for="create-tax-display" class="block font-bold text-gray-300">Pajak</label>
-                        <input type="text" id="create-tax-display" value="{{ old('tax') ?? 0 }}" oninput="formatRupiahInput(this); updateHiddenVal(this, 'create-tax')" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400">
+                        <input type="text" id="create-tax-display" value="{{ old('tax') ?? 0 }}"
+                            oninput="formatRupiahInput(this); updateHiddenVal(this, 'create-tax')"
+                            class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400">
                         <input type="hidden" name="tax" id="create-tax" value="{{ old('tax') ?? 0 }}">
                     </div>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="space-y-1">
-                        <label for="create-grand_total-display" class="block font-bold text-gray-300">Total <span class="text-red-500">*</span></label>
-                        <input type="text" id="create-grand_total-display" value="{{ old('grand_total') ?? '0' }}" class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-3 focus:outline-none cursor-not-allowed" readonly required>
-                        <input type="hidden" name="grand_total" id="create-grand_total" value="{{ old('grand_total') ?? 0 }}">
+                        <label for="create-grand_total-display" class="block font-bold text-gray-300">Total <span
+                                class="text-red-500">*</span></label>
+                        <input type="text" id="create-grand_total-display" value="{{ old('grand_total') ?? '0' }}"
+                            class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-3 focus:outline-none cursor-not-allowed"
+                            readonly required>
+                        <input type="hidden" name="grand_total" id="create-grand_total"
+                            value="{{ old('grand_total') ?? 0 }}">
                     </div>
                     <div class="space-y-1">
-                        <label for="create-payment_method" class="block font-bold text-gray-300">Metode Pembayaran <span class="text-red-500">*</span></label>
-                        <select name="payment_method" id="create-payment_method" onchange="updateStatusFromPaymentMethod('create')" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400" required>
+                        <label for="create-payment_method" class="block font-bold text-gray-300">Metode Pembayaran <span
+                                class="text-red-500">*</span></label>
+                        <select name="payment_method" id="create-payment_method"
+                            onchange="updateStatusFromPaymentMethod('create')"
+                            class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400"
+                            required>
                             <option value="TUNAI">TUNAI</option>
                             <option value="TRANSFER">TRANSFER</option>
                             <option value="KREDIT">KREDIT</option>
@@ -173,16 +217,165 @@
                     </div>
                 </div>
                 <div class="pt-4 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3">
-                    <button type="button" onclick="closeCreateModal()" class="w-full sm:w-auto text-center justify-center text-gray-400 hover:text-white font-semibold py-2.5 px-4 rounded-xl hover:bg-gray-800 transition cursor-pointer">Batal</button>
-                    <button type="submit" class="w-full sm:w-auto text-center justify-center bg-[#B4F481] hover:bg-green-400 text-black font-bold py-2.5 px-6 rounded-xl transition shadow-lg shadow-[#B4F481]/20 cursor-pointer">Simpan Penjualan</button>
+                    <button type="button" onclick="closeCreateModal()"
+                        class="w-full sm:w-auto text-center justify-center text-gray-400 hover:text-white font-semibold py-2.5 px-4 rounded-xl hover:bg-gray-800 transition cursor-pointer">Batal</button>
+                    <button type="submit"
+                        class="w-full sm:w-auto text-center justify-center bg-[#B4F481] hover:bg-green-400 text-black font-bold py-2.5 px-6 rounded-xl transition shadow-lg shadow-[#B4F481]/20 cursor-pointer">Simpan
+                        Penjualan</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- ================= MODAL BOX: DETAIL PENJUALAN ================= -->
+    <div id="detail-modal"
+        class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div
+            class="card max-w-2xl w-full p-6 rounded-2xl shadow-2xl relative border border-gray-800 max-h-[90vh] overflow-y-auto">
+            <button onclick="closeDetailModal()"
+                class="absolute top-4 right-4 text-gray-400 hover:text-white transition cursor-pointer">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <div class="mb-6">
+                <h3 class="text-base font-bold tracking-wide font-display text-white">Detail Transaksi Penjualan</h3>
+                <p class="text-[11px] text-gray-400 mt-1">Informasi lengkap transaksi penjualan</p>
+            </div>
+            <div class="space-y-4 text-xs">
+                <div class="bg-gray-900/50 p-4 rounded-xl grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-gray-500 font-bold uppercase tracking-wider text-[9px]">Invoice</p>
+                        <p id="detail-invoice" class="text-white font-mono font-bold mt-0.5 text-xs select-all"></p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 font-bold uppercase tracking-wider text-[9px]">Tanggal</p>
+                        <p id="detail-date" class="text-white mt-0.5"></p>
+                    </div>
+
+                    <div>
+                        <p class="text-gray-500 font-bold uppercase tracking-wider text-[9px]">Outlet</p>
+                        <p id="detail-outlet" class="text-white mt-0.5 font-semibold"></p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 font-bold uppercase tracking-wider text-[9px]">Status</p>
+                        <span id="detail-status"
+                            class="inline-block px-2.5 py-1 rounded text-[10px] font-bold mt-1 uppercase"></span>
+                    </div>
+                </div>
+
+                <!-- Table Detail Items -->
+                <div class="bg-gray-900/40 rounded-xl overflow-hidden mb-4 border border-gray-800">
+                    <table class="w-full text-left text-gray-300 border-collapse text-[11px]">
+                        <thead>
+                            <tr class="border-b border-gray-800 text-gray-400 font-bold uppercase bg-gray-900/60">
+                                <th class="p-2 w-12">No</th>
+                                <th class="p-2">Produk</th>
+                                <th class="p-2">SKU</th>
+                                <th class="p-2 text-center">Qty</th>
+                                <th class="p-2 text-right">Harga</th>
+                                <th class="p-2 text-right">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detail-items-body" class="divide-y divide-gray-800">
+                            <!-- Dynamic items -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Totals -->
+                <div class="bg-gray-900/30 p-4 rounded-xl space-y-2 border border-gray-800">
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Subtotal</span>
+                        <span id="detail-subtotal" class="font-semibold text-white"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Diskon</span>
+                        <span id="detail-discount" class="font-semibold text-red-400"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Pajak</span>
+                        <span id="detail-tax" class="font-semibold text-blue-400"></span>
+                    </div>
+                    <div class="flex justify-between border-t border-gray-800 pt-2 font-bold">
+                        <span class="text-white">Grand Total</span>
+                        <span id="detail-grand-total" class="text-sm text-[#B4F481]"></span>
+                    </div>
+                </div>
+
+                <div class="pt-2 flex items-center justify-end">
+                    <button onclick="closeDetailModal()"
+                        class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-xl transition cursor-pointer">
+                        Tutup
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
         function openCreateModal() { document.getElementById('create-modal').classList.remove('hidden'); }
         function closeCreateModal() { document.getElementById('create-modal').classList.add('hidden'); }
+
+        async function openDetailModal(saleId) {
+            try {
+                const response = await fetch(`/auth/sales/${saleId}`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                if (!response.ok) throw new Error('Gagal mengambil data penjualan');
+                const sale = await response.json();
+
+                document.getElementById('detail-invoice').textContent = sale.invoice;
+                document.getElementById('detail-date').textContent = new Date(sale.date).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+                document.getElementById('detail-outlet').textContent = sale.outlet ? sale.outlet.name : '—';
+
+                const statusEl = document.getElementById('detail-status');
+                statusEl.textContent = sale.status.toUpperCase();
+                statusEl.className = 'inline-block px-2.5 py-1 rounded text-[10px] font-bold mt-1 uppercase';
+                const statusLower = sale.status.toLowerCase();
+                if (statusLower === 'completed' || statusLower === 'lunas') {
+                    statusEl.classList.add('bg-green-500/20', 'text-green-400');
+                } else if (statusLower === 'pending' || statusLower === 'belum bayar') {
+                    statusEl.classList.add('bg-yellow-500/20', 'text-yellow-400');
+                } else {
+                    statusEl.classList.add('bg-red-500/20', 'text-red-400');
+                }
+
+                const tbody = document.getElementById('detail-items-body');
+                tbody.innerHTML = '';
+                const items = sale.sales_items || sale.salesItems || [];
+                items.forEach((item, index) => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'border-b border-gray-800 text-[11px]';
+                    tr.innerHTML = `
+                            <td class="p-2 text-gray-400 font-semibold">${index + 1}</td>
+                            <td class="p-2 font-bold text-white">${item.product_name}</td>
+                            <td class="p-2 text-gray-300 font-mono">${item.sku}</td>
+                            <td class="p-2 text-center text-white">${item.qty} ${item.unit || 'pcs'}</td>
+                            <td class="p-2 text-right text-white">Rp ${Math.round(item.price).toLocaleString('id-ID')}</td>
+                            <td class="p-2 text-right font-bold text-[#B4F481]">Rp ${Math.round(item.subtotal).toLocaleString('id-ID')}</td>
+                        `;
+                    tbody.appendChild(tr);
+                });
+
+                document.getElementById('detail-subtotal').textContent = 'Rp ' + Math.round(sale.subtotal).toLocaleString('id-ID');
+                document.getElementById('detail-discount').textContent = 'Rp ' + Math.round(sale.discount).toLocaleString('id-ID');
+                document.getElementById('detail-tax').textContent = 'Rp ' + Math.round(sale.tax).toLocaleString('id-ID');
+                document.getElementById('detail-grand-total').textContent = 'Rp ' + Math.round(sale.grand_total).toLocaleString('id-ID');
+
+                document.getElementById('detail-modal').classList.remove('hidden');
+            } catch (err) {
+                console.error(err);
+                alert('Terjadi kesalahan saat memuat detail penjualan.');
+            }
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detail-modal').classList.add('hidden');
+        }
         function formatRupiahNumber(num) {
             return num.toLocaleString('id-ID').replace(/,/g, '.');
         }
@@ -214,6 +407,18 @@
             }
         }
 
+        function renameFormInputs(prefix) {
+            const rows = document.querySelectorAll(`#${prefix}-items-body tr`);
+            rows.forEach((row, index) => {
+                const prodInput = row.querySelector('input[data-field="product_id"]');
+                const qtyInput = row.querySelector('input[data-field="qty"]');
+                const priceInput = row.querySelector('input[data-field="price"]');
+                if (prodInput) prodInput.name = `items[${index}][product_id]`;
+                if (qtyInput) qtyInput.name = `items[${index}][qty]`;
+                if (priceInput) priceInput.name = `items[${index}][price]`;
+            });
+        }
+
         function addItem(prefix) {
             const productSelect = document.getElementById(`${prefix}-item-product`);
             const qtyInput = document.getElementById(`${prefix}-item-qty`);
@@ -229,13 +434,19 @@
             if (noItemsRow) noItemsRow.remove();
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td class="p-2">${productText}</td>
-                <td class="p-2 text-center">${qty}</td>
-                <td class="p-2 text-right">${formatRupiahNumber(price)}</td>
-                <td class="p-2 text-right" data-raw-subtotal="${subtotal}">${formatRupiahNumber(subtotal)}</td>
-                <td class="p-2 text-center"><button type="button" onclick="this.closest('tr').remove(); recalc${prefix.charAt(0).toUpperCase()+prefix.slice(1)}();">✕</button></td>
-            `;
+                    <td class="p-2">
+                        ${productText}
+                        <input type="hidden" data-field="product_id" value="${productId}">
+                        <input type="hidden" data-field="qty" value="${qty}">
+                        <input type="hidden" data-field="price" value="${price}">
+                    </td>
+                    <td class="p-2 text-center">${qty}</td>
+                    <td class="p-2 text-right">${formatRupiahNumber(price)}</td>
+                    <td class="p-2 text-right" data-raw-subtotal="${subtotal}">${formatRupiahNumber(subtotal)}</td>
+                    <td class="p-2 text-center"><button type="button" onclick="this.closest('tr').remove(); renameFormInputs('${prefix}'); recalc${prefix.charAt(0).toUpperCase() + prefix.slice(1)}();">✕</button></td>
+                `;
             itemsBody.appendChild(row);
+            renameFormInputs(prefix);
             recalcCreate();
             productSelect.value = '';
             qtyInput.value = '';
@@ -261,7 +472,7 @@
             document.getElementById('create-grand_total-display').value = formatRupiahNumber(total);
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Initial formatting on load
             const discountDisp = document.getElementById('create-discount-display');
             if (discountDisp && discountDisp.value) {

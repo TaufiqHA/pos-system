@@ -504,4 +504,83 @@ class SalesTest extends TestCase
         $this->assertTrue($salesPassed->contains('id', $saleOfUser->id));
         $this->assertFalse($salesPassed->contains('id', $saleOfOther->id));
     }
+
+    public function test_cabang_sales_creation_decrements_branch_product_stock(): void
+    {
+        $cabangRole = Role::firstOrCreate(
+            ['name' => 'cabang'],
+            ['id' => (string) Str::uuid()]
+        );
+
+        $cabangUser = User::factory()->create([
+            'role_id' => $cabangRole->id,
+            'branch_id' => $this->branch->id,
+        ]);
+
+        $category = Category::create([
+            'id' => (string) Str::uuid(),
+            'name' => 'Kategori Test',
+        ]);
+
+        $product = Product::create([
+            'id' => (string) Str::uuid(),
+            'category_id' => $category->id,
+            'sku' => 'SKU-STOCK-DEC',
+            'name' => 'Product Stock Dec',
+            'buy_price' => 1000,
+            'sell_price' => 2000,
+        ]);
+
+        // Create starting stock of 10
+        ProductStock::create([
+            'id' => (string) Str::uuid(),
+            'product_id' => $product->id,
+            'branch_id' => $this->branch->id,
+            'stock' => 10,
+            'minimum_stock' => 1,
+            'average_cost' => 1000,
+        ]);
+
+        $payload = [
+            'invoice' => 'INV-DEC-001',
+            'branch_id' => $this->branch->id,
+            'user_id' => $cabangUser->id,
+            'date' => '2026-07-06 12:00:00',
+            'subtotal' => 4000.00,
+            'discount' => 0.00,
+            'tax' => 0.00,
+            'grand_total' => 4000.00,
+            'status' => 'completed',
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'qty' => 2,
+                    'price' => 2000.00,
+                ],
+            ],
+        ];
+
+        $response = $this->actingAs($cabangUser)->postJson(route('sales.store'), $payload);
+
+        $response->assertStatus(201);
+
+        // Verify stock has decremented from 10 to 8
+        $this->assertDatabaseHas('product_stocks', [
+            'product_id' => $product->id,
+            'branch_id' => $this->branch->id,
+            'stock' => 8,
+        ]);
+
+        // Verify stock history record exists
+        $this->assertDatabaseHas('stock_histories', [
+            'product_id' => $product->id,
+            'branch_id' => $this->branch->id,
+            'type' => 'OUT',
+            'qty' => 2,
+            'previous_stock' => 10,
+            'new_stock' => 8,
+            'reference_type' => Sales::class,
+            'user_id' => $cabangUser->id,
+        ]);
+    }
 }

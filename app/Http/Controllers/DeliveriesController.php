@@ -180,4 +180,18 @@ class DeliveriesController extends Controller
 
         return redirect()->route('deliveries.index')->with('success', 'Pengiriman berhasil dihapus');
     }
+
+    public function pengirimanIndexCabang(Request $request)
+    {
+        $deliveries = Deliveries::with(['sale.salesItems'])
+            ->where('created_by', auth()->id())
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        if ($request->wantsJson()) {
+            return response()->json($deliveries);
+        }
+
+        return view('cabang.pengiriman', compact('deliveries'));
+    }
 }

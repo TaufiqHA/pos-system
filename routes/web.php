@@ -112,6 +112,8 @@ Route::prefix('cabang')->middleware(['auth', 'role.cabang'])->group(function () 
     Route::get('/monitoring-stok', [ProductStockController::class, 'monitoringStok'])->name('cabang.monitoring-stok');
     // Penjualan Cabang Route
     Route::get('/penjualan', [SalesController::class, 'cabangIndex'])->name('cabang.penjualan');
+    // Pengiriman Cabang Route
+    Route::get('/pengiriman', [DeliveriesController::class, 'pengirimanIndexCabang'])->name('cabang.pengiriman');
     Route::put('/monitoring-stok/{id}', [ProductStockController::class, 'updateCabangStock'])->name('cabang.monitoring-stok.update');
     Route::resource('stock-histories', StockHistoriesController::class);
 

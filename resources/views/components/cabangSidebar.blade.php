@@ -100,8 +100,8 @@
                     class="hover:text-white cursor-pointer transition {{ request()->routeIs('purchase-orders.index') && request('action') !== 'create' ? 'text-[#B4F481] font-bold' : '' }}">
                     <a href="{{ route('purchase-orders.index') }}" class="block w-full">Daftar PO</a>
                 </li>
-                <li class="hover:text-white cursor-pointer transition">
-                    <a href="#" class="block w-full">Pengiriman</a>
+                <li class="hover:text-white cursor-pointer transition {{ request()->routeIs('cabang.pengiriman') ? 'text-[#B4F481] font-bold' : '' }}">
+                    <a href="{{ route('cabang.pengiriman') }}" class="block w-full">Pengiriman</a>
                 </li>
             </ul>
         </div>

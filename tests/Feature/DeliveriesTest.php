@@ -387,4 +387,69 @@ class DeliveriesTest extends TestCase
         $response->assertStatus(200);
         $this->assertEquals(2, $stock->fresh()->stock);
     }
+
+    public function test_cabang_user_can_access_cabang_pengiriman_page(): void
+    {
+        $cabangRole = Role::firstOrCreate(
+            ['name' => 'cabang'],
+            ['id' => (string) Str::uuid()]
+        );
+
+        $cabangUser = User::factory()->create([
+            'role_id' => $cabangRole->id,
+            'branch_id' => $this->branch->id,
+        ]);
+
+        $response = $this->actingAs($cabangUser)->get(route('cabang.pengiriman'));
+
+        $response->assertStatus(200);
+    }
+
+    public function test_cabang_pengiriman_only_displays_own_deliveries(): void
+    {
+        $cabangRole = Role::firstOrCreate(
+            ['name' => 'cabang'],
+            ['id' => (string) Str::uuid()]
+        );
+
+        $user1 = User::factory()->create([
+            'role_id' => $cabangRole->id,
+            'branch_id' => $this->branch->id,
+        ]);
+
+        $user2 = User::factory()->create([
+            'role_id' => $cabangRole->id,
+            'branch_id' => $this->branch->id,
+        ]);
+
+        // Delivery created by user1
+        $delivery1 = Deliveries::create([
+            'id' => (string) Str::uuid(),
+            'sale_id' => $this->sale->id,
+            'driver_name' => 'Driver User 1',
+            'status' => 'PENDING',
+            'created_by' => $user1->id,
+        ]);
+
+        // Delivery created by user2
+        $delivery2 = Deliveries::create([
+            'id' => (string) Str::uuid(),
+            'sale_id' => $this->sale->id,
+            'driver_name' => 'Driver User 2',
+            'status' => 'PENDING',
+            'created_by' => $user2->id,
+        ]);
+
+        // Logged in as user1 - should only see delivery1
+        $response = $this->actingAs($user1)->get(route('cabang.pengiriman'));
+        $response->assertStatus(200);
+        $response->assertSee('Driver User 1');
+        $response->assertDontSee('Driver User 2');
+
+        // Logged in as user2 - should only see delivery2
+        $response = $this->actingAs($user2)->get(route('cabang.pengiriman'));
+        $response->assertStatus(200);
+        $response->assertSee('Driver User 2');
+        $response->assertDontSee('Driver User 1');
+    }
 }

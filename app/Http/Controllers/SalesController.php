@@ -6,9 +6,11 @@ use App\Models\Branch;
 use App\Models\Deliveries;
 use App\Models\Outlets;
 use App\Models\Product;
+use App\Models\ProductStock;
 use App\Models\Sales;
 use App\Models\SalesItem;
 use App\Models\SalesPayment;
+use App\Models\StockHistories;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -17,6 +19,14 @@ class SalesController extends Controller
 {
     public function index(Request $request)
     {
+        if (auth()->user()->role && auth()->user()->role->name === 'cabang') {
+            if ($request->wantsJson()) {
+                return $this->cabangIndex($request);
+            }
+
+            return redirect()->route('cabang.penjualan');
+        }
+
         $sales = Sales::with(['branch.users', 'user', 'salesItems', 'salesPayments'])
             ->where('create_by', auth()->id())
             ->orderBy('created_at', 'desc')
@@ -38,6 +48,10 @@ class SalesController extends Controller
 
     public function create()
     {
+        if (auth()->user()->role && auth()->user()->role->name === 'cabang') {
+            return redirect()->route('cabang.penjualan');
+        }
+
         return redirect()->route('sales.index', ['action' => 'create']);
     }
 
@@ -80,6 +94,9 @@ class SalesController extends Controller
             $sale = Sales::create($validated);
 
             if ($request->has('items') && is_array($request->items)) {
+                $isCabang = auth()->user()->role && auth()->user()->role->name === 'cabang';
+                $branchId = auth()->user()->branch_id;
+
                 foreach ($request->items as $item) {
                     $product = Product::find($item['product_id']);
                     if ($product) {
@@ -96,6 +113,43 @@ class SalesController extends Controller
                             'subtotal' => $item['qty'] * $item['price'],
                             'is_wholesale' => false,
                         ]);
+
+                        if ($isCabang && $branchId) {
+                            $qty = $item['qty'];
+                            $branchStock = ProductStock::where('product_id', $product->id)
+                                ->where('branch_id', $branchId)
+                                ->first();
+
+                            $previousStock = 0;
+                            if ($branchStock) {
+                                $previousStock = $branchStock->stock;
+                                $branchStock->update(['stock' => $previousStock - $qty]);
+                            } else {
+                                $branchStock = ProductStock::create([
+                                    'id' => (string) Str::uuid(),
+                                    'product_id' => $product->id,
+                                    'branch_id' => $branchId,
+                                    'stock' => -$qty,
+                                    'minimum_stock' => 0,
+                                    'average_cost' => $product->buy_price,
+                                ]);
+                            }
+                            $newStock = $previousStock - $qty;
+
+                            // Catat ke StockHistories
+                            StockHistories::create([
+                                'id' => (string) Str::uuid(),
+                                'product_id' => $product->id,
+                                'branch_id' => $branchId,
+                                'type' => 'OUT',
+                                'qty' => $qty,
+                                'previous_stock' => $previousStock,
+                                'new_stock' => $newStock,
+                                'reference_type' => Sales::class,
+                                'reference_id' => $sale->id,
+                                'user_id' => auth()->id(),
+                            ]);
+                        }
                     }
                 }
             }
@@ -133,6 +187,12 @@ class SalesController extends Controller
             return response()->json($sale, 201);
         }
 
+        if (auth()->user()->role && auth()->user()->role->name === 'cabang') {
+            return redirect()
+                ->route('cabang.penjualan')
+                ->with('success', 'Penjualan berhasil dibuat');
+        }
+
         return redirect()
             ->route('sales.index')
             ->with('success', 'Penjualan berhasil dibuat');
@@ -140,9 +200,14 @@ class SalesController extends Controller
 
     public function show(string $id)
     {
+        if (auth()->user()->role && auth()->user()->role->name === 'cabang' && ! request()->wantsJson() && ! request()->ajax()) {
+            return redirect()->route('cabang.penjualan');
+        }
+
         $sale = Sales::with([
             'branch.users',
             'user',
+            'outlet',
             'salesItems',
             'salesPayments',
         ])->findOrFail($id);
@@ -156,7 +221,7 @@ class SalesController extends Controller
     public function cabangIndex(Request $request)
     {
         $branchId = auth()->user()->branch_id;
-        $sales = Sales::with(['branch.users', 'user', 'salesItems', 'salesPayments'])
+        $sales = Sales::with(['branch.users', 'user', 'outlet', 'salesItems', 'salesPayments'])
             ->where('branch_id', $branchId)
             ->where('create_by', auth()->user()->id)
             ->orderBy('created_at', 'desc')
@@ -179,6 +244,10 @@ class SalesController extends Controller
 
     public function edit($id)
     {
+        if (auth()->user()->role && auth()->user()->role->name === 'cabang') {
+            return redirect()->route('cabang.penjualan');
+        }
+
         return redirect()->route('sales.index', [
             'action' => 'edit',
             'id' => $id,
@@ -210,6 +279,34 @@ class SalesController extends Controller
         $validated['tax'] = $validated['tax'] ?? 0;
 
         DB::transaction(function () use ($sale, $validated, $request) {
+            $isCabang = auth()->user()->role && auth()->user()->role->name === 'cabang';
+            $branchId = auth()->user()->branch_id;
+
+            if ($isCabang && $branchId && $request->has('items')) {
+                // Restore old stock
+                foreach ($sale->salesItems as $oldItem) {
+                    $oldStock = ProductStock::where('product_id', $oldItem->product_id)
+                        ->where('branch_id', $branchId)
+                        ->first();
+                    if ($oldStock) {
+                        $oldStock->update(['stock' => $oldStock->stock + $oldItem->qty]);
+                        // Record stock history for restore
+                        StockHistories::create([
+                            'id' => (string) Str::uuid(),
+                            'product_id' => $oldItem->product_id,
+                            'branch_id' => $branchId,
+                            'type' => 'IN',
+                            'qty' => $oldItem->qty,
+                            'previous_stock' => $oldStock->stock - $oldItem->qty,
+                            'new_stock' => $oldStock->stock,
+                            'reference_type' => Sales::class,
+                            'reference_id' => $sale->id,
+                            'user_id' => auth()->id(),
+                        ]);
+                    }
+                }
+            }
+
             $sale->update($validated);
 
             if ($request->has('items')) {
@@ -232,6 +329,43 @@ class SalesController extends Controller
                                 'subtotal' => $item['qty'] * $item['price'],
                                 'is_wholesale' => false,
                             ]);
+
+                            if ($isCabang && $branchId) {
+                                $qty = $item['qty'];
+                                $branchStock = ProductStock::where('product_id', $product->id)
+                                    ->where('branch_id', $branchId)
+                                    ->first();
+
+                                $previousStock = 0;
+                                if ($branchStock) {
+                                    $previousStock = $branchStock->stock;
+                                    $branchStock->update(['stock' => $previousStock - $qty]);
+                                } else {
+                                    $branchStock = ProductStock::create([
+                                        'id' => (string) Str::uuid(),
+                                        'product_id' => $product->id,
+                                        'branch_id' => $branchId,
+                                        'stock' => -$qty,
+                                        'minimum_stock' => 0,
+                                        'average_cost' => $product->buy_price,
+                                    ]);
+                                }
+                                $newStock = $previousStock - $qty;
+
+                                // Catat ke StockHistories
+                                StockHistories::create([
+                                    'id' => (string) Str::uuid(),
+                                    'product_id' => $product->id,
+                                    'branch_id' => $branchId,
+                                    'type' => 'OUT',
+                                    'qty' => $qty,
+                                    'previous_stock' => $previousStock,
+                                    'new_stock' => $newStock,
+                                    'reference_type' => Sales::class,
+                                    'reference_id' => $sale->id,
+                                    'user_id' => auth()->id(),
+                                ]);
+                            }
                         }
                     }
                 }
@@ -240,6 +374,12 @@ class SalesController extends Controller
 
         if ($request->wantsJson()) {
             return response()->json($sale->fresh());
+        }
+
+        if (auth()->user()->role && auth()->user()->role->name === 'cabang') {
+            return redirect()
+                ->route('cabang.penjualan')
+                ->with('success', 'Penjualan berhasil diupdate');
         }
 
         return redirect()
@@ -254,6 +394,12 @@ class SalesController extends Controller
 
         if ($request->wantsJson()) {
             return response()->json(['message' => 'Deleted']);
+        }
+
+        if (auth()->user()->role && auth()->user()->role->name === 'cabang') {
+            return redirect()
+                ->route('cabang.penjualan')
+                ->with('success', 'Penjualan berhasil dihapus');
         }
 
         return redirect()

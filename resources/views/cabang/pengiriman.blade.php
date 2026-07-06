@@ -1,16 +1,16 @@
-@extends('layouts.admin')
+@extends('layouts.cabang')
 
-@section('title', 'Daftar Pengiriman - Lucifer POS')
+@section('title', 'Daftar Pengiriman Cabang - POS')
 
-@section('page_title', 'Daftar Pengiriman')
-@section('page_subtitle', 'Mengelola pengiriman barang')
+@section('page_title', 'DAFTAR PENGIRIMAN CABANG')
+@section('page_subtitle', 'Kelola dan pantau status pengiriman barang dari cabang')
 
 @section('content')
     <div class="card p-6 rounded-2xl shadow-xl">
 
         @if (session('success'))
             <div id="success-alert"
-                class="mb-4 bg-green-500/10 border border-green-500/30 text-green-400 p-4 rounded-xl text-xs flex items-center gap-2">
+                class="mb-6 bg-green-500/10 border border-green-500/30 text-green-400 p-4 rounded-xl text-xs flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -46,11 +46,9 @@
                                 </span>
                             </td>
                             <td class="py-4 px-4 text-gray-400">
-                                {{ $delivery->sent_at ? \Carbon\Carbon::parse($delivery->sent_at)->format('d-m-Y H:i') : '-' }}
-                            </td>
+                                {{ $delivery->sent_at ? $delivery->sent_at->format('d-m-Y H:i') : '-' }}</td>
                             <td class="py-4 px-4 text-gray-400">
-                                {{ $delivery->received_at ? \Carbon\Carbon::parse($delivery->received_at)->format('d-m-Y H:i') : '-' }}
-                            </td>
+                                {{ $delivery->received_at ? $delivery->received_at->format('d-m-Y H:i') : '-' }}</td>
                             <td class="py-4 pl-4 pr-4 text-right whitespace-nowrap">
                                 <div class="flex justify-end items-center gap-2">
                                     <button onclick="openDetailModal({{ json_encode($delivery) }})"
@@ -76,75 +74,11 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="py-8 text-center text-gray-500">Belum ada data pengiriman terdaftar.</td>
+                            <td colspan="7" class="py-8 text-center text-gray-500">Belum ada data pengiriman terdaftar.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
-        </div>
-    </div>
-    <!-- ================= MODAL BOX: EDIT PENGIRIMAN ================= -->
-    <div id="edit-modal"
-        class="fixed inset-0 z-50 {{ $errors->any() && old('_method') === 'PUT' ? '' : 'hidden' }} bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div
-            class="card max-w-lg w-full p-6 rounded-2xl shadow-2xl relative border border-gray-800 max-h-[90vh] overflow-y-auto">
-            <button onclick="closeEditModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white transition">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
-            <div class="mb-6">
-                <h3 class="text-base font-bold tracking-wide font-display text-white">Edit Pengiriman</h3>
-                <p class="text-[11px] text-gray-400 mt-1">Ubah data pengiriman</p>
-            </div>
-            <form id="edit-form" action="#" method="POST" class="space-y-4 text-xs">
-                @csrf
-                @method('PUT')
-
-                <div class="space-y-1">
-                    <label for="edit-sale_invoice" class="block font-bold text-gray-300">Penjualan (Tidak dapat
-                        diubah)</label>
-                    <input type="text" id="edit-sale_invoice" readonly
-                        class="w-full bg-gray-800 border border-gray-850 text-gray-400 rounded-xl p-3 focus:outline-none cursor-not-allowed">
-                </div>
-
-
-
-                <div class="space-y-1">
-                    <label for="edit-status" class="block font-bold text-gray-300">Status <span
-                            class="text-red-500">*</span></label>
-                    <select name="status" id="edit-status"
-                        class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400"
-                        required>
-                        <option value="PENDING">PENDING</option>
-                        <option value="DIKIRIM">DIKIRIM</option>
-                    </select>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div class="space-y-1">
-                        <label for="edit-sent_at" class="block font-bold text-gray-300">Tanggal Kirim</label>
-                        <input type="datetime-local" name="sent_at" id="edit-sent_at"
-                            class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400">
-                    </div>
-                    <div class="space-y-1">
-                        <label for="edit-received_at" class="block font-bold text-gray-300">Tanggal Diterima</label>
-                        <input type="datetime-local" name="received_at" id="edit-received_at"
-                            class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400">
-                    </div>
-                </div>
-
-                <div class="pt-4 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3">
-                    <button type="button" onclick="closeEditModal()"
-                        class="w-full sm:w-auto text-center justify-center text-gray-400 hover:text-white font-semibold py-2.5 px-4 rounded-xl hover:bg-gray-800 transition cursor-pointer">
-                        Batal
-                    </button>
-                    <button type="submit"
-                        class="w-full sm:w-auto text-center justify-center bg-[#B4F481] hover:bg-green-400 text-black font-bold py-2.5 px-6 rounded-xl transition shadow-lg shadow-[#B4F481]/20 cursor-pointer">
-                        Simpan Perubahan
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 
@@ -152,7 +86,7 @@
     <div id="detail-modal"
         class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div
-            class="card max-w-lg w-full p-6 rounded-2xl shadow-2xl relative border border-gray-800 max-h-[90vh] overflow-y-auto">
+            class="card max-w-2xl w-full p-6 rounded-2xl shadow-2xl relative border border-gray-800 max-h-[90vh] overflow-y-auto">
             <button onclick="closeDetailModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white transition">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -172,7 +106,6 @@
                         <p class="text-gray-500 font-bold uppercase tracking-wider text-[9px]">Invoice Penjualan</p>
                         <p id="detail-invoice" class="text-white font-mono font-bold mt-0.5 text-xs select-all"></p>
                     </div>
-
                     <div>
                         <p class="text-gray-500 font-bold uppercase tracking-wider text-[9px]">Status</p>
                         <span id="detail-status"
@@ -195,7 +128,31 @@
                     </div>
                 </div>
 
-                <div class="pt-2 flex items-center justify-end">
+                <!-- Table Detail Items -->
+                <div class="bg-gray-900/40 rounded-xl overflow-hidden mb-4">
+                    <table class="w-full text-left text-gray-300 border-collapse">
+                        <thead>
+                            <tr
+                                class="border-b border-gray-800 text-gray-400 text-[10px] uppercase tracking-wider bg-gray-900/60">
+                                <th class="py-3 px-4 font-semibold w-12">No</th>
+                                <th class="py-3 px-4 font-semibold">Produk</th>
+                                <th class="py-3 px-4 font-semibold">SKU</th>
+                                <th class="py-3 px-4 font-semibold">Qty</th>
+                                <th class="py-3 px-4 font-semibold">Harga</th>
+                                <th class="py-3 px-4 font-semibold">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detail-items-body">
+                            <!-- Dynamic items -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pt-2 flex items-center justify-between">
+                    <div class="text-left">
+                        <p class="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">Grand Total</p>
+                        <p id="detail-grand-total" class="text-sm font-bold text-[#B4F481] font-display">-</p>
+                    </div>
                     <button onclick="closeDetailModal()"
                         class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-xl transition cursor-pointer">
                         Tutup
@@ -205,9 +162,73 @@
         </div>
     </div>
 
-    <script>
-        const allSales = @json($sales);
+    <!-- ================= MODAL BOX: EDIT PENGIRIMAN ================= -->
+    <div id="edit-modal"
+        class="fixed inset-0 z-50 {{ $errors->any() && old('_method') === 'PUT' ? '' : 'hidden' }} bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div
+            class="card max-w-lg w-full p-6 rounded-2xl shadow-2xl relative border border-gray-800 max-h-[90vh] overflow-y-auto">
+            <button onclick="closeEditModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
 
+            <div class="mb-6">
+                <h3 class="text-base font-bold tracking-wide font-display text-white">Edit Pengiriman</h3>
+                <p class="text-[11px] text-gray-400 mt-1">Ubah data pengiriman</p>
+            </div>
+            <form id="edit-form" action="#" method="POST" class="space-y-4 text-xs text-gray-300">
+                @csrf
+                @method('PUT')
+
+                <div class="space-y-1">
+                    <label for="edit-sale_invoice" class="block font-bold text-gray-300">Penjualan (Tidak dapat
+                        diubah)</label>
+                    <input type="text" id="edit-sale_invoice" readonly
+                        class="w-full bg-gray-800 border border-gray-850 text-gray-400 rounded-xl p-3 focus:outline-none cursor-not-allowed">
+                </div>
+
+
+
+                <div class="space-y-1">
+                    <label for="edit-status" class="block font-bold text-gray-300">Status <span
+                            class="text-red-500">*</span></label>
+                    <select name="status" id="edit-status"
+                        class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-[#B4F481]"
+                        required>
+                        <option value="PENDING">PENDING</option>
+                        <option value="DIKIRIM">DIKIRIM</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label for="edit-sent_at" class="block font-bold text-gray-300">Tanggal Kirim</label>
+                        <input type="datetime-local" name="sent_at" id="edit-sent_at"
+                            class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-[#B4F481]">
+                    </div>
+                    <div class="space-y-1">
+                        <label for="edit-received_at" class="block font-bold text-gray-300">Tanggal Diterima</label>
+                        <input type="datetime-local" name="received_at" id="edit-received_at"
+                            class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-[#B4F481]">
+                    </div>
+                </div>
+
+                <div class="pt-4 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3">
+                    <button type="button" onclick="closeEditModal()"
+                        class="w-full sm:w-auto text-center justify-center text-gray-400 hover:text-white font-semibold py-2.5 px-4 rounded-xl hover:bg-gray-800 transition cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="submit"
+                        class="w-full sm:w-auto text-center justify-center bg-[#B4F481] hover:bg-green-400 text-black font-bold py-2.5 px-6 rounded-xl transition shadow-lg shadow-[#B4F481]/20 cursor-pointer">
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
         document.addEventListener('DOMContentLoaded', function () {
             const successAlert = document.getElementById('success-alert');
             if (successAlert) {
@@ -227,6 +248,11 @@
                         const sentAtInput = document.getElementById('edit-sent_at');
                         if (sentAtInput && !sentAtInput.value) {
                             sentAtInput.value = toDatetimeLocal(new Date());
+                        }
+                    } else if (this.value === 'DITERIMA') {
+                        const receivedAtInput = document.getElementById('edit-received_at');
+                        if (receivedAtInput && !receivedAtInput.value) {
+                            receivedAtInput.value = toDatetimeLocal(new Date());
                         }
                     }
                 });
@@ -263,9 +289,9 @@
 
             document.getElementById('edit-modal').classList.remove('hidden');
         }
+
         function closeEditModal() {
             document.getElementById('edit-modal').classList.add('hidden');
-            window.history.replaceState({}, document.title, window.location.pathname);
         }
 
         function openDetailModal(delivery) {
@@ -290,8 +316,38 @@
                 statusEl.classList.add('bg-red-500/20', 'text-red-400');
             }
 
+            // Load items table
+            const tbody = document.getElementById('detail-items-body');
+            tbody.innerHTML = '';
+            const items = delivery.sale?.sales_items || delivery.sale?.salesItems || [];
+
+            let total = 0;
+            if (items.length > 0) {
+                items.forEach((item, index) => {
+                    const subtotal = item.qty * item.price;
+                    total += subtotal;
+
+                    const tr = document.createElement('tr');
+                    tr.className = 'border-b border-gray-800 text-[11px]';
+                    tr.innerHTML = `
+                        <td class="py-3 px-4 text-gray-400 font-semibold">${index + 1}</td>
+                        <td class="py-3 px-4 font-bold text-white">${item.product_name}</td>
+                        <td class="py-3 px-4 text-gray-300 font-mono">${item.sku}</td>
+                        <td class="py-3 px-4 text-white">${item.qty} ${item.unit || 'pcs'}</td>
+                        <td class="py-3 px-4 text-white">Rp ${item.price.toLocaleString('id-ID')}</td>
+                        <td class="py-3 px-4 font-bold text-[#B4F481]">Rp ${subtotal.toLocaleString('id-ID')}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                document.getElementById('detail-grand-total').textContent = 'Rp ' + total.toLocaleString('id-ID');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="6" class="py-4 text-center text-gray-500">Tidak ada item penjualan.</td></tr>';
+                document.getElementById('detail-grand-total').textContent = '-';
+            }
+
             document.getElementById('detail-modal').classList.remove('hidden');
         }
+
         function closeDetailModal() {
             document.getElementById('detail-modal').classList.add('hidden');
         }
