@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Branch;
 use App\Models\Category;
+use App\Models\Debts;
+use App\Models\DebtsPayment;
 use App\Models\Product;
 use App\Models\Purchases;
 use App\Models\Role;
@@ -303,5 +305,180 @@ class PurchasesTest extends TestCase
             'branch_id' => $this->branch->id,
             'stock' => 10,
         ]);
+    }
+
+    public function test_kredit_purchase_creates_debt_and_sets_status_completed(): void
+    {
+        $category = Category::create([
+            'id' => (string) Str::uuid(),
+            'name' => 'Elektronik',
+        ]);
+
+        $product = Product::create([
+            'id' => (string) Str::uuid(),
+            'category_id' => $category->id,
+            'sku' => 'PROD-TEST002',
+            'name' => 'Test Product 2',
+            'unit' => 'pcs',
+            'buy_price' => 5000.00,
+            'sell_price' => 7000.00,
+        ]);
+
+        $payload = [
+            'supplier_id' => $this->supplier->id,
+            'branch_id' => $this->branch->id,
+            'user_id' => $this->user->id,
+            'date' => '2026-07-04 20:00:00',
+            'subtotal' => 50000.00,
+            'discount' => 0.00,
+            'tax' => 0.00,
+            'grand_total' => 50000.00,
+            'status' => 'pending',
+            'payment_method' => 'KREDIT',
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'qty' => 10,
+                    'price' => 5000.00,
+                ],
+            ],
+        ];
+
+        $response = $this->actingAs($this->user)->postJson(route('purchases.store'), $payload);
+
+        $response->assertStatus(201);
+
+        $purchase = Purchases::where('grand_total', 50000.00)->first();
+        $this->assertNotNull($purchase);
+        $this->assertEquals('completed', $purchase->status);
+
+        // Verify stock increased
+        $this->assertDatabaseHas('product_stocks', [
+            'product_id' => $product->id,
+            'branch_id' => $this->branch->id,
+            'stock' => 10,
+        ]);
+
+        // Verify Debt created
+        $this->assertDatabaseHas('debts', [
+            'purchase_id' => $purchase->id,
+            'debtor_type' => 'branch',
+            'debtor_branch_id' => $this->branch->id,
+            'creditor_type' => 'supplier',
+            'supplier_id' => $this->supplier->id,
+            'total_amount' => 50000.00,
+            'paid_amount' => 0.00,
+            'remaining_amount' => 50000.00,
+            'status' => 'unpaid',
+        ]);
+    }
+
+    public function test_updating_purchase_propagates_to_debt(): void
+    {
+        $purchase = Purchases::create([
+            'id' => (string) Str::uuid(),
+            'invoice' => 'PUR-20260704-TEST-KREDIT',
+            'supplier_id' => $this->supplier->id,
+            'branch_id' => $this->branch->id,
+            'user_id' => $this->user->id,
+            'date' => '2026-07-04 20:00:00',
+            'subtotal' => 100000.00,
+            'discount' => 10000.00,
+            'tax' => 9000.00,
+            'grand_total' => 99000.00,
+            'status' => 'completed',
+        ]);
+
+        // Create Debt manually
+        $debt = Debts::create([
+            'id' => (string) Str::uuid(),
+            'debtor_type' => 'branch',
+            'debtor_branch_id' => $this->branch->id,
+            'creditor_type' => 'supplier',
+            'supplier_id' => $this->supplier->id,
+            'source_type' => 'purchase',
+            'purchase_id' => $purchase->id,
+            'invoice_number' => $purchase->invoice,
+            'total_amount' => 99000.00,
+            'paid_amount' => 10000.00,
+            'remaining_amount' => 89000.00,
+            'status' => 'partial',
+        ]);
+
+        $payload = [
+            'supplier_id' => $this->supplier->id,
+            'branch_id' => $this->branch->id,
+            'user_id' => $this->user->id,
+            'date' => '2026-07-04 20:00:00',
+            'subtotal' => 120000.00,
+            'discount' => 10000.00,
+            'tax' => 0.00,
+            'grand_total' => 110000.00,
+            'status' => 'completed',
+        ];
+
+        $response = $this->actingAs($this->user)->putJson(route('purchases.update', $purchase->id), $payload);
+
+        $response->assertStatus(200);
+
+        // Verify debt total and remaining were updated
+        $this->assertDatabaseHas('debts', [
+            'id' => $debt->id,
+            'total_amount' => 110000.00,
+            'paid_amount' => 10000.00,
+            'remaining_amount' => 100000.00,
+            'status' => 'partial',
+        ]);
+    }
+
+    public function test_deleting_purchase_deletes_associated_debt(): void
+    {
+        $purchase = Purchases::create([
+            'id' => (string) Str::uuid(),
+            'invoice' => 'PUR-20260704-TEST-DEL-KREDIT',
+            'supplier_id' => $this->supplier->id,
+            'branch_id' => $this->branch->id,
+            'user_id' => $this->user->id,
+            'date' => '2026-07-04 20:00:00',
+            'subtotal' => 100000.00,
+            'discount' => 10000.00,
+            'tax' => 9000.00,
+            'grand_total' => 99000.00,
+            'status' => 'completed',
+        ]);
+
+        // Create Debt manually
+        $debt = Debts::create([
+            'id' => (string) Str::uuid(),
+            'debtor_type' => 'branch',
+            'debtor_branch_id' => $this->branch->id,
+            'creditor_type' => 'supplier',
+            'supplier_id' => $this->supplier->id,
+            'source_type' => 'purchase',
+            'purchase_id' => $purchase->id,
+            'invoice_number' => $purchase->invoice,
+            'total_amount' => 99000.00,
+            'paid_amount' => 0.00,
+            'remaining_amount' => 99000.00,
+            'status' => 'unpaid',
+        ]);
+
+        // Create Debt Payment manually
+        $payment = DebtsPayment::create([
+            'id' => (string) Str::uuid(),
+            'debt_id' => $debt->id,
+            'payment_date' => now()->toDateTimeString(),
+            'amount' => 10000.00,
+            'method' => 'cash',
+        ]);
+
+        $response = $this->actingAs($this->user)->deleteJson(route('purchases.destroy', $purchase->id));
+
+        $response->assertStatus(200);
+
+        // Verify purchase, debt, and debt payment are deleted
+        $this->assertDatabaseMissing('purchases', ['id' => $purchase->id]);
+        $this->assertDatabaseMissing('debts', ['id' => $debt->id]);
+        $this->assertDatabaseMissing('debts_payments', ['id' => $payment->id]);
     }
 }

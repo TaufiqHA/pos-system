@@ -82,6 +82,7 @@ Route::prefix('admin')->middleware(['auth', 'role.admin'])->group(function () {
     Route::resource('suppliers', SuppliersController::class);
     Route::resource('users', UserController::class);
     Route::resource('purchases', PurchasesController::class);
+    Route::get('/hutang', [DebtsController::class, 'adminIndex'])->name('admin.hutang');
 
     // Wholesale Prices Routes
     Route::post('/wholesale-prices', [WholesalePriceController::class, 'store'])->name('wholesale-prices.store');

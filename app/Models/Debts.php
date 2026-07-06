@@ -77,4 +77,9 @@ class Debts extends Model
     {
         return $this->belongsTo(Sales::class, 'sale_id');
     }
+
+    public function payments()
+    {
+        return $this->hasMany(DebtsPayment::class, 'debt_id');
+    }
 }

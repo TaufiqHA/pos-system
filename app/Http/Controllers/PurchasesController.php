@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Branch;
+use App\Models\Debts;
 use App\Models\Product;
 use App\Models\ProductStock;
 use App\Models\PurchaseItem;
@@ -76,6 +77,11 @@ class PurchasesController extends Controller
         $validated['tax'] = $validated['tax'] ?? 0;
 
         $purchase = DB::transaction(function () use ($validated, $request) {
+            $paymentMethod = $request->input('payment_method', 'TUNAI');
+            if ($paymentMethod === 'KREDIT') {
+                $validated['status'] = 'completed';
+            }
+
             $purchase = Purchases::create($validated);
 
             if ($request->has('items') && is_array($request->items)) {
@@ -94,8 +100,8 @@ class PurchasesController extends Controller
                             'subtotal' => $item['qty'] * $item['price'],
                         ]);
 
-                        // Jika status pembelian LUNAS, tambah stok untuk branch terkait
-                        if ($purchase->status === 'LUNAS') {
+                        // Jika status pembelian LUNAS atau completed, tambah stok untuk branch terkait
+                        if (in_array(strtoupper($purchase->status), ['LUNAS', 'COMPLETED'])) {
                             $stockRecord = ProductStock::where('product_id', $product->id)
                                 ->where('branch_id', $purchase->branch_id)
                                 ->first();
@@ -118,7 +124,6 @@ class PurchasesController extends Controller
             }
 
             // Create automatic purchase payment
-            $paymentMethod = $request->input('payment_method', 'TUNAI');
             $paymentStatus = ($paymentMethod === 'TUNAI' || $paymentMethod === 'TRANSFER') ? 'LUNAS' : 'BELUM BAYAR';
             $paidAt = ($paymentStatus === 'LUNAS') ? now() : null;
 
@@ -130,6 +135,26 @@ class PurchasesController extends Controller
                 'status' => $paymentStatus,
                 'paid_at' => $paidAt,
             ]);
+
+            if ($paymentMethod === 'KREDIT') {
+                Debts::create([
+                    'debtor_type' => 'branch',
+                    'debtor_branch_id' => $purchase->branch_id,
+                    'debtor_outlet_id' => null,
+                    'creditor_type' => 'supplier',
+                    'supplier_id' => $purchase->supplier_id,
+                    'creditor_branch_id' => null,
+                    'source_type' => 'purchase',
+                    'purchase_id' => $purchase->id,
+                    'invoice_number' => $purchase->invoice,
+                    'total_amount' => $purchase->grand_total,
+                    'paid_amount' => 0,
+                    'remaining_amount' => $purchase->grand_total,
+                    'status' => 'unpaid',
+                    'due_date' => $request->input('due_date'),
+                    'notes' => $request->input('notes'),
+                ]);
+            }
 
             return $purchase;
         });
@@ -187,6 +212,21 @@ class PurchasesController extends Controller
         DB::transaction(function () use ($purchase, $validated, $request) {
             $purchase->update($validated);
 
+            // If the purchase has a related Debt, update its total_amount and recalculate
+            $debt = Debts::where('purchase_id', $purchase->id)->first();
+            if ($debt) {
+                $debt->total_amount = $purchase->grand_total;
+                $debt->remaining_amount = max(0, $purchase->grand_total - $debt->paid_amount);
+                if ($debt->remaining_amount <= 0) {
+                    $debt->status = 'paid';
+                } elseif ($debt->paid_amount > 0) {
+                    $debt->status = 'partial';
+                } else {
+                    $debt->status = 'unpaid';
+                }
+                $debt->save();
+            }
+
             if ($request->has('items')) {
                 // Delete previous items
                 $purchase->items()->delete();
@@ -226,7 +266,12 @@ class PurchasesController extends Controller
     public function destroy(Request $request, $id)
     {
         $purchase = Purchases::findOrFail($id);
-        $purchase->delete();
+
+        DB::transaction(function () use ($purchase) {
+            // Delete related debt and its payments (if any)
+            Debts::where('purchase_id', $purchase->id)->delete();
+            $purchase->delete();
+        });
 
         if ($request->wantsJson()) {
             return response()->json(['message' => 'Purchase berhasil dihapus']);

@@ -123,7 +123,9 @@
             </div>
             <ul id="keuangan-menu" class="text-gray-400 space-y-2 ml-4 border-l border-gray-800 pl-4 text-xs transition-all duration-200">
                 <li class="hover:text-white cursor-pointer transition">Laporan Keuangan</li>
-                <li class="hover:text-white cursor-pointer transition">Arus Kas</li>
+                <li class="hover:text-white transition {{ request()->routeIs('admin.hutang') ? 'text-[#B4F481] font-semibold' : '' }}">
+                    <a href="{{ route('admin.hutang') }}" class="block w-full">Hutang & Piutang</a>
+                </li>
             </ul>
         </div>
     </nav>

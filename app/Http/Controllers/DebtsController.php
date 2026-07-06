@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
 use App\Models\Debts;
+use App\Models\Outlets;
+use App\Models\Suppliers;
 use Illuminate\Http\Request;
 
 class DebtsController extends Controller
@@ -178,11 +181,34 @@ class DebtsController extends Controller
         return response()->json(['message' => 'Debt berhasil dihapus']);
     }
 
-    /**
-     * Remove the specified resource from storage (alias for destroy).
-     */
     public function delete(Request $request, $id)
     {
         return $this->destroy($request, $id);
+    }
+
+    /**
+     * Display a listing of the resource for admin panel.
+     */
+    public function adminIndex(Request $request)
+    {
+        $debts = Debts::where('creditor_type', 'supplier')->with([
+            'debtorBranch',
+            'debtorOutlet',
+            'supplier',
+            'creditorBranch',
+            'purchase',
+            'sale',
+            'payments.creator',
+        ])->orderBy('created_at', 'desc')->get();
+
+        if ($request->wantsJson()) {
+            return response()->json($debts);
+        }
+
+        $suppliers = Suppliers::all();
+        $branches = Branch::all();
+        $outlets = Outlets::all();
+
+        return view('admin.hutang', compact('debts', 'suppliers', 'branches', 'outlets'));
     }
 }
