@@ -3,6 +3,8 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\DebtsController;
+use App\Http\Controllers\DebtsPaymentController;
 use App\Http\Controllers\DeliveriesController;
 use App\Http\Controllers\OutletsController;
 use App\Http\Controllers\ProductBranchPricesController;
@@ -213,6 +215,10 @@ Route::prefix('auth')->group(function () {
         Route::resource('purchase-orders', PurchaseOrdersController::class);
         Route::delete('purchase-orders/{id}/delete', [PurchaseOrdersController::class, 'delete'])->name('purchase-orders.delete');
         Route::resource('deliveries', DeliveriesController::class);
+        Route::resource('debts', DebtsController::class);
+        Route::delete('debts/{id}/delete', [DebtsController::class, 'delete'])->name('debts.delete');
+        Route::resource('debts-payments', DebtsPaymentController::class);
+        Route::delete('debts-payments/{id}/delete', [DebtsPaymentController::class, 'delete'])->name('debts-payments.delete');
         // Sales Routes
         Route::resource('sales', SalesController::class);
 
