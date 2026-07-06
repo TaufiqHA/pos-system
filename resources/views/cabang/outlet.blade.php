@@ -67,7 +67,7 @@
                             <td class="py-4 px-4 text-gray-400">{{ $outlet->phone }}</td>
                             <td class="py-4 pl-4 pr-4 text-right">
                     <a href="javascript:void(0)" onclick="openDetailModal(this)" data-id="{{ $outlet->id }}" data-name="{{ $outlet->name }}" data-branch="{{ $outlet->branch->name ?? '' }}" data-address="{{ $outlet->address }}" data-phone="{{ $outlet->phone }}" data-email="{{ $outlet->email ?? '' }}" class="text-[#B4F481] hover:text-green-400 font-semibold transition px-2 py-1 hover:bg-green-500/10 rounded cursor-pointer">Detail</a>
-                    <a href="javascript:void(0)" onclick="openEditModal(this)" data-id="{{ $outlet->id }}" data-branch_id="{{ $outlet->branch_id }}" data-name="{{ $outlet->name }}" data-address="{{ $outlet->address }}" data-phone="{{ $outlet->phone }}" data-email="{{ $outlet->email ?? '' }}" class="text-blue-400 hover:text-blue-300 font-semibold transition px-2 py-1 hover:bg-blue-500/10 rounded cursor-pointer">Edit</a>
+                    <a href="javascript:void(0)" onclick="openEditModal(this)" data-id="{{ $outlet->id }}" data-branch_id="{{ $outlet->branch_id }}" data-branch_name="{{ $outlet->branch->name ?? '' }}" data-name="{{ $outlet->name }}" data-address="{{ $outlet->address }}" data-phone="{{ $outlet->phone }}" data-email="{{ $outlet->email ?? '' }}" class="text-blue-400 hover:text-blue-300 font-semibold transition px-2 py-1 hover:bg-blue-500/10 rounded cursor-pointer">Edit</a>
                     <form action="{{ route('outlets.destroy', $outlet->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin hapus outlet?');">
                         @csrf
                         @method('DELETE')
@@ -123,14 +123,8 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="space-y-1">
                     <label class="block font-bold text-gray-300">Cabang</label>
-                    <select name="branch_id" id="edit-branch_id" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400">
-                        <option value="">-- Pilih Cabang --</option>
-                        @foreach($branches as $branch)
-                            @if(!in_array($branch->id, $adminBranchIds ?? []))
-                                <option value="{{ $branch->id }}">{{ $branch->name }}</option>
-                            @endif
-                        @endforeach
-                    </select>
+                    <input type="text" id="edit-branch_display" class="w-full bg-gray-800 border border-gray-800 text-gray-400 rounded-xl p-3 focus:outline-none cursor-not-allowed" disabled>
+                    <input type="hidden" name="branch_id" id="edit-branch_id">
                 </div>
                 <div class="space-y-1">
                     <label class="block font-bold text-gray-300">Nama Outlet</label>
@@ -175,15 +169,9 @@
             @csrf
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="space-y-1">
-                    <label for="create-branch_id" class="block font-bold text-gray-300">Cabang *</label>
-                    <select name="branch_id" id="create-branch_id" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @if($errors->has('branch_id')) border-red-500 @endif">
-                        <option value="">-- Pilih Cabang --</option>
-                        @foreach($branches as $branch)
-                            @if(!in_array($branch->id, $adminBranchIds ?? []))
-                                <option value="{{ $branch->id }}" {{ old('branch_id') == $branch->id ? 'selected' : '' }}>{{ $branch->name }}</option>
-                            @endif
-                        @endforeach
-                    </select>
+                    <label for="create-branch_display" class="block font-bold text-gray-300">Cabang *</label>
+                    <input type="text" id="create-branch_display" value="{{ auth()->user()->branch->name ?? '-' }}" class="w-full bg-gray-800 border border-gray-800 text-gray-400 rounded-xl p-3 focus:outline-none cursor-not-allowed" disabled>
+                    <input type="hidden" name="branch_id" value="{{ auth()->user()->branch_id }}">
                     @if($errors->has('branch_id'))
                         <p class="text-red-500 text-[10px] mt-1">{{ $errors->first('branch_id') }}</p>
                     @endif
@@ -252,6 +240,7 @@
     function openEditModal(el){
         const form = document.getElementById('edit-form');
         form.action = '/cabang/outlets/' + el.dataset.id;
+        document.getElementById('edit-branch_display').value = el.dataset.branch_name;
         document.getElementById('edit-branch_id').value = el.dataset.branch_id;
         document.getElementById('edit-name').value = el.dataset.name;
         document.getElementById('edit-address').value = el.dataset.address;
