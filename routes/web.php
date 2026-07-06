@@ -178,6 +178,27 @@ Route::prefix('outlet')->middleware(['auth', 'role.outlet'])->group(function () 
 
         return view('outlet.dashboard', compact('deliveries', 'products'));
     })->name('outlet.dashboard');
+
+    Route::get('/order', function () {
+        $outletId = auth()->user()->outlet_id;
+        $branchId = auth()->user()->branch_id ?? 'BRC-001';
+
+        $purchaseOrders = PurchaseOrders::where('outlet_id', $outletId)
+            ->with(['branch', 'user'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $products = Product::with([
+            'wholesalePrices' => function ($query) use ($branchId) {
+                $query->where('branch_id', $branchId);
+            },
+            'branchPrices' => function ($query) use ($branchId) {
+                $query->where('branch_id', $branchId);
+            },
+        ])->orderBy('name')->get();
+
+        return view('outlet.order', compact('purchaseOrders', 'products'));
+    })->name('outlet.order');
 });
 
 // Auth Routes

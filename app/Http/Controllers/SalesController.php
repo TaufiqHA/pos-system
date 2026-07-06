@@ -7,6 +7,7 @@ use App\Models\Deliveries;
 use App\Models\Outlets;
 use App\Models\Product;
 use App\Models\ProductStock;
+use App\Models\PurchaseOrders;
 use App\Models\Sales;
 use App\Models\SalesItem;
 use App\Models\SalesPayment;
@@ -43,7 +44,18 @@ class SalesController extends Controller
             });
         })->get();
 
-        return view('admin.sale', compact('sales', 'products', 'branches'));
+        $purchaseOrders = PurchaseOrders::whereHas('user', function ($query) {
+            $query->where('parent_id', auth()->id());
+        })
+            ->where(function ($query) {
+                $query->where('status', '!=', 'Approved')
+                    ->orWhereDate('updated_at', '>=', now()->toDateString());
+            })
+            ->with(['branch', 'user'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('admin.sale', compact('sales', 'products', 'branches', 'purchaseOrders'));
     }
 
     public function create()

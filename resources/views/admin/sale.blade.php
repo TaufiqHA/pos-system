@@ -6,18 +6,33 @@
 @section('page_subtitle', 'Mengelola transaksi penjualan barang')
 
 @section('content')
+    @php
+        $selectedPoId = request('po_id');
+        $selectedPo = $selectedPoId ? $purchaseOrders->firstWhere('id', $selectedPoId) : $purchaseOrders->first();
+        $selectedPoNotes = $selectedPo ? json_decode($selectedPo->notes, true) : null;
+        $showModal = request()->has('show_modal') || request()->has('po_id');
+    @endphp
     <div class="card p-6 rounded-2xl shadow-xl">
         <div class="flex justify-between items-center mb-6">
             <div></div>
             <div class="flex items-center gap-3">
-                <button
-                    class="w-full sm:w-auto justify-center border border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white font-semibold text-xs py-2.5 px-4 rounded-xl transition flex items-center gap-2 cursor-pointer">
+                <button onclick="openPermintaanPoModal()"
+                    class="w-full sm:w-auto justify-center border border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white font-semibold text-xs py-2.5 px-4 rounded-xl transition flex items-center gap-2 cursor-pointer relative">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
                         </path>
                     </svg>
-                    Daftar PO
+                    Permintaan PO
+                    @php
+                        $pendingCount = $purchaseOrders->where('status', 'Pending')->count();
+                    @endphp
+                    @if($pendingCount > 0)
+                        <span
+                            class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center animate-pulse border border-[#0B1120]">
+                            {{ $pendingCount }}
+                        </span>
+                    @endif
                 </button>
                 <button onclick="openCreateModal()"
                     class="w-full sm:w-auto justify-center bg-[#B4F481] hover:bg-green-400 text-black font-semibold text-xs py-2.5 px-4 rounded-xl transition flex items-center gap-2 shadow-lg shadow-[#B4F481]/20 cursor-pointer">
@@ -906,5 +921,289 @@
         function closeDetailModal() {
             document.getElementById('detail-modal').classList.add('hidden');
         }
+
+        function openPermintaanPoModal() {
+            document.getElementById('permintaan-po-modal').classList.remove('hidden');
+        }
+
+        function closePermintaanPoModal() {
+            window.location.href = "{{ route('sales.index') }}";
+        }
+
+        function submitApprovalForm(status) {
+            if (!confirm(`Apakah Anda yakin ingin menandai PO ini sebagai ${status === 'Approved' ? 'SETUJU' : 'DITOLAK'}?`)) {
+                return;
+            }
+            document.getElementById('form-status').value = status;
+            document.getElementById('approval-form').submit();
+        }
     </script>
+
+    <!-- ================= MODAL BOX: PERMINTAAN PO ================= -->
+    <div id="permintaan-po-modal"
+        class="fixed inset-0 z-50 @if(!$showModal) hidden @endif bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div
+            class="card max-w-6xl w-full p-0 rounded-2xl shadow-2xl relative border border-gray-800 max-h-[85vh] flex flex-col overflow-hidden">
+            <!-- Tombol Close (X) -->
+            <button onclick="closePermintaanPoModal()"
+                class="absolute top-4 right-4 text-gray-400 hover:text-white transition cursor-pointer z-50">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+
+            <!-- Header Modal -->
+            <div class="p-6 border-b border-gray-800 bg-gray-900/40">
+                <h3 class="text-base font-bold tracking-wide font-display text-white">Daftar Permintaan PO Cabang</h3>
+                <p class="text-[11px] text-gray-400 mt-1">Daftar pengajuan Purchase Order dari cabang yang terhubung</p>
+            </div>
+
+            <!-- Modal Content - Split Screen Grid -->
+            <div class="flex-1 flex overflow-hidden min-h-0">
+                <!-- Side Kiri: Daftar PO -->
+                <div class="w-1/3 border-r border-gray-800 overflow-y-auto bg-gray-950/40 p-4 space-y-3">
+                    <h4 class="text-[10px] font-bold tracking-wider text-gray-550 uppercase px-2">Pilih Permintaan PO</h4>
+                    <div class="space-y-2" id="po-list-container">
+                        @forelse($purchaseOrders as $po)
+                            @php
+                                $notes = json_decode($po->notes, true);
+                                $grandTotal = $notes['grand_total'] ?? 0;
+                            @endphp
+                            <a href="?po_id={{ $po->id }}&show_modal=1" id="po-item-{{ $po->id }}"
+                                class="p-3.5 rounded-xl border {{ $selectedPo && $selectedPo->id === $po->id ? 'bg-gray-850 border-gray-600' : 'bg-gray-900/60 border-gray-800' }} hover:bg-gray-850 hover:border-gray-700 cursor-pointer transition flex flex-col gap-2 group block">
+                                <div class="flex justify-between items-start">
+                                    <span
+                                        class="font-bold text-xs text-white font-mono group-hover:text-[#B4F481] transition-colors">{{ $po->po_number }}</span>
+                                    <!-- Status Badge -->
+                                    <span id="po-badge-{{ $po->id }}" class="px-2 py-0.5 rounded-full text-[9px] font-bold border 
+                                                @if($po->status === 'Pending') bg-yellow-500/10 text-yellow-500 border-yellow-500/20
+                                                @elseif($po->status === 'Approved') bg-blue-500/10 text-blue-400 border-blue-500/20
+                                                @elseif($po->status === 'Completed') bg-green-500/10 text-green-400 border-green-500/20
+                                                @elseif($po->status === 'Rejected') bg-red-500/10 text-red-400 border-red-500/20
+                                                @else bg-gray-500/10 text-gray-400 border-gray-500/20 @endif">
+                                        {{ $po->status }}
+                                    </span>
+                                </div>
+                                <div class="flex flex-col text-[11px] text-gray-400 leading-snug">
+                                    <div class="font-semibold text-gray-300">
+                                        {{ $po->branch->name ?? ($po->user->name ?? 'Cabang') }}</div>
+                                    <div>{{ $po->created_at->format('d M Y, H:i') }}</div>
+                                </div>
+                                <div class="text-xs font-bold text-[#B4F481] mt-1">
+                                    Rp {{ number_format($grandTotal, 0, ',', '.') }}
+                                </div>
+                            </a>
+                        @empty
+                            <div class="py-8 text-center text-gray-500 text-xs">
+                                Tidak ada permintaan PO masuk
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+
+                <!-- Side Kanan: Detail Konten (Field Form PO) -->
+                <div class="flex-1 overflow-y-auto p-6 bg-[#1F2937]/30 flex flex-col justify-between"
+                    id="po-detail-container">
+                    @if(!$selectedPo)
+                        <!-- Placeholder when no PO selected -->
+                        <div id="po-placeholder" class="flex-1 flex flex-col items-center justify-center text-center p-8">
+                            <div
+                                class="w-16 h-16 rounded-2xl bg-gray-900 border border-gray-800 flex items-center justify-center text-gray-505 mb-4 animate-bounce">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
+                                    </path>
+                                </svg>
+                            </div>
+                            <h4 class="font-bold text-white text-sm">Pilih Permintaan PO</h4>
+                            <p class="text-xs text-gray-400 max-w-xs mt-1">Silakan pilih salah satu purchase order di sebelah
+                                kiri untuk melihat rincian detail pengajuan.</p>
+                        </div>
+                    @else
+                        <!-- Detail View -->
+                        <form id="approval-form" action="{{ route('purchase-orders.update', $selectedPo->id) }}" method="POST"
+                            class="flex-1 flex flex-col justify-between text-xs space-y-6">
+                            @csrf
+                            @method('PUT')
+                            <input type="hidden" name="po_number" value="{{ $selectedPo->po_number }}">
+                            <input type="hidden" name="branch_id" value="{{ $selectedPo->branch_id }}">
+                            <input type="hidden" name="user_id" value="{{ $selectedPo->user_id }}">
+                            <input type="hidden" id="form-status" name="status" value="">
+
+                            <!-- Flat notes inputs for controller auto-serialization -->
+                            <input type="hidden" name="user_notes" value="{{ $selectedPoNotes['user_notes'] ?? '' }}">
+                            <input type="hidden" name="subtotal" value="{{ $selectedPoNotes['subtotal'] ?? 0 }}">
+                            <input type="hidden" name="discount" value="{{ $selectedPoNotes['discount'] ?? 0 }}">
+                            <input type="hidden" name="tax" value="{{ $selectedPoNotes['tax'] ?? 0 }}">
+                            <input type="hidden" name="grand_total" value="{{ $selectedPoNotes['grand_total'] ?? 0 }}">
+                            @foreach(($selectedPoNotes['items'] ?? []) as $index => $item)
+                                <input type="hidden" name="items[{{ $index }}][product_id]" value="{{ $item['product_id'] }}">
+                                <input type="hidden" name="items[{{ $index }}][name]" value="{{ $item['name'] }}">
+                                <input type="hidden" name="items[{{ $index }}][sku]" value="{{ $item['sku'] }}">
+                                <input type="hidden" name="items[{{ $index }}][qty]" value="{{ $item['qty'] }}">
+                                <input type="hidden" name="items[{{ $index }}][price]" value="{{ $item['price'] }}">
+                            @endforeach
+
+                            <!-- Grid 2 Kolom Info -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Cabang (Readonly) -->
+                                <div class="space-y-1">
+                                    <label class="block font-bold text-gray-300">Cabang *</label>
+                                    <input type="text" readonly
+                                        value="{{ $selectedPo->branch->name ?? ($selectedPo->user->name ?? 'Cabang') }}"
+                                        class="w-full bg-gray-900 border border-gray-800 text-gray-400 rounded-xl p-3 cursor-not-allowed focus:outline-none">
+                                </div>
+
+                                <!-- Tanggal Transaksi -->
+                                <div class="space-y-1">
+                                    <label class="block font-bold text-gray-300">Tanggal Transaksi *</label>
+                                    <div class="relative">
+                                        <input type="text" readonly
+                                            value="{{ $selectedPo->created_at->format('d/m/Y, h:i A') }}"
+                                            class="w-full bg-gray-900 border border-gray-800 text-gray-400 rounded-xl p-3 pr-10 focus:outline-none cursor-not-allowed">
+                                        <div
+                                            class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                                </path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Table Item PO -->
+                            <div class="space-y-3">
+                                <h4 class="text-[10px] font-bold tracking-wider text-gray-400 uppercase">ITEM DAFTAR PO</h4>
+                                <div class="bg-gray-900/40 rounded-xl overflow-hidden border border-gray-800/80">
+                                    <table class="w-full text-left text-gray-300 border-collapse">
+                                        <thead>
+                                            <tr
+                                                class="border-b border-gray-800 text-gray-400 text-[10px] uppercase tracking-wider bg-gray-900/60">
+                                                <th class="py-3 px-4 font-semibold">Produk</th>
+                                                <th class="py-3 px-4 font-semibold text-center">Qty</th>
+                                                <th class="py-3 px-4 font-semibold text-right">Harga</th>
+                                                <th class="py-3 px-4 font-semibold text-right">Subtotal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse(($selectedPoNotes['items'] ?? []) as $item)
+                                                @php
+                                                    $price = floatval($item['price'] ?? 0);
+                                                    $qty = intval($item['qty'] ?? 0);
+                                                    $subtotal = $price * $qty;
+                                                @endphp
+                                                <tr class="border-b border-gray-800 hover:bg-gray-800/20 transition">
+                                                    <td class="py-3 px-4">
+                                                        <div class="font-bold text-white">{{ $item['name'] ?? '' }}</div>
+                                                        <div class="text-[10px] text-gray-500 font-medium">SKU: {{ $item['sku'] ?? '' }}</div>
+                                                    </td>
+                                                    <td class="py-3 px-4 text-center text-white font-semibold">{{ $qty }}</td>
+                                                    <td class="py-3 px-4 text-right text-white">Rp
+                                                        {{ number_format($price, 0, ',', '.') }}</td>
+                                                    <td class="py-3 px-4 text-right text-white font-bold">Rp
+                                                        {{ number_format($subtotal, 0, ',', '.') }}</td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="4" class="py-6 text-center text-gray-500">Tidak ada item dalam PO
+                                                        ini</td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Ringkasan Finansial (Subtotal, Diskon, Pajak) -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-gray-800 pt-4">
+                                <div class="space-y-1">
+                                    <label class="block font-bold text-gray-400">Subtotal</label>
+                                    <input type="text" readonly
+                                        value="Rp {{ number_format($selectedPoNotes['subtotal'] ?? 0, 0, ',', '.') }}"
+                                        class="w-full bg-gray-900 border border-gray-800 text-gray-400 rounded-xl p-3 cursor-not-allowed focus:outline-none">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="block font-bold text-gray-400">Diskon</label>
+                                    <input type="text" readonly
+                                        value="Rp {{ number_format($selectedPoNotes['discount'] ?? 0, 0, ',', '.') }}"
+                                        class="w-full bg-gray-900 border border-gray-800 text-gray-400 rounded-xl p-3 cursor-not-allowed focus:outline-none">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="block font-bold text-gray-400">Pajak</label>
+                                    <input type="text" readonly
+                                        value="Rp {{ number_format($selectedPoNotes['tax'] ?? 0, 0, ',', '.') }}"
+                                        class="w-full bg-gray-900 border border-gray-800 text-gray-400 rounded-xl p-3 cursor-not-allowed focus:outline-none">
+                                </div>
+                            </div>
+
+                            <!-- Grand Total & Payment Method -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="space-y-1">
+                                    <label class="block font-bold text-gray-400">Grand Total *</label>
+                                    <input type="text" readonly
+                                        value="Rp {{ number_format($selectedPoNotes['grand_total'] ?? 0, 0, ',', '.') }}"
+                                        class="w-full bg-gray-900 border border-gray-800 text-[#B4F481] font-bold rounded-xl p-3 cursor-not-allowed focus:outline-none">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="block font-bold text-gray-355">Metode Pembayaran *</label>
+                                    @if($selectedPo->status === 'Pending')
+                                        <select name="payment_method"
+                                            class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-[#B4F481]">
+                                            <option value="KREDIT" @if(($selectedPoNotes['payment_method'] ?? 'KREDIT') === 'KREDIT')
+                                            selected @endif>KREDIT</option>
+                                            <option value="TUNAI" @if(($selectedPoNotes['payment_method'] ?? 'KREDIT') === 'TUNAI')
+                                            selected @endif>TUNAI</option>
+                                            <option value="TRANSFER" @if(($selectedPoNotes['payment_method'] ?? 'KREDIT') === 'TRANSFER') selected @endif>TRANSFER</option>
+                                        </select>
+                                    @else
+                                        <select disabled
+                                            class="w-full bg-gray-900 border border-gray-800 text-gray-400 rounded-xl p-3 cursor-not-allowed focus:outline-none">
+                                            <option selected>{{ $selectedPoNotes['payment_method'] ?? 'KREDIT' }}</option>
+                                        </select>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Notes / Catatan -->
+                            <div class="space-y-1">
+                                <label class="block font-bold text-gray-355">Catatan / Notes Cabang</label>
+                                <textarea readonly rows="2"
+                                    class="w-full bg-gray-900/60 border border-gray-800 text-gray-300 rounded-xl p-3 cursor-not-allowed focus:outline-none italic">{{ $selectedPoNotes['user_notes'] ?? '-' }}</textarea>
+                            </div>
+
+                            <!-- Tombol Action & Persetujuan -->
+                            <div
+                                class="pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between border-t border-gray-855 gap-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-gray-455 font-bold uppercase text-[10px]">Status Saat Ini:</span>
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border 
+                                                @if($selectedPo->status === 'Pending') bg-yellow-500/10 text-yellow-500 border-yellow-500/20
+                                                @elseif($selectedPo->status === 'Approved') bg-blue-500/10 text-blue-400 border-blue-500/20
+                                                @elseif($selectedPo->status === 'Completed') bg-green-500/10 text-green-400 border-green-500/20
+                                                @elseif($selectedPo->status === 'Rejected') bg-red-500/10 text-red-400 border-red-500/20
+                                                @else bg-gray-500/10 text-gray-450 border-gray-500/20 @endif">
+                                        {{ $selectedPo->status }}
+                                    </span>
+                                </div>
+                                @if($selectedPo->status === 'Pending')
+                                    <div class="flex items-center gap-3 w-full sm:w-auto" id="po-action-buttons">
+                                        <button type="button" onclick="submitApprovalForm('Rejected')"
+                                            class="w-1/2 sm:w-auto bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 font-bold py-2.5 px-6 rounded-xl transition cursor-pointer">
+                                            Tolak PO
+                                        </button>
+                                        <button type="button" onclick="submitApprovalForm('Approved')"
+                                            class="w-1/2 sm:w-auto bg-[#B4F481] hover:bg-green-400 text-black font-bold py-2.5 px-8 rounded-xl transition shadow-lg shadow-[#B4F481]/20 cursor-pointer">
+                                            Setujui PO
+                                        </button>
+                                    </div>
+                                @endif
+                            </div>
+                        </form>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection

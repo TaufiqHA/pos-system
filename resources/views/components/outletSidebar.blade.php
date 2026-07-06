@@ -42,9 +42,9 @@
         </a>
 
         <!-- Order -->
-        <a href="{{ Route::has('outlet.order') ? route('outlet.order') : (Route::has('outlet.orders.index') ? route('outlet.orders.index') : '#') }}"
-            class="block {{ request()->routeIs('outlet.order*') || request()->routeIs('outlet.orders*') ? 'bg-indigo-950/60 text-white border border-indigo-700/50 shadow-md shadow-indigo-950/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/50' }} rounded-xl p-3 flex items-center space-x-3 transition cursor-pointer">
-            <svg class="w-5 h-5 {{ request()->routeIs('outlet.order*') || request()->routeIs('outlet.orders*') ? 'text-[#B4F481]' : 'text-gray-400' }}"
+        <a href="{{ route('outlet.order') }}"
+            class="block {{ request()->routeIs('outlet.order*') ? 'bg-indigo-950/60 text-white border border-indigo-700/50 shadow-md shadow-indigo-950/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/50' }} rounded-xl p-3 flex items-center space-x-3 transition cursor-pointer">
+            <svg class="w-5 h-5 {{ request()->routeIs('outlet.order*') ? 'text-[#B4F481]' : 'text-gray-400' }}"
                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z">
