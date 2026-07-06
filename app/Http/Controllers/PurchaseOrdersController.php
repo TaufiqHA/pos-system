@@ -35,7 +35,15 @@ class PurchaseOrdersController extends Controller
         }
 
         if ($user->role && $user->role->name === 'cabang') {
-            $products = Product::orderBy('name')->get();
+            $pusatBranchId = $user->parent->branch_id ?? 'BRC-001';
+            $products = Product::with([
+                'wholesalePrices' => function ($query) use ($pusatBranchId) {
+                    $query->where('branch_id', $pusatBranchId);
+                },
+                'branchPrices' => function ($query) use ($pusatBranchId) {
+                    $query->where('branch_id', $pusatBranchId);
+                },
+            ])->orderBy('name')->get();
 
             return view('cabang.daftar-po', compact('purchaseOrders', 'products'));
         }
@@ -195,7 +203,7 @@ class PurchaseOrdersController extends Controller
                                 'price' => $item['price'],
                                 'cost' => $product->buy_price,
                                 'subtotal' => $item['qty'] * $item['price'],
-                                'is_wholesale' => false,
+                                'is_wholesale' => ! empty($item['is_wholesale']),
                             ]);
 
                             // Kurangi stok Gudang Pusat

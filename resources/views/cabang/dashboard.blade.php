@@ -347,10 +347,23 @@
                                 class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-[#B4F481]">
                                 <option value="">-- Pilih Produk --</option>
                                 @foreach($products as $product)
-                                    <option value="{{ $product->id }}" data-sku="{{ $product->sku }}"
-                                        data-price="{{ $product->buy_price }}" data-name="{{ $product->name }}">
+                                    @php
+                                        $wholesaleData = $product->wholesalePrices->sortBy('min_qty')->map(function ($wp) {
+                                            return [
+                                                'min_qty' => (int) $wp->min_qty,
+                                                'price' => (float) $wp->price
+                                            ];
+                                        })->values()->all();
+                                        $pusatPrice = $product->branchPrices->first()?->sell_price ?? $product->sell_price;
+                                    @endphp
+                                    <option value="{{ $product->id }}" 
+                                        data-sku="{{ $product->sku }}"
+                                        data-price="{{ $product->buy_price }}" 
+                                        data-pusat-price="{{ $pusatPrice }}"
+                                        data-name="{{ $product->name }}"
+                                        data-wholesale='{{ json_encode($wholesaleData) }}'>
                                         {{ $product->name }} (SKU: {{ $product->sku }}) - Rp
-                                        {{ number_format($product->buy_price, 0, ',', '.') }}
+                                        {{ number_format($pusatPrice, 0, ',', '.') }}
                                     </option>
                                 @endforeach
                             </select>
@@ -358,6 +371,17 @@
                         <div class="w-full sm:w-24">
                             <input type="number" id="po-qty-input" placeholder="Qty" min="1"
                                 class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-[#B4F481]">
+                        </div>
+                        <div class="w-full sm:w-28 flex items-center gap-2 bg-gray-900 border border-gray-800 rounded-xl p-3">
+                            <input type="checkbox" id="po-use-wholesale"
+                                class="w-4 h-4 rounded text-[#B4F481] bg-gray-950 border-gray-800 focus:ring-0 accent-[#B4F481] cursor-pointer">
+                            <label for="po-use-wholesale" class="text-gray-300 font-bold cursor-pointer select-none">Grosir</label>
+                        </div>
+                        <div id="po-wholesale-select-container" class="hidden w-full sm:w-48">
+                            <select id="po-wholesale-price-select"
+                                class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-[#B4F481]">
+                                <option value="">-- Pilih Tingkat Grosir --</option>
+                            </select>
                         </div>
                         <div class="w-full sm:w-36">
                             <input type="text" id="po-price-input" placeholder="Harga" readonly
@@ -371,6 +395,7 @@
                             </svg>
                         </button>
                     </div>
+                    <div id="po-wholesale-info" class="hidden text-[11px] text-[#B4F481] bg-[#B4F481]/10 border border-[#B4F481]/30 p-3 rounded-xl flex flex-wrap gap-2 items-center"></div>
                 </div>
 
                 <!-- Table Item PO -->
@@ -686,16 +711,131 @@
             return parseFloat(value.replace(/\./g, '')) || 0;
         }
 
-        // Auto prefill price when product changes
-        document.getElementById('po-product-select').addEventListener('change', function () {
-            const selectedOption = this.options[this.selectedIndex];
+        function updateWholesalePricesSelect() {
+            const select = document.getElementById('po-product-select');
+            const selectedOption = select.options[select.selectedIndex];
+            const useWholesaleCheckbox = document.getElementById('po-use-wholesale');
+            const selectContainer = document.getElementById('po-wholesale-select-container');
+            const wholesaleSelect = document.getElementById('po-wholesale-price-select');
+
+            // Reset select options
+            wholesaleSelect.innerHTML = '<option value="">-- Pilih Tingkat Grosir --</option>';
+
+            if (selectedOption && selectedOption.value && useWholesaleCheckbox.checked) {
+                const wholesaleStr = selectedOption.getAttribute('data-wholesale');
+                let wholesalePrices = [];
+                try {
+                    wholesalePrices = JSON.parse(wholesaleStr) || [];
+                } catch(e) {}
+
+                if (wholesalePrices.length > 0) {
+                    selectContainer.classList.remove('hidden');
+                    wholesalePrices.sort((a, b) => a.min_qty - b.min_qty);
+                    wholesalePrices.forEach(wp => {
+                        const opt = document.createElement('option');
+                        opt.value = wp.min_qty;
+                        opt.setAttribute('data-price', wp.price);
+                        opt.textContent = `Min. ${wp.min_qty} - Rp ${formatCurrency(wp.price)}`;
+                        wholesaleSelect.appendChild(opt);
+                    });
+                } else {
+                    selectContainer.classList.add('hidden');
+                }
+            } else {
+                selectContainer.classList.add('hidden');
+            }
+        }
+
+        // Auto prefill price when product changes or qty changes, checking wholesale prices
+        function updatePriceBasedOnQty() {
+            const select = document.getElementById('po-product-select');
+            const selectedOption = select.options[select.selectedIndex];
+            const qtyInput = document.getElementById('po-qty-input');
             const priceInput = document.getElementById('po-price-input');
+            const infoDiv = document.getElementById('po-wholesale-info');
+            const useWholesaleCheckbox = document.getElementById('po-use-wholesale');
+            const wholesaleSelect = document.getElementById('po-wholesale-price-select');
+
             if (selectedOption && selectedOption.value) {
-                const price = parseFloat(selectedOption.getAttribute('data-price')) || 0;
-                priceInput.value = formatCurrency(price);
+                const defaultPrice = parseFloat(selectedOption.getAttribute('data-pusat-price')) || 0;
+                const qty = parseInt(qtyInput.value) || 0;
+                const useWholesale = useWholesaleCheckbox.checked;
+
+                const wholesaleStr = selectedOption.getAttribute('data-wholesale');
+                let wholesalePrices = [];
+                try {
+                    wholesalePrices = JSON.parse(wholesaleStr) || [];
+                } catch(e) {
+                    wholesalePrices = [];
+                }
+
+                // Find if any wholesale price matches the qty
+                let appliedPrice = defaultPrice;
+                let activeWholesale = null;
+
+                if (useWholesale) {
+                    // Sort descending to check from highest threshold
+                    wholesalePrices.sort((a, b) => b.min_qty - a.min_qty);
+
+                    for (let wp of wholesalePrices) {
+                        if (qty >= wp.min_qty) {
+                            appliedPrice = wp.price;
+                            activeWholesale = wp;
+                            break;
+                        }
+                    }
+                }
+
+                priceInput.value = formatCurrency(appliedPrice);
+
+                // Synchronize the wholesale select value
+                if (activeWholesale) {
+                    wholesaleSelect.value = activeWholesale.min_qty;
+                } else {
+                    wholesaleSelect.value = "";
+                }
+
+                // Update info div text
+                if (wholesalePrices.length > 0 && useWholesale) {
+                    infoDiv.classList.remove('hidden');
+                    let infoHtml = '<strong>Tersedia Harga Grosir:</strong> ';
+                    // Sort ascending for display
+                    const displayWp = [...wholesalePrices].sort((a, b) => a.min_qty - b.min_qty);
+                    const wpTexts = displayWp.map(wp => {
+                        const isApplied = activeWholesale && activeWholesale.min_qty === wp.min_qty;
+                        const style = isApplied ? 'text-black font-extrabold bg-[#B4F481] px-2 py-0.5 rounded shadow' : 'text-[#B4F481] opacity-75';
+                        return `<span class="${style}">Min. ${wp.min_qty} = Rp ${formatCurrency(wp.price)}</span>`;
+                    });
+                    infoHtml += wpTexts.join(' | ');
+                    infoDiv.innerHTML = infoHtml;
+                } else {
+                    infoDiv.classList.add('hidden');
+                    infoDiv.innerHTML = '';
+                }
             } else {
                 priceInput.value = '';
+                infoDiv.classList.add('hidden');
+                infoDiv.innerHTML = '';
+                wholesaleSelect.value = "";
             }
+        }
+
+        document.getElementById('po-product-select').addEventListener('change', function() {
+            updateWholesalePricesSelect();
+            updatePriceBasedOnQty();
+        });
+        document.getElementById('po-qty-input').addEventListener('input', updatePriceBasedOnQty);
+        document.getElementById('po-use-wholesale').addEventListener('change', function() {
+            updateWholesalePricesSelect();
+            updatePriceBasedOnQty();
+        });
+        document.getElementById('po-wholesale-price-select').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const qtyInput = document.getElementById('po-qty-input');
+            if (selectedOption && selectedOption.value) {
+                qtyInput.value = parseInt(selectedOption.value);
+            }
+            updatePriceBasedOnQty();
         });
 
         function addPoItem() {
@@ -721,21 +861,61 @@
                 return;
             }
 
+            const useWholesaleCheckbox = document.getElementById('po-use-wholesale');
+            const useWholesale = useWholesaleCheckbox.checked;
+
             const productId = selectedOption.value;
             const name = selectedOption.getAttribute('data-name');
             const sku = selectedOption.getAttribute('data-sku');
 
+            // Find if the final applied price is indeed a wholesale price
+            const defaultPrice = parseFloat(selectedOption.getAttribute('data-pusat-price')) || 0;
+            const wholesaleStr = selectedOption.getAttribute('data-wholesale');
+            let wholesalePrices = [];
+            try {
+                wholesalePrices = JSON.parse(wholesaleStr) || [];
+            } catch(e) {}
+            
+            let isWholesaleApplied = false;
+            if (useWholesale) {
+                wholesalePrices.sort((a, b) => b.min_qty - a.min_qty);
+                for (let wp of wholesalePrices) {
+                    if (qty >= wp.min_qty) {
+                        isWholesaleApplied = true;
+                        break;
+                    }
+                }
+            }
+
             // Check if product already added
             const existingIndex = poItems.findIndex(item => item.product_id === productId);
             if (existingIndex > -1) {
-                poItems[existingIndex].qty += qty;
+                const newQty = poItems[existingIndex].qty + qty;
+                poItems[existingIndex].qty = newQty;
+
+                // Update price for the new quantity based on wholesale prices
+                let appliedPrice = defaultPrice;
+                let newIsWholesaleApplied = false;
+                if (useWholesale) {
+                    wholesalePrices.sort((a, b) => b.min_qty - a.min_qty);
+                    for (let wp of wholesalePrices) {
+                        if (newQty >= wp.min_qty) {
+                            appliedPrice = wp.price;
+                            newIsWholesaleApplied = true;
+                            break;
+                        }
+                    }
+                }
+                poItems[existingIndex].price = appliedPrice;
+                poItems[existingIndex].is_wholesale = newIsWholesaleApplied;
             } else {
                 poItems.push({
                     product_id: productId,
                     name: name,
                     sku: sku,
                     qty: qty,
-                    price: price
+                    price: price,
+                    is_wholesale: isWholesaleApplied
                 });
             }
 
@@ -743,6 +923,9 @@
             select.value = '';
             qtyInput.value = '';
             priceInput.value = '';
+            useWholesaleCheckbox.checked = false; // reset checkbox to default unchecked
+            updateWholesalePricesSelect();
+            document.getElementById('po-wholesale-info').classList.add('hidden');
 
             updatePoTable();
         }
@@ -775,13 +958,14 @@
 
                 const tr = document.createElement('tr');
                 tr.className = 'border-b border-gray-800';
+                const badge = item.is_wholesale ? ' <span class="ml-1.5 inline-block bg-green-950/20 text-[#B4F481] border border-green-800/50 py-0.5 px-2 rounded-full text-[9px] font-semibold">Grosir</span>' : '';
                 tr.innerHTML = `
                                         <td class="py-3 px-4">
                                             <div class="font-bold text-white">${item.name}</div>
                                             <div class="text-[10px] text-gray-400">SKU: ${item.sku}</div>
                                         </td>
                                         <td class="py-3 px-4 text-white">${item.qty}</td>
-                                        <td class="py-3 px-4 text-white">Rp ${item.price.toLocaleString('id-ID')}</td>
+                                        <td class="py-3 px-4 text-white">Rp ${item.price.toLocaleString('id-ID')}${badge}</td>
                                         <td class="py-3 px-4 text-white">Rp ${itemSubtotal.toLocaleString('id-ID')}</td>
                                         <td class="py-3 px-4 text-center">
                                             <button type="button" onclick="removePoItem(${index})" class="text-red-400 hover:text-red-300 font-bold transition">Hapus</button>
@@ -796,6 +980,7 @@
                                         <input type="hidden" name="items[${index}][sku]" value="${item.sku}">
                                         <input type="hidden" name="items[${index}][qty]" value="${item.qty}">
                                         <input type="hidden" name="items[${index}][price]" value="${item.price}">
+                                        <input type="hidden" name="items[${index}][is_wholesale]" value="${item.is_wholesale ? 1 : 0}">
                                     `;
             });
 

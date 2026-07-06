@@ -101,7 +101,15 @@ Route::prefix('admin')->middleware(['auth', 'role.admin'])->group(function () {
 // Cabang Dashboard Routes
 Route::prefix('cabang')->middleware(['auth', 'role.cabang'])->group(function () {
     Route::get('/dashboard', function () {
-        $products = Product::orderBy('name')->get();
+        $pusatBranchId = auth()->user()->parent->branch_id ?? 'BRC-001';
+        $products = Product::with([
+            'wholesalePrices' => function ($query) use ($pusatBranchId) {
+                $query->where('branch_id', $pusatBranchId);
+            },
+            'branchPrices' => function ($query) use ($pusatBranchId) {
+                $query->where('branch_id', $pusatBranchId);
+            },
+        ])->orderBy('name')->get();
         $deliveries = Deliveries::whereHas('sale', function ($query) {
             $query->where('branch_id', auth()->user()->branch_id);
         })->with(['sale.salesItems'])->orderBy('created_at', 'desc')->get();
