@@ -108,18 +108,25 @@ class DeliveriesController extends Controller
             $delivery->update($validated);
 
             if ($isReceivedNow) {
-                $branchId = auth()->user()->branch_id ?? $delivery->sale->branch_id ?? null;
+                $purchaseOrder = PurchaseOrders::where('sale_id', $delivery->sale_id)->first();
+                if ($purchaseOrder) {
+                    $purchaseOrder->update(['status' => 'Completed']);
+                }
+
+                $isOutletDelivery = ($delivery->sale && ! empty($delivery->sale->outlet_id)) || ($purchaseOrder && ! empty($purchaseOrder->outlet_id));
+
+                if ($isOutletDelivery) {
+                    $branchId = $delivery->sale->branch_id ?? ($purchaseOrder ? $purchaseOrder->branch_id : null) ?? ($purchaseOrder && $purchaseOrder->outlet ? $purchaseOrder->outlet->branch_id : null);
+                } else {
+                    $branchId = auth()->user()->branch_id ?? $delivery->sale->branch_id ?? null;
+                }
 
                 if ($branchId && $delivery->sale_id) {
                     $items = [];
-                    $purchaseOrder = PurchaseOrders::where('sale_id', $delivery->sale_id)->first();
-                    if ($purchaseOrder) {
-                        $purchaseOrder->update(['status' => 'Completed']);
-                        if ($purchaseOrder->notes) {
-                            $notesData = json_decode($purchaseOrder->notes, true);
-                            if (isset($notesData['items']) && is_array($notesData['items'])) {
-                                $items = $notesData['items'];
-                            }
+                    if ($purchaseOrder && $purchaseOrder->notes) {
+                        $notesData = json_decode($purchaseOrder->notes, true);
+                        if (isset($notesData['items']) && is_array($notesData['items'])) {
+                            $items = $notesData['items'];
                         }
                     }
 
@@ -145,27 +152,46 @@ class DeliveriesController extends Controller
                                 ->first();
 
                             $previousStock = 0;
-                            if ($stockRecord) {
-                                $previousStock = $stockRecord->stock;
-                                $stockRecord->increment('stock', $qty);
+                            if ($isOutletDelivery) {
+                                if ($stockRecord) {
+                                    $previousStock = $stockRecord->stock;
+                                    $stockRecord->decrement('stock', $qty);
+                                } else {
+                                    $stockRecord = ProductStock::create([
+                                        'id' => (string) Str::uuid(),
+                                        'product_id' => $productId,
+                                        'branch_id' => $branchId,
+                                        'stock' => -$qty,
+                                        'minimum_stock' => 0,
+                                        'average_cost' => $price,
+                                    ]);
+                                }
+                                $newStock = $previousStock - $qty;
+                                $stockType = 'OUT';
                             } else {
-                                $stockRecord = ProductStock::create([
-                                    'id' => (string) Str::uuid(),
-                                    'product_id' => $productId,
-                                    'branch_id' => $branchId,
-                                    'stock' => $qty,
-                                    'minimum_stock' => 0,
-                                    'average_cost' => $price,
-                                ]);
+                                if ($stockRecord) {
+                                    $previousStock = $stockRecord->stock;
+                                    $stockRecord->increment('stock', $qty);
+                                } else {
+                                    $stockRecord = ProductStock::create([
+                                        'id' => (string) Str::uuid(),
+                                        'product_id' => $productId,
+                                        'branch_id' => $branchId,
+                                        'stock' => $qty,
+                                        'minimum_stock' => 0,
+                                        'average_cost' => $price,
+                                    ]);
+                                }
+                                $newStock = $previousStock + $qty;
+                                $stockType = 'IN';
                             }
-                            $newStock = $previousStock + $qty;
 
                             // Create stock history record
                             StockHistories::create([
                                 'id' => (string) Str::uuid(),
                                 'product_id' => $productId,
                                 'branch_id' => $branchId,
-                                'type' => 'IN',
+                                'type' => $stockType,
                                 'qty' => $qty,
                                 'previous_stock' => $previousStock,
                                 'new_stock' => $newStock,

@@ -5,11 +5,13 @@ namespace Tests\Feature;
 use App\Models\Branch;
 use App\Models\Category;
 use App\Models\Deliveries;
+use App\Models\Outlets;
 use App\Models\Product;
 use App\Models\ProductStock;
 use App\Models\PurchaseOrders;
 use App\Models\Role;
 use App\Models\Sales;
+use App\Models\StockHistories;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
@@ -387,6 +389,137 @@ class DeliveriesTest extends TestCase
         $response = $this->actingAs($this->user)->putJson(route('deliveries.update', $delivery->id), $payload);
         $response->assertStatus(200);
         $this->assertEquals(2, $stock->fresh()->stock);
+    }
+
+    public function test_updating_delivery_status_to_diterima_for_outlet_delivery_decrements_branch_stock(): void
+    {
+        $category = Category::create([
+            'id' => (string) Str::uuid(),
+            'name' => 'Elektronik',
+        ]);
+
+        $product = Product::create([
+            'id' => (string) Str::uuid(),
+            'category_id' => $category->id,
+            'sku' => 'SKU-OUTLET-123',
+            'name' => 'Product for Outlet PO',
+            'buy_price' => 50000,
+            'sell_price' => 60000,
+        ]);
+
+        // Set initial stock of this product at the branch to 10
+        ProductStock::create([
+            'id' => (string) Str::uuid(),
+            'product_id' => $product->id,
+            'branch_id' => $this->branch->id,
+            'stock' => 10,
+            'minimum_stock' => 0,
+            'average_cost' => 50000,
+        ]);
+
+        // Create an outlet for this branch
+        $outlet = Outlets::create([
+            'id' => (string) Str::uuid(),
+            'branch_id' => $this->branch->id,
+            'name' => 'Outlet Lucifer A',
+            'address' => 'Jl. Outlet A No. 1',
+            'phone' => '08777777777',
+        ]);
+
+        $outletRole = Role::firstOrCreate(['name' => 'outlet'], ['id' => (string) Str::uuid()]);
+        $outletUser = User::factory()->create([
+            'role_id' => $outletRole->id,
+            'outlet_id' => $outlet->id,
+            'branch_id' => null,
+        ]);
+
+        $notesData = [
+            'user_notes' => 'Catatan PO Outlet',
+            'subtotal' => 100000,
+            'discount' => 0,
+            'tax' => 0,
+            'grand_total' => 100000,
+            'payment_method' => 'TUNAI',
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'name' => $product->name,
+                    'sku' => $product->sku,
+                    'qty' => 3,
+                    'price' => 50000,
+                ],
+            ],
+        ];
+
+        // Create a PO made by this outlet to this branch
+        $purchaseOrder = PurchaseOrders::create([
+            'id' => (string) Str::uuid(),
+            'po_number' => 'PO-TEST-OUTLET-001',
+            'outlet_id' => $outlet->id,
+            'branch_id' => $this->branch->id,
+            'user_id' => $outletUser->id,
+            'status' => 'Pending',
+            'notes' => json_encode($notesData),
+        ]);
+
+        // We act as a branch user to approve the PO
+        $cabangRole = Role::firstOrCreate(['name' => 'cabang'], ['id' => (string) Str::uuid()]);
+        $cabangUser = User::factory()->create([
+            'role_id' => $cabangRole->id,
+            'branch_id' => $this->branch->id,
+        ]);
+
+        $this->actingAs($cabangUser)->putJson(route('purchase-orders.update', $purchaseOrder->id), [
+            'po_number' => $purchaseOrder->po_number,
+            'outlet_id' => $outlet->id,
+            'branch_id' => $this->branch->id,
+            'user_id' => $outletUser->id,
+            'status' => 'Approved',
+        ])->assertStatus(200);
+
+        // Verify that the branch's stock did NOT change on PO approval
+        $stockRecord = ProductStock::where('product_id', $product->id)
+            ->where('branch_id', $this->branch->id)
+            ->first();
+        $this->assertEquals(10, $stockRecord->stock);
+
+        // Find the created delivery
+        $freshPo = $purchaseOrder->fresh();
+        $this->assertNotNull($freshPo->sale_id);
+
+        $delivery = Deliveries::where('sale_id', $freshPo->sale_id)->firstOrFail();
+        $this->assertEquals('PENDING', $delivery->status);
+
+        // Confirm delivery status to DITERIMA
+        $payload = [
+            'status' => 'DITERIMA',
+            'received_at' => '2026-07-05 15:00:00',
+        ];
+
+        // The outlet user receives the delivery
+        $response = $this->actingAs($outletUser)->putJson(route('deliveries.update', $delivery->id), $payload);
+        $response->assertStatus(200);
+
+        // Verify delivery status changed
+        $this->assertEquals('DITERIMA', $delivery->fresh()->status);
+
+        // Verify purchase order status is Completed
+        $this->assertEquals('Completed', $purchaseOrder->fresh()->status);
+
+        // Verify branch product stock decreased by 3 (from 10 to 7)
+        $stockRecord = $stockRecord->fresh();
+        $this->assertEquals(7, $stockRecord->stock);
+
+        // Verify StockHistories record has type 'OUT' for this decrement
+        $history = StockHistories::where('product_id', $product->id)
+            ->where('branch_id', $this->branch->id)
+            ->where('type', 'OUT')
+            ->first();
+
+        $this->assertNotNull($history);
+        $this->assertEquals(3, $history->qty);
+        $this->assertEquals(10, $history->previous_stock);
+        $this->assertEquals(7, $history->new_stock);
     }
 
     public function test_cabang_user_can_access_cabang_pengiriman_page(): void

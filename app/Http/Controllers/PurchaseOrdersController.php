@@ -218,43 +218,45 @@ class PurchaseOrdersController extends Controller
                                 'is_wholesale' => ! empty($item['is_wholesale']),
                             ]);
 
-                            // Kurangi stok Gudang Pusat
-                            $pusatBranchId = auth()->user()->branch_id ?? 'BRC-001';
-                            $qty = $item['qty'];
+                            // Kurangi stok Gudang Pusat (hanya jika PO bukan untuk outlet)
+                            if (empty($purchaseOrder->outlet_id)) {
+                                $pusatBranchId = auth()->user()->branch_id ?? 'BRC-001';
+                                $qty = $item['qty'];
 
-                            $pusatStock = ProductStock::where('product_id', $product->id)
-                                ->where('branch_id', $pusatBranchId)
-                                ->first();
+                                $pusatStock = ProductStock::where('product_id', $product->id)
+                                    ->where('branch_id', $pusatBranchId)
+                                    ->first();
 
-                            $previousStock = 0;
-                            if ($pusatStock) {
-                                $previousStock = $pusatStock->stock;
-                                $pusatStock->decrement('stock', $qty);
-                            } else {
-                                $pusatStock = ProductStock::create([
+                                $previousStock = 0;
+                                if ($pusatStock) {
+                                    $previousStock = $pusatStock->stock;
+                                    $pusatStock->decrement('stock', $qty);
+                                } else {
+                                    $pusatStock = ProductStock::create([
+                                        'id' => (string) Str::uuid(),
+                                        'product_id' => $product->id,
+                                        'branch_id' => $pusatBranchId,
+                                        'stock' => -$qty,
+                                        'minimum_stock' => 0,
+                                        'average_cost' => $product->buy_price,
+                                    ]);
+                                }
+                                $newStock = $previousStock - $qty;
+
+                                // Catat ke StockHistories
+                                StockHistories::create([
                                     'id' => (string) Str::uuid(),
                                     'product_id' => $product->id,
                                     'branch_id' => $pusatBranchId,
-                                    'stock' => -$qty,
-                                    'minimum_stock' => 0,
-                                    'average_cost' => $product->buy_price,
+                                    'type' => 'OUT',
+                                    'qty' => $qty,
+                                    'previous_stock' => $previousStock,
+                                    'new_stock' => $newStock,
+                                    'reference_type' => PurchaseOrders::class,
+                                    'reference_id' => $purchaseOrder->id,
+                                    'user_id' => auth()->id() ?? $purchaseOrder->user_id,
                                 ]);
                             }
-                            $newStock = $previousStock - $qty;
-
-                            // Catat ke StockHistories
-                            StockHistories::create([
-                                'id' => (string) Str::uuid(),
-                                'product_id' => $product->id,
-                                'branch_id' => $pusatBranchId,
-                                'type' => 'OUT',
-                                'qty' => $qty,
-                                'previous_stock' => $previousStock,
-                                'new_stock' => $newStock,
-                                'reference_type' => PurchaseOrders::class,
-                                'reference_id' => $purchaseOrder->id,
-                                'user_id' => auth()->id() ?? $purchaseOrder->user_id,
-                            ]);
                         }
                     }
 
