@@ -160,4 +160,36 @@ class PurchaseOrdersApprovalTest extends TestCase
             'status' => 'PENDING',
         ]);
     }
+
+    public function test_approved_purchase_order_is_hidden_on_dashboard_after_midnight(): void
+    {
+        // Assert it is currently visible on the dashboard as Pending
+        $response = $this->actingAs($this->admin)->get(route('admin.dashboard'));
+        $response->assertStatus(200);
+        $response->assertSee($this->purchaseOrder->po_number);
+
+        // Approve the PO today
+        $notes = json_decode($this->purchaseOrder->notes, true);
+        $this->actingAs($this->admin)->putJson(route('purchase-orders.update', $this->purchaseOrder->id), [
+            'po_number' => $this->purchaseOrder->po_number,
+            'branch_id' => $this->purchaseOrder->branch_id,
+            'user_id' => $this->purchaseOrder->user_id,
+            'status' => 'Approved',
+            'notes' => json_encode($notes),
+            'sale_id' => null,
+        ])->assertStatus(200);
+
+        // Verify it is still visible on the dashboard today as Approved
+        $response = $this->actingAs($this->admin)->get(route('admin.dashboard'));
+        $response->assertStatus(200);
+        $response->assertSee($this->purchaseOrder->po_number);
+
+        // Travel to the next day
+        $this->travel(1)->days();
+
+        // Verify it is now hidden from the dashboard
+        $response = $this->actingAs($this->admin)->get(route('admin.dashboard'));
+        $response->assertStatus(200);
+        $response->assertDontSee($this->purchaseOrder->po_number);
+    }
 }

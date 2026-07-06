@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
 use App\Models\Outlets;
+use App\Models\Role;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -14,8 +17,10 @@ class OutletsController extends Controller
     public function index(Request $request)
     {
         $outlets = Outlets::with('branch')->get();
-        $branches = \App\Models\Branch::all();
-        $adminBranchIds = \App\Models\User::whereHas('role', function($q){ $q->where('name', 'admin'); })->pluck('branch_id')->toArray();
+        $branches = Branch::all();
+        $adminBranchIds = User::whereHas('role', function ($q) {
+            $q->where('name', 'admin');
+        })->pluck('branch_id')->toArray();
 
         if ($request->wantsJson()) {
             return response()->json(['outlets' => $outlets, 'branches' => $branches, 'adminBranchIds' => $adminBranchIds]);
@@ -46,7 +51,7 @@ class OutletsController extends Controller
         // Create associated User with role "outlet"
         $outletUserData = [
             'id' => (string) Str::uuid(),
-            'role_id' => \App\Models\Role::where('name', 'outlet')->value('id'),
+            'role_id' => Role::where('name', 'outlet')->value('id'),
             'branch_id' => $validated['branch_id'],
             'outlet_id' => $outlet->id,
             'name' => $validated['name'], // use outlet name as user name
@@ -54,7 +59,7 @@ class OutletsController extends Controller
             'password' => $validated['password'], // will be hashed via mutator
             'status' => 'active', // default status
         ];
-        \App\Models\User::create($outletUserData);
+        User::create($outletUserData);
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -131,4 +136,3 @@ class OutletsController extends Controller
         return $this->delete($request, $id);
     }
 }
-

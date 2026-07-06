@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DeliveriesController;
+use App\Http\Controllers\OutletsController;
 use App\Http\Controllers\ProductBranchPricesController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductStockController;
@@ -20,7 +21,6 @@ use App\Http\Controllers\SuppliersController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WholesalePriceController;
 use App\Http\Controllers\WilayahController;
-use App\Http\Controllers\OutletsController;
 use App\Http\Middleware\AuthCheck;
 use App\Models\Deliveries;
 use App\Models\Product;
@@ -59,7 +59,14 @@ Route::prefix('admin')->middleware(['auth', 'role.admin'])->group(function () {
     Route::get('/dashboard', function () {
         $purchaseOrders = PurchaseOrders::whereHas('user', function ($query) {
             $query->where('parent_id', auth()->id());
-        })->with(['branch', 'user'])->orderBy('created_at', 'desc')->get();
+        })
+            ->where(function ($query) {
+                $query->where('status', '!=', 'Approved')
+                    ->orWhereDate('updated_at', '>=', now()->toDateString());
+            })
+            ->with(['branch', 'user'])
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         return view('admin.dashboard', compact('purchaseOrders'));
     })->name('admin.dashboard');
@@ -72,7 +79,6 @@ Route::prefix('admin')->middleware(['auth', 'role.admin'])->group(function () {
     Route::resource('suppliers', SuppliersController::class);
     Route::resource('users', UserController::class);
     Route::resource('purchases', PurchasesController::class);
-
 
     // Wholesale Prices Routes
     Route::post('/wholesale-prices', [WholesalePriceController::class, 'store'])->name('wholesale-prices.store');
@@ -90,9 +96,6 @@ Route::prefix('admin')->middleware(['auth', 'role.admin'])->group(function () {
         'store', 'show', 'update', 'destroy',
     ]);
 
-    
-
-    
 });
 
 // Cabang Dashboard Routes
@@ -107,8 +110,8 @@ Route::prefix('cabang')->middleware(['auth', 'role.cabang'])->group(function () 
     })->name('cabang.dashboard');
 
     Route::get('/monitoring-stok', [ProductStockController::class, 'monitoringStok'])->name('cabang.monitoring-stok');
-        // Penjualan Cabang Route
-        Route::get('/penjualan', [SalesController::class, 'cabangIndex'])->name('cabang.penjualan');
+    // Penjualan Cabang Route
+    Route::get('/penjualan', [SalesController::class, 'cabangIndex'])->name('cabang.penjualan');
     Route::put('/monitoring-stok/{id}', [ProductStockController::class, 'updateCabangStock'])->name('cabang.monitoring-stok.update');
     Route::resource('stock-histories', StockHistoriesController::class);
 
@@ -135,21 +138,21 @@ Route::prefix('auth')->group(function () {
         Route::resource('purchase-orders', PurchaseOrdersController::class);
         Route::delete('purchase-orders/{id}/delete', [PurchaseOrdersController::class, 'delete'])->name('purchase-orders.delete');
         Route::resource('deliveries', DeliveriesController::class);
-    // Sales Routes
-    Route::resource('sales', SalesController::class);
+        // Sales Routes
+        Route::resource('sales', SalesController::class);
 
-    // Sales Items routes
-    Route::prefix('sales-items')->group(function () {
-        Route::post('/', [SalesItemController::class, 'store'])->name('sales-items.store');
-        Route::get('/{id}', [SalesItemController::class, 'show'])->name('sales-items.show');
-        Route::put('/{id}', [SalesItemController::class, 'update'])->name('sales-items.update');
-        Route::delete('/{id}', [SalesItemController::class, 'destroy'])->name('sales-items.destroy');
-    });
+        // Sales Items routes
+        Route::prefix('sales-items')->group(function () {
+            Route::post('/', [SalesItemController::class, 'store'])->name('sales-items.store');
+            Route::get('/{id}', [SalesItemController::class, 'show'])->name('sales-items.show');
+            Route::put('/{id}', [SalesItemController::class, 'update'])->name('sales-items.update');
+            Route::delete('/{id}', [SalesItemController::class, 'destroy'])->name('sales-items.destroy');
+        });
 
-    // Sales Payments routes
+        // Sales Payments routes
         Route::post('/sales-payments', [SalesPaymentController::class, 'create'])->name('sales-payments.store');
-    Route::get('/sales-payments/{id}', [SalesPaymentController::class, 'show'])->name('sales-payments.show');
-    Route::put('/sales-payments/{id}', [SalesPaymentController::class, 'update'])->name('sales-payments.update');
+        Route::get('/sales-payments/{id}', [SalesPaymentController::class, 'show'])->name('sales-payments.show');
+        Route::put('/sales-payments/{id}', [SalesPaymentController::class, 'update'])->name('sales-payments.update');
         Route::delete('/sales-payments/{id}', [SalesPaymentController::class, 'delete'])->name('sales-payments.destroy');
     });
 });

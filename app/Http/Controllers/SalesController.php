@@ -164,8 +164,9 @@ class SalesController extends Controller
 
         $branches = Branch::where('id', $branchId)->get();
         $products = Product::all();
+
         return view('cabang.penjualan', compact('sales', 'branches', 'products'));
-        
+
     }
 
     public function edit($id)
