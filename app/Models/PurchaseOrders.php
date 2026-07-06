@@ -17,6 +17,7 @@ class PurchaseOrders extends Model
         'id',
         'po_number',
         'branch_id',
+        'outlet_id',
         'user_id',
         'status',
         'notes',
@@ -29,6 +30,14 @@ class PurchaseOrders extends Model
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class, 'branch_id');
+    }
+
+    /**
+     * Get the outlet that requested the purchase order.
+     */
+    public function outlet(): BelongsTo
+    {
+        return $this->belongsTo(Outlets::class, 'outlet_id');
     }
 
     /**

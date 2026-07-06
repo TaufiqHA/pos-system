@@ -22,10 +22,12 @@ class PurchaseOrdersController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $query = PurchaseOrders::with(['branch', 'user', 'sale']);
+        $query = PurchaseOrders::with(['branch', 'outlet', 'user', 'sale']);
 
         if ($user->role && $user->role->name === 'cabang') {
             $query->where('branch_id', $user->branch_id);
+        } elseif ($user->role && $user->role->name === 'outlet') {
+            $query->where('outlet_id', $user->outlet_id);
         }
 
         $purchaseOrders = $query->orderBy('created_at', 'desc')->get();
@@ -66,7 +68,8 @@ class PurchaseOrdersController extends Controller
     {
         $validated = $request->validate([
             'po_number' => 'nullable|string|max:255|unique:purchase_orders,po_number',
-            'branch_id' => 'required|exists:branches,id',
+            'branch_id' => 'required_without:outlet_id|nullable|exists:branches,id',
+            'outlet_id' => 'required_without:branch_id|nullable|exists:outlets,id',
             'user_id' => 'required|exists:users,id',
             'status' => 'required|string|in:Draft,Pending,Approved,Rejected,Completed',
             'notes' => 'nullable|string',
@@ -104,7 +107,7 @@ class PurchaseOrdersController extends Controller
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'Purchase Order berhasil dibuat',
-                'data' => $purchaseOrder->load(['branch', 'user', 'sale']),
+                'data' => $purchaseOrder->load(['branch', 'outlet', 'user', 'sale']),
             ], 201);
         }
 
@@ -116,7 +119,7 @@ class PurchaseOrdersController extends Controller
      */
     public function show($id)
     {
-        $purchaseOrder = PurchaseOrders::with(['branch', 'user', 'sale'])->findOrFail($id);
+        $purchaseOrder = PurchaseOrders::with(['branch', 'outlet', 'user', 'sale'])->findOrFail($id);
 
         return response()->json($purchaseOrder);
     }
@@ -138,7 +141,8 @@ class PurchaseOrdersController extends Controller
 
         $validated = $request->validate([
             'po_number' => 'nullable|string|max:255|unique:purchase_orders,po_number,'.$id,
-            'branch_id' => 'required|exists:branches,id',
+            'branch_id' => 'required_without:outlet_id|nullable|exists:branches,id',
+            'outlet_id' => 'required_without:branch_id|nullable|exists:outlets,id',
             'user_id' => 'required|exists:users,id',
             'status' => 'required|string|in:Draft,Pending,Approved,Rejected,Completed',
             'notes' => 'nullable|string',
@@ -174,10 +178,18 @@ class PurchaseOrdersController extends Controller
                 }
 
                 DB::transaction(function () use ($purchaseOrder, $notesData, $invoice) {
+                    $saleBranchId = $purchaseOrder->branch_id;
+                    $saleOutletId = $purchaseOrder->outlet_id;
+
+                    if (empty($saleBranchId) && ! empty($saleOutletId)) {
+                        $saleBranchId = $purchaseOrder->outlet->branch_id ?? null;
+                    }
+
                     $sale = Sales::create([
                         'id' => (string) Str::uuid(),
                         'invoice' => $invoice,
-                        'branch_id' => $purchaseOrder->branch_id,
+                        'branch_id' => $saleBranchId,
+                        'outlet_id' => $saleOutletId,
                         'user_id' => $purchaseOrder->user_id,
                         'create_by' => auth()->id(),
                         'date' => now()->format('Y-m-d H:i:s'),

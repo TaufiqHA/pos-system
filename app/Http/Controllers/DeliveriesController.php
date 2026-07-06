@@ -16,10 +16,20 @@ class DeliveriesController extends Controller
 {
     public function index(Request $request)
     {
-        $deliveries = Deliveries::with('sale')->orderBy('created_at', 'desc')->get();
+        $deliveries = Deliveries::with('sale')
+            ->where('created_by', auth()->id())
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         if ($request->wantsJson()) {
             return response()->json($deliveries);
+        }
+
+        $user = auth()->user();
+        if ($user && $user->role && $user->role->name === 'cabang') {
+            return redirect()->route('cabang.pengiriman');
+        } elseif ($user && $user->role && $user->role->name === 'outlet') {
+            return redirect()->route('outlet.dashboard');
         }
 
         $sales = Sales::whereDoesntHave('delivery')->get();
@@ -53,6 +63,13 @@ class DeliveriesController extends Controller
 
         if ($request->wantsJson()) {
             return response()->json($delivery, 201);
+        }
+
+        $user = auth()->user();
+        if ($user && $user->role && $user->role->name === 'cabang') {
+            return redirect()->route('cabang.pengiriman')->with('success', 'Pengiriman berhasil dibuat');
+        } elseif ($user && $user->role && $user->role->name === 'outlet') {
+            return redirect()->route('outlet.dashboard')->with('success', 'Pengiriman berhasil dibuat');
         }
 
         return redirect()->route('deliveries.index')->with('success', 'Pengiriman berhasil dibuat');
@@ -166,6 +183,13 @@ class DeliveriesController extends Controller
             return response()->json($delivery->fresh());
         }
 
+        $user = auth()->user();
+        if ($user && $user->role && $user->role->name === 'cabang') {
+            return redirect()->route('cabang.pengiriman')->with('success', 'Pengiriman berhasil diupdate');
+        } elseif ($user && $user->role && $user->role->name === 'outlet') {
+            return redirect()->route('outlet.dashboard')->with('success', 'Pengiriman berhasil diupdate');
+        }
+
         return redirect()->route('deliveries.index')->with('success', 'Pengiriman berhasil diupdate');
     }
 
@@ -176,6 +200,13 @@ class DeliveriesController extends Controller
 
         if ($request->wantsJson()) {
             return response()->json(['message' => 'Deleted']);
+        }
+
+        $user = auth()->user();
+        if ($user && $user->role && $user->role->name === 'cabang') {
+            return redirect()->route('cabang.pengiriman')->with('success', 'Pengiriman berhasil dihapus');
+        } elseif ($user && $user->role && $user->role->name === 'outlet') {
+            return redirect()->route('outlet.dashboard')->with('success', 'Pengiriman berhasil dihapus');
         }
 
         return redirect()->route('deliveries.index')->with('success', 'Pengiriman berhasil dihapus');

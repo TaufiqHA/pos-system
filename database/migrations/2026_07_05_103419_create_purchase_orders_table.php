@@ -14,14 +14,16 @@ return new class extends Migration
         Schema::create('purchase_orders', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->string('po_number')->unique();
-            $table->string('branch_id');
+            $table->string('branch_id')->nullable();
+            $table->string('outlet_id')->nullable();
             $table->string('user_id');
             $table->string('status'); // Draft, Pending, Approved, Rejected, Completed
             $table->text('notes')->nullable();
             $table->string('sale_id')->nullable();
             $table->timestamps();
 
-            $table->foreign('branch_id')->references('id')->on('branches')->onDelete('cascade');
+            $table->foreign('branch_id')->references('id')->on('branches')->onDelete('set null');
+            $table->foreign('outlet_id')->references('id')->on('outlets')->onDelete('set null');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('sale_id')->references('id')->on('sales')->onDelete('set null');
         });

@@ -86,6 +86,7 @@ class DeliveriesTest extends TestCase
             'status' => 'PENDING',
             'sent_at' => null,
             'received_at' => null,
+            'created_by' => $this->user->id,
         ]);
 
         $response = $this->actingAs($this->user)->getJson(route('deliveries.index'));

@@ -25,6 +25,7 @@ use App\Http\Middleware\AuthCheck;
 use App\Models\Deliveries;
 use App\Models\Product;
 use App\Models\PurchaseOrders;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -100,8 +101,10 @@ Route::prefix('admin')->middleware(['auth', 'role.admin'])->group(function () {
 
 // Cabang Dashboard Routes
 Route::prefix('cabang')->middleware(['auth', 'role.cabang'])->group(function () {
-    Route::get('/dashboard', function () {
+    Route::get('/dashboard', function (Request $request) {
         $pusatBranchId = auth()->user()->parent->branch_id ?? 'BRC-001';
+        $branchId = auth()->user()->branch_id;
+
         $products = Product::with([
             'wholesalePrices' => function ($query) use ($pusatBranchId) {
                 $query->where('branch_id', $pusatBranchId);
@@ -110,11 +113,21 @@ Route::prefix('cabang')->middleware(['auth', 'role.cabang'])->group(function () 
                 $query->where('branch_id', $pusatBranchId);
             },
         ])->orderBy('name')->get();
-        $deliveries = Deliveries::whereHas('sale', function ($query) {
-            $query->where('branch_id', auth()->user()->branch_id);
-        })->with(['sale.salesItems'])->orderBy('created_at', 'desc')->get();
+        $deliveries = Deliveries::where('created_by', '!=', auth()->id())
+            ->whereHas('sale', function ($query) {
+                $query->where('branch_id', auth()->user()->branch_id);
+            })->with(['sale.salesItems'])->orderBy('created_at', 'desc')->get();
 
-        return view('cabang.dashboard', compact('products', 'deliveries'));
+        // Fetch PO requests from outlets belonging to this branch
+        $outletPurchaseOrders = PurchaseOrders::whereHas('outlet', function ($query) use ($branchId) {
+            $query->where('branch_id', $branchId);
+        })->with(['outlet', 'user', 'sale'])->orderBy('created_at', 'desc')->get();
+
+        $selectedPoId = $request->query('outlet_po_id');
+        $selectedPo = $selectedPoId ? $outletPurchaseOrders->firstWhere('id', $selectedPoId) : null;
+        $selectedPoNotes = $selectedPo ? json_decode($selectedPo->notes, true) : null;
+
+        return view('cabang.dashboard', compact('products', 'deliveries', 'outletPurchaseOrders', 'selectedPo', 'selectedPoNotes'));
     })->name('cabang.dashboard');
 
     Route::get('/monitoring-stok', [ProductStockController::class, 'monitoringStok'])->name('cabang.monitoring-stok');
@@ -144,7 +157,26 @@ Route::prefix('cabang')->middleware(['auth', 'role.cabang'])->group(function () 
 // Outlet Dashboard Routes
 Route::prefix('outlet')->middleware(['auth', 'role.outlet'])->group(function () {
     Route::get('/dashboard', function () {
-        return view('outlet.dashboard');
+        $outletId = auth()->user()->outlet_id;
+        $branchId = auth()->user()->branch_id ?? 'BRC-001';
+
+        $deliveries = collect();
+        if ($outletId) {
+            $deliveries = Deliveries::whereHas('sale', function ($query) use ($outletId) {
+                $query->where('outlet_id', $outletId);
+            })->with(['sale.salesItems'])->orderBy('created_at', 'desc')->get();
+        }
+
+        $products = Product::with([
+            'wholesalePrices' => function ($query) use ($branchId) {
+                $query->where('branch_id', $branchId);
+            },
+            'branchPrices' => function ($query) use ($branchId) {
+                $query->where('branch_id', $branchId);
+            },
+        ])->orderBy('name')->get();
+
+        return view('outlet.dashboard', compact('deliveries', 'products'));
     })->name('outlet.dashboard');
 });
 
