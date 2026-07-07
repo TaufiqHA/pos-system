@@ -583,4 +583,97 @@ class SalesTest extends TestCase
             'user_id' => $cabangUser->id,
         ]);
     }
+
+    public function test_can_filter_sales_by_search(): void
+    {
+        // Create matching sale
+        $matchSale = Sales::create([
+            'id' => (string) Str::uuid(),
+            'invoice' => 'INV-MATCH-SEARCH',
+            'branch_id' => $this->branch->id,
+            'user_id' => $this->user->id,
+            'create_by' => $this->user->id,
+            'date' => '2026-07-04 22:00:00',
+            'subtotal' => 100000.00,
+            'discount' => 10000.00,
+            'tax' => 9000.00,
+            'grand_total' => 99000.00,
+            'status' => 'completed',
+        ]);
+
+        // Create non-matching sale
+        $otherSale = Sales::create([
+            'id' => (string) Str::uuid(),
+            'invoice' => 'INV-OTHER-INVOICE',
+            'branch_id' => $this->branch->id,
+            'user_id' => $this->user->id,
+            'create_by' => $this->user->id,
+            'date' => '2026-07-04 22:00:00',
+            'subtotal' => 100000.00,
+            'discount' => 10000.00,
+            'tax' => 9000.00,
+            'grand_total' => 99000.00,
+            'status' => 'completed',
+        ]);
+
+        $response = $this->actingAs($this->user)->get(route('sales.index', ['search' => 'MATCH']));
+
+        $response->assertStatus(200);
+        $response->assertViewHas('sales');
+
+        $sales = $response->viewData('sales');
+        $this->assertTrue($sales->contains('id', $matchSale->id));
+        $this->assertFalse($sales->contains('id', $otherSale->id));
+    }
+
+    public function test_can_filter_sales_by_wilayah(): void
+    {
+        // Create second branch in a different wilayah
+        $otherBranch = Branch::create([
+            'id' => (string) Str::uuid(),
+            'name' => 'Cabang Semarang',
+            'address' => 'Jl. Semarang No. 12',
+            'phone' => '081234567891',
+            'wilayah_id' => 'Jawa Tengah',
+            'notes' => 'Catatan Cabang',
+        ]);
+
+        // Create sales
+        $saleInJabar = Sales::create([
+            'id' => (string) Str::uuid(),
+            'invoice' => 'INV-JABAR-001',
+            'branch_id' => $this->branch->id, // Jawa Barat
+            'user_id' => $this->user->id,
+            'create_by' => $this->user->id,
+            'date' => '2026-07-04 22:00:00',
+            'subtotal' => 100000.00,
+            'discount' => 10000.00,
+            'tax' => 9000.00,
+            'grand_total' => 99000.00,
+            'status' => 'completed',
+        ]);
+
+        $saleInJateng = Sales::create([
+            'id' => (string) Str::uuid(),
+            'invoice' => 'INV-JATENG-001',
+            'branch_id' => $otherBranch->id, // Jawa Tengah
+            'user_id' => $this->user->id,
+            'create_by' => $this->user->id,
+            'date' => '2026-07-04 22:00:00',
+            'subtotal' => 100000.00,
+            'discount' => 10000.00,
+            'tax' => 9000.00,
+            'grand_total' => 99000.00,
+            'status' => 'completed',
+        ]);
+
+        $response = $this->actingAs($this->user)->get(route('sales.index', ['wilayah_id' => 'Jawa Barat']));
+
+        $response->assertStatus(200);
+        $response->assertViewHas('sales');
+
+        $sales = $response->viewData('sales');
+        $this->assertTrue($sales->contains('id', $saleInJabar->id));
+        $this->assertFalse($sales->contains('id', $saleInJateng->id));
+    }
 }

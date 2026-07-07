@@ -13,9 +13,21 @@
         $showModal = request()->has('show_modal') || request()->has('po_id');
     @endphp
     <div class="card p-6 rounded-2xl shadow-xl">
-        <div class="flex justify-between items-center mb-6">
-            <div></div>
-            <div class="flex items-center gap-3">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+            <!-- Filter Form -->
+            <form method="GET" action="{{ route('sales.index') }}" class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari invoice atau cabang..." class="w-full sm:w-64 bg-gray-900 border border-gray-800 text-white rounded-xl py-2.5 px-4 focus:outline-none focus:border-green-400 text-xs shadow-lg shadow-gray-900/20">
+                <select name="wilayah_id" onchange="this.form.submit()" class="w-full sm:w-auto bg-gray-900 border border-gray-800 text-white rounded-xl py-2.5 px-4 focus:outline-none focus:border-green-400 text-xs shadow-lg shadow-gray-900/20 cursor-pointer">
+                    <option value="">-- Semua Wilayah --</option>
+                    @foreach($wilayahs as $wilayah)
+                        <option value="{{ $wilayah->id }}" {{ request('wilayah_id') == $wilayah->id ? 'selected' : '' }}>
+                            {{ $wilayah->name }}
+                        </option>
+                    @endforeach
+                </select>
+                <button type="submit" class="hidden">Search</button>
+            </form>
+            <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto justify-end">
                 <button onclick="openPermintaanPoModal()"
                     class="w-full sm:w-auto justify-center border border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white font-semibold text-xs py-2.5 px-4 rounded-xl transition flex items-center gap-2 cursor-pointer relative">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

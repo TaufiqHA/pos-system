@@ -12,6 +12,7 @@ use App\Models\Sales;
 use App\Models\SalesItem;
 use App\Models\SalesPayment;
 use App\Models\StockHistories;
+use App\Models\Wilayah;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -28,10 +29,26 @@ class SalesController extends Controller
             return redirect()->route('cabang.penjualan');
         }
 
-        $sales = Sales::with(['branch.users', 'user', 'salesItems', 'salesPayments'])
-            ->where('create_by', auth()->id())
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $query = Sales::with(['branch.users', 'user', 'salesItems', 'salesPayments'])
+            ->where('create_by', auth()->id());
+
+        if ($request->filled('wilayah_id')) {
+            $query->whereHas('branch', function ($q) use ($request) {
+                $q->where('wilayah_id', $request->wilayah_id);
+            });
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('invoice', 'like', "%{$search}%")
+                    ->orWhereHas('branch', function ($q2) use ($search) {
+                        $q2->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $sales = $query->orderBy('created_at', 'desc')->get();
 
         if ($request->wantsJson()) {
             return response()->json($sales);
@@ -55,7 +72,9 @@ class SalesController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('admin.sale', compact('sales', 'products', 'branches', 'purchaseOrders'));
+        $wilayahs = Wilayah::orderBy('name')->get();
+
+        return view('admin.sale', compact('sales', 'products', 'branches', 'purchaseOrders', 'wilayahs'));
     }
 
     public function create()
