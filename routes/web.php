@@ -234,6 +234,8 @@ Route::prefix('outlet')->middleware(['auth', 'role.outlet'])->group(function () 
         $deliveries = collect();
         $totalBelanja = 0;
         $totalOrder = 0;
+        $chartLabels = [];
+        $chartValues = [];
 
         if ($outletId) {
             $deliveries = Deliveries::whereHas('sale', function ($query) use ($outletId) {
@@ -247,6 +249,30 @@ Route::prefix('outlet')->middleware(['auth', 'role.outlet'])->group(function () 
 
                 return (float) ($notes['grand_total'] ?? 0);
             });
+
+            // Prepare chart data (rolling last 6 months)
+            $indonesianMonths = [
+                1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'Mei', 6 => 'Jun',
+                7 => 'Jul', 8 => 'Agu', 9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des',
+            ];
+
+            for ($i = 5; $i >= 0; $i--) {
+                $date = now()->subMonths($i);
+                $monthNum = (int) $date->format('m');
+                $yearNum = (int) $date->format('Y');
+
+                $chartLabels[] = $indonesianMonths[$monthNum];
+
+                $sum = $purchaseOrders->filter(function ($po) use ($monthNum, $yearNum) {
+                    return $po->created_at->year === $yearNum && $po->created_at->month === $monthNum;
+                })->sum(function ($po) {
+                    $notes = json_decode($po->notes, true);
+
+                    return (float) ($notes['grand_total'] ?? 0);
+                });
+
+                $chartValues[] = (float) $sum;
+            }
         }
 
         $products = Product::with([
@@ -261,7 +287,7 @@ Route::prefix('outlet')->middleware(['auth', 'role.outlet'])->group(function () 
             },
         ])->orderBy('name')->get();
 
-        return view('outlet.dashboard', compact('deliveries', 'products', 'totalBelanja', 'totalOrder'));
+        return view('outlet.dashboard', compact('deliveries', 'products', 'totalBelanja', 'totalOrder', 'chartLabels', 'chartValues'));
     })->name('outlet.dashboard');
 
     Route::get('/order', function () {

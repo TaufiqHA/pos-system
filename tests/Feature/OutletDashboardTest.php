@@ -95,6 +95,8 @@ class OutletDashboardTest extends TestCase
         // Assert view variables
         $response->assertViewHas('totalBelanja', 25000000);
         $response->assertViewHas('totalOrder', 2);
+        $response->assertViewHas('chartLabels');
+        $response->assertViewHas('chartValues');
 
         // Assert content is rendered in view
         $response->assertSee('Rp 25.000.000');

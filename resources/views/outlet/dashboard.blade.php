@@ -85,7 +85,7 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <!-- Box 1: Order Barang -->
-            <div
+            <a href="{{ route('outlet.order') }}"
                 class="card p-5 rounded-xl flex items-center justify-between hover:bg-gray-800/80 cursor-pointer transition border border-gray-750 shadow-md group">
                 <div class="pr-2">
                     <p class="text-[9px] text-[#B4F481] font-bold mb-1 tracking-widest uppercase">Stok</p>
@@ -97,10 +97,10 @@
                     class="w-12 h-12 bg-white/5 rounded-xl border border-gray-700/80 flex-shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
                     <img src="https://cdn-icons-png.flaticon.com/512/3144/3144456.png" class="w-6 h-6 invert" alt="Icon">
                 </div>
-            </div>
+            </a>
 
             <!-- Box 2: Riwayat Transaksi -->
-            <div
+            <a href="{{ route('outlet.history') }}"
                 class="card p-5 rounded-xl flex items-center justify-between hover:bg-gray-800/80 cursor-pointer transition border border-gray-750 shadow-md group">
                 <div class="pr-2">
                     <p class="text-[9px] text-purple-400 font-bold mb-1 tracking-widest uppercase">History</p>
@@ -113,7 +113,7 @@
                     class="w-12 h-12 bg-white/5 rounded-xl border border-gray-700/80 flex-shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
                     <img src="https://cdn-icons-png.flaticon.com/512/869/869636.png" class="w-6 h-6 invert" alt="Icon">
                 </div>
-            </div>
+            </a>
         </div>
     </div>
 
@@ -467,10 +467,10 @@
             new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul'],
+                    labels: {!! json_encode($chartLabels) !!},
                     datasets: [{
                         label: 'Total Belanja',
-                        data: [8000000, 12000000, 11000000, 19000000, 15000000, 22000000, 25000000],
+                        data: {!! json_encode($chartValues) !!},
                         borderColor: '#B4F481',
                         borderWidth: 3,
                         backgroundColor: gradient,
