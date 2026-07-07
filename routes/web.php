@@ -24,9 +24,12 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\WholesalePriceController;
 use App\Http\Controllers\WilayahController;
 use App\Http\Middleware\AuthCheck;
+use App\Models\Debts;
 use App\Models\Deliveries;
 use App\Models\Product;
+use App\Models\ProductStock;
 use App\Models\PurchaseOrders;
+use App\Models\Sales;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -133,7 +136,66 @@ Route::prefix('cabang')->middleware(['auth', 'role.cabang'])->group(function () 
         $selectedPo = $selectedPoId ? $outletPurchaseOrders->firstWhere('id', $selectedPoId) : null;
         $selectedPoNotes = $selectedPo ? json_decode($selectedPo->notes, true) : null;
 
-        return view('cabang.dashboard', compact('products', 'deliveries', 'outletPurchaseOrders', 'selectedPo', 'selectedPoNotes'));
+        // Calculate dynamic dashboard metrics
+        $omsetPenjualan = Sales::where('branch_id', $branchId)->sum('grand_total');
+        $omsetHariIni = Sales::where('branch_id', $branchId)->whereDate('date', now()->toDateString())->sum('grand_total');
+
+        $hutangPusat = Debts::where('debtor_type', 'branch')
+            ->where('debtor_branch_id', $branchId)
+            ->where('creditor_type', 'branch')
+            ->sum('remaining_amount');
+        $hutangPusatCount = Debts::where('debtor_type', 'branch')
+            ->where('debtor_branch_id', $branchId)
+            ->where('creditor_type', 'branch')
+            ->where('remaining_amount', '>', 0)
+            ->count();
+
+        $totalProduk = Product::count();
+        $totalStok = ProductStock::where('branch_id', $branchId)->sum('stock') ?? 0;
+
+        // Prepare chart data (rolling last 6 months)
+        $startDate = now()->subMonths(5)->startOfMonth();
+        $monthlySalesData = Sales::where('branch_id', $branchId)
+            ->where('date', '>=', $startDate)
+            ->select('grand_total', 'date')
+            ->get();
+
+        $chartLabels = [];
+        $chartValues = [];
+        $indonesianMonths = [
+            1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'Mei', 6 => 'Jun',
+            7 => 'Jul', 8 => 'Agu', 9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des',
+        ];
+
+        for ($i = 5; $i >= 0; $i--) {
+            $date = now()->subMonths($i);
+            $monthNum = (int) $date->format('m');
+            $yearNum = (int) $date->format('Y');
+
+            $chartLabels[] = $indonesianMonths[$monthNum];
+
+            $sum = $monthlySalesData->filter(function ($sale) use ($monthNum, $yearNum) {
+                return $sale->date->year === $yearNum && $sale->date->month === $monthNum;
+            })->sum('grand_total');
+
+            $chartValues[] = (float) $sum;
+        }
+
+        return view('cabang.dashboard', compact(
+            'products',
+            'deliveries',
+            'outletPurchaseOrders',
+            'selectedPo',
+            'selectedPoNotes',
+            'omsetPenjualan',
+            'omsetHariIni',
+            'hutangPusat',
+            'hutangPusatCount',
+            'totalProduk',
+            'totalStok',
+            'chartLabels',
+            'chartValues'
+        ));
     })->name('cabang.dashboard');
 
     Route::get('/monitoring-stok', [ProductStockController::class, 'monitoringStok'])->name('cabang.monitoring-stok');
