@@ -150,8 +150,8 @@
             </div>
             <ul id="keuangan-menu"
                 class="text-gray-400 space-y-2 ml-4 border-l border-gray-800 pl-4 text-xs transition-all duration-200">
-                <li class="hover:text-white cursor-pointer transition">
-                    <a href="#" class="block w-full">Laporan Keuangan</a>
+                <li class="hover:text-white cursor-pointer transition {{ request()->routeIs('cabang.laporan') ? 'text-[#B4F481] font-bold' : '' }}">
+                    <a href="{{ route('cabang.laporan') }}" class="block w-full">Laporan Keuangan</a>
                 </li>
                 <li class="{{ request()->routeIs('cabang.hutang') ? 'text-[#B4F481] font-bold' : '' }} hover:text-white cursor-pointer transition">
                     <a href="{{ route('cabang.hutang') }}" class="block w-full">Hutang</a>

@@ -439,6 +439,67 @@ Route::prefix('cabang')->middleware(['auth', 'role.cabang'])->group(function () 
 
     // Hutang Cabang Route
     Route::get('/hutang', [DebtsController::class, 'cabangIndex'])->name('cabang.hutang');
+
+    Route::get('/laporan', function () {
+        $branchId = auth()->user()->branch_id;
+
+        $totalOmset = Sales::where('branch_id', $branchId)
+            ->whereNotNull('outlet_id')
+            ->where('create_by', auth()->id())
+            ->sum('grand_total');
+
+        $totalKeuntungan = SalesItem::whereHas('sale', function ($query) use ($branchId) {
+            $query->where('branch_id', $branchId)
+                ->whereNotNull('outlet_id')
+                ->where('create_by', auth()->id());
+        })->sum(DB::raw('(price - cost) * qty')) - Sales::where('branch_id', $branchId)->whereNotNull('outlet_id')->where('create_by', auth()->id())->sum('discount');
+
+        $barangTerjual = SalesItem::whereHas('sale', function ($query) use ($branchId) {
+            $query->where('branch_id', $branchId)
+                ->whereNotNull('outlet_id')
+                ->where('create_by', auth()->id());
+        })->sum('qty');
+
+        $chartLabels = [];
+        $chartValues = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $chartLabels[] = $date->format('j M');
+            $chartValues[] = (float) Sales::where('branch_id', $branchId)
+                ->whereNotNull('outlet_id')
+                ->where('create_by', auth()->id())
+                ->whereDate('date', $date->toDateString())
+                ->sum('grand_total');
+        }
+
+        $produkTerlaris = SalesItem::whereHas('sale', function ($query) use ($branchId) {
+            $query->where('branch_id', $branchId)
+                ->whereNotNull('outlet_id')
+                ->where('create_by', auth()->id());
+        })->select('product_name', DB::raw('SUM(qty) as total_terjual'), DB::raw('SUM(subtotal) as total_omset'))
+            ->groupBy('product_name')
+            ->orderByDesc('total_terjual')
+            ->limit(5)
+            ->get();
+
+        $transaksiTerakhir = Sales::where('branch_id', $branchId)
+            ->whereNotNull('outlet_id')
+            ->where('create_by', auth()->id())
+            ->with('outlet')
+            ->orderBy('date', 'desc')
+            ->limit(5)
+            ->get();
+
+        return view('cabang.laporan', compact(
+            'totalOmset',
+            'totalKeuntungan',
+            'barangTerjual',
+            'chartLabels',
+            'chartValues',
+            'produkTerlaris',
+            'transaksiTerakhir'
+        ));
+    })->name('cabang.laporan');
 });
 
 // Outlet Dashboard Routes
