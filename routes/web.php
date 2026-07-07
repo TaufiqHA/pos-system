@@ -80,10 +80,10 @@ Route::prefix('admin')->middleware(['auth', 'role.admin'])->group(function () {
             ->get();
 
         // Calculate widget metrics
-        $widgetOmset = Sales::sum('grand_total');
+        $widgetOmset = Sales::where('create_by', auth()->id())->sum('grand_total');
 
-        $omsetBulanIni = Sales::whereMonth('date', now()->month)->whereYear('date', now()->year)->sum('grand_total');
-        $omsetBulanLalu = Sales::whereMonth('date', now()->subMonth()->month)->whereYear('date', now()->subMonth()->year)->sum('grand_total');
+        $omsetBulanIni = Sales::where('create_by', auth()->id())->whereMonth('date', now()->month)->whereYear('date', now()->year)->sum('grand_total');
+        $omsetBulanLalu = Sales::where('create_by', auth()->id())->whereMonth('date', now()->subMonth()->month)->whereYear('date', now()->subMonth()->year)->sum('grand_total');
         $omsetTrendPercent = 0;
         if ($omsetBulanLalu > 0) {
             $omsetTrendPercent = (($omsetBulanIni - $omsetBulanLalu) / $omsetBulanLalu) * 100;
@@ -93,12 +93,20 @@ Route::prefix('admin')->middleware(['auth', 'role.admin'])->group(function () {
 
         $hutangSupplier = Debts::whereNotNull('supplier_id')->sum('remaining_amount');
         $hutangCabang = Debts::where('debtor_type', 'branch')->where('creditor_type', 'branch')->sum('remaining_amount');
-        $totalSku = Product::count();
-        $totalStok = ProductStock::sum('stock') ?? 0;
+        $userBranchId = auth()->user()->branch_id;
+        $totalSku = $userBranchId
+            ? Product::whereHas('productStocks', function ($q) use ($userBranchId) {
+                $q->where('branch_id', $userBranchId);
+            })->count()
+            : Product::count();
+        $totalStok = $userBranchId
+            ? (ProductStock::where('branch_id', $userBranchId)->sum('stock') ?? 0)
+            : (ProductStock::sum('stock') ?? 0);
 
         // Calculate dynamic monthly sales trend for the last 7 months
         $startDate = now()->subMonths(6)->startOfMonth();
-        $monthlySalesData = Sales::where('date', '>=', $startDate)
+        $monthlySalesData = Sales::where('create_by', auth()->id())
+            ->where('date', '>=', $startDate)
             ->select('grand_total', 'date')
             ->get();
 
@@ -137,25 +145,34 @@ Route::prefix('admin')->middleware(['auth', 'role.admin'])->group(function () {
     })->name('admin.dashboard');
     Route::get('/monitoring-stock', [ProductStockController::class, 'index'])->name('admin.monitoring-stock');
     Route::get('/laporan', function () {
-        $totalOmset = Sales::sum('grand_total');
-        $totalKeuntungan = SalesItem::sum(DB::raw('(price - cost) * qty')) - Sales::sum('discount');
-        $barangTerjual = SalesItem::sum('qty');
+        $totalOmset = Sales::where('create_by', auth()->id())->sum('grand_total');
+        $totalKeuntungan = SalesItem::whereHas('sale', function ($query) {
+            $query->where('create_by', auth()->id());
+        })->sum(DB::raw('(price - cost) * qty')) - Sales::where('create_by', auth()->id())->sum('discount');
+        $barangTerjual = SalesItem::whereHas('sale', function ($query) {
+            $query->where('create_by', auth()->id());
+        })->sum('qty');
 
         $chartLabels = [];
         $chartValues = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i);
             $chartLabels[] = $date->format('j M');
-            $chartValues[] = (float) Sales::whereDate('date', $date->toDateString())->sum('grand_total');
+            $chartValues[] = (float) Sales::where('create_by', auth()->id())
+                ->whereDate('date', $date->toDateString())
+                ->sum('grand_total');
         }
 
-        $produkTerlaris = SalesItem::select('product_name', DB::raw('SUM(qty) as total_terjual'), DB::raw('SUM(subtotal) as total_omset'))
+        $produkTerlaris = SalesItem::whereHas('sale', function ($query) {
+            $query->where('create_by', auth()->id());
+        })->select('product_name', DB::raw('SUM(qty) as total_terjual'), DB::raw('SUM(subtotal) as total_omset'))
             ->groupBy('product_name')
             ->orderByDesc('total_terjual')
             ->limit(5)
             ->get();
 
-        $transaksiTerakhir = Sales::with('branch')
+        $transaksiTerakhir = Sales::where('create_by', auth()->id())
+            ->with('branch')
             ->orderBy('date', 'desc')
             ->limit(5)
             ->get();
@@ -335,8 +352,8 @@ Route::prefix('cabang')->middleware(['auth', 'role.cabang'])->group(function () 
         $selectedPoNotes = $selectedPo ? json_decode($selectedPo->notes, true) : null;
 
         // Calculate dynamic dashboard metrics
-        $omsetPenjualan = Sales::where('branch_id', $branchId)->sum('grand_total');
-        $omsetHariIni = Sales::where('branch_id', $branchId)->whereDate('date', now()->toDateString())->sum('grand_total');
+        $omsetPenjualan = Sales::where('branch_id', $branchId)->where('create_by', auth()->id())->sum('grand_total');
+        $omsetHariIni = Sales::where('branch_id', $branchId)->where('create_by', auth()->id())->whereDate('date', now()->toDateString())->sum('grand_total');
 
         $hutangPusat = Debts::where('debtor_type', 'branch')
             ->where('debtor_branch_id', $branchId)
@@ -354,6 +371,7 @@ Route::prefix('cabang')->middleware(['auth', 'role.cabang'])->group(function () 
         // Prepare chart data (rolling last 6 months)
         $startDate = now()->subMonths(5)->startOfMonth();
         $monthlySalesData = Sales::where('branch_id', $branchId)
+            ->where('create_by', auth()->id())
             ->where('date', '>=', $startDate)
             ->select('grand_total', 'date')
             ->get();
