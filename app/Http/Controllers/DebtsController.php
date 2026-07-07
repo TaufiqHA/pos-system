@@ -154,6 +154,25 @@ class DebtsController extends Controller
             $debt->save();
         }
 
+        // Sync with Sales model if sale_id is present
+        if ($debt->sale_id) {
+            $sale = $debt->sale;
+            if ($sale) {
+                $newStatus = $debt->status === 'paid' ? 'LUNAS' : 'BELUM BAYAR';
+                if ($sale->status !== $newStatus) {
+                    $sale->update(['status' => $newStatus]);
+                }
+
+                $payment = $sale->salesPayments()->first();
+                if ($payment && $payment->status !== $newStatus) {
+                    $payment->update([
+                        'status' => $newStatus,
+                        'paid_at' => $debt->status === 'paid' ? now() : null,
+                    ]);
+                }
+            }
+        }
+
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'Debt berhasil diupdate',

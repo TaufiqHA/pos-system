@@ -44,6 +44,27 @@ class Debts extends Model
                 $model->{$model->getKeyName()} = (string) Str::uuid();
             }
         });
+
+        static::saved(function ($debt) {
+            if ($debt->sale_id) {
+                $sale = $debt->sale;
+                if ($sale) {
+                    $newStatus = $debt->status === 'paid' ? 'LUNAS' : 'BELUM BAYAR';
+                    if ($sale->status !== $newStatus) {
+                        $sale->update(['status' => $newStatus]);
+                    }
+
+                    // Update related sales payment status
+                    $payment = $sale->salesPayments()->first();
+                    if ($payment && $payment->status !== $newStatus) {
+                        $payment->update([
+                            'status' => $newStatus,
+                            'paid_at' => $debt->status === 'paid' ? now() : null,
+                        ]);
+                    }
+                }
+            }
+        });
     }
 
     // Relations

@@ -6,6 +6,8 @@ use App\Models\Branch;
 use App\Models\Debts;
 use App\Models\DebtsPayment;
 use App\Models\Role;
+use App\Models\Sales;
+use App\Models\SalesPayment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
@@ -139,6 +141,69 @@ class DebtsPaymentTest extends TestCase
             'paid_amount' => 500000,
             'remaining_amount' => 0,
             'status' => 'paid',
+        ]);
+    }
+
+    public function test_debts_payment_fully_paid_updates_related_sale_status(): void
+    {
+        $sale = Sales::create([
+            'id' => (string) Str::uuid(),
+            'invoice' => 'INV-TEST-DEBT-PAY',
+            'branch_id' => $this->branch->id,
+            'user_id' => $this->user->id,
+            'create_by' => $this->user->id,
+            'date' => now()->toDateTimeString(),
+            'subtotal' => 500000,
+            'discount' => 0,
+            'tax' => 0,
+            'grand_total' => 500000,
+            'status' => 'BELUM BAYAR',
+        ]);
+
+        $salesPayment = SalesPayment::create([
+            'id' => (string) Str::uuid(),
+            'sale_id' => $sale->id,
+            'method' => 'KREDIT',
+            'amount' => 500000,
+            'status' => 'BELUM BAYAR',
+        ]);
+
+        $debt = Debts::create([
+            'id' => (string) Str::uuid(),
+            'debtor_type' => 'branch',
+            'debtor_branch_id' => $this->branch->id,
+            'creditor_type' => 'branch',
+            'creditor_branch_id' => $this->branch->id,
+            'total_amount' => 500000,
+            'paid_amount' => 0,
+            'remaining_amount' => 500000,
+            'status' => 'unpaid',
+            'sale_id' => $sale->id,
+        ]);
+
+        $response = $this->actingAs($this->user)->postJson(route('debts-payments.store'), [
+            'debt_id' => $debt->id,
+            'payment_date' => now()->toDateTimeString(),
+            'amount' => 500000,
+            'method' => 'cash',
+        ]);
+
+        $response->assertStatus(201);
+
+        $this->assertDatabaseHas('debts', [
+            'id' => $debt->id,
+            'status' => 'paid',
+            'remaining_amount' => 0,
+        ]);
+
+        $this->assertDatabaseHas('sales', [
+            'id' => $sale->id,
+            'status' => 'LUNAS',
+        ]);
+
+        $this->assertDatabaseHas('sales_payments', [
+            'id' => $salesPayment->id,
+            'status' => 'LUNAS',
         ]);
     }
 

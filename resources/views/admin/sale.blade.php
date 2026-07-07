@@ -838,7 +838,9 @@
             document.getElementById('edit-status').value = sale.status;
 
             const methodSelect = document.getElementById('edit-payment_method');
-            if (sale.status === 'LUNAS') {
+            if (sale.sales_payments && sale.sales_payments.length > 0) {
+                methodSelect.value = sale.sales_payments[0].method;
+            } else if (sale.status === 'LUNAS') {
                 methodSelect.value = 'TUNAI';
             } else if (sale.status === 'BELUM BAYAR') {
                 methodSelect.value = 'KREDIT';
