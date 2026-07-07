@@ -30,7 +30,9 @@ use App\Models\Product;
 use App\Models\ProductStock;
 use App\Models\PurchaseOrders;
 use App\Models\Sales;
+use App\Models\SalesItem;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -77,6 +79,40 @@ Route::prefix('admin')->middleware(['auth', 'role.admin'])->group(function () {
         return view('admin.dashboard', compact('purchaseOrders'));
     })->name('admin.dashboard');
     Route::get('/monitoring-stock', [ProductStockController::class, 'index'])->name('admin.monitoring-stock');
+    Route::get('/laporan', function () {
+        $totalOmset = Sales::sum('grand_total');
+        $totalKeuntungan = SalesItem::sum(DB::raw('(price - cost) * qty')) - Sales::sum('discount');
+        $barangTerjual = SalesItem::sum('qty');
+
+        $chartLabels = [];
+        $chartValues = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $chartLabels[] = $date->format('j M');
+            $chartValues[] = (float) Sales::whereDate('date', $date->toDateString())->sum('grand_total');
+        }
+
+        $produkTerlaris = SalesItem::select('product_name', DB::raw('SUM(qty) as total_terjual'), DB::raw('SUM(subtotal) as total_omset'))
+            ->groupBy('product_name')
+            ->orderByDesc('total_terjual')
+            ->limit(5)
+            ->get();
+
+        $transaksiTerakhir = Sales::with('branch')
+            ->orderBy('date', 'desc')
+            ->limit(5)
+            ->get();
+
+        return view('admin.laporan', compact(
+            'totalOmset',
+            'totalKeuntungan',
+            'barangTerjual',
+            'chartLabels',
+            'chartValues',
+            'produkTerlaris',
+            'transaksiTerakhir'
+        ));
+    })->name('admin.laporan');
 
     Route::get('/products/check-sku', [ProductController::class, 'checkSku'])->name('products.check_sku');
     Route::resource('categories', CategoryController::class);

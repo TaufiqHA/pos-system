@@ -115,14 +115,16 @@
 
         <!-- Menu Kategori: Keuangan -->
         <div class="space-y-2">
-            <div class="flex justify-between items-center text-gray-400 px-2 cursor-pointer hover:text-white transition" onclick="toggleDropdown('keuangan-menu', 'keuangan-icon')">
+            <div class="flex justify-between items-center {{ request()->routeIs('admin.laporan') || request()->routeIs('admin.hutang') ? 'text-white' : 'text-gray-400' }} px-2 cursor-pointer hover:text-white transition" onclick="toggleDropdown('keuangan-menu', 'keuangan-icon')">
                 <span class="text-[10px] font-bold tracking-wider uppercase">Keuangan</span>
                 <svg id="keuangan-icon" class="w-3 h-3 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                 </svg>
             </div>
             <ul id="keuangan-menu" class="text-gray-400 space-y-2 ml-4 border-l border-gray-800 pl-4 text-xs transition-all duration-200">
-                <li class="hover:text-white cursor-pointer transition">Laporan Keuangan</li>
+                <li class="hover:text-white transition {{ request()->routeIs('admin.laporan') ? 'text-[#B4F481] font-semibold' : '' }}">
+                    <a href="{{ route('admin.laporan') }}" class="block w-full">Laporan Keuangan</a>
+                </li>
                 <li class="hover:text-white transition {{ request()->routeIs('admin.hutang') ? 'text-[#B4F481] font-semibold' : '' }}">
                     <a href="{{ route('admin.hutang') }}" class="block w-full">Hutang & Piutang</a>
                 </li>
