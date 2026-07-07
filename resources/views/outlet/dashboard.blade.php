@@ -40,7 +40,7 @@
                     </svg>
                 </div>
             </div>
-            <h3 class="text-2xl font-bold mb-2 text-white font-display">Rp 25.000.000</h3>
+            <h3 class="text-2xl font-bold mb-2 text-white font-display">Rp {{ number_format($totalBelanja, 0, ',', '.') }}</h3>
             <p class="text-xs"><span class="text-green-400 font-bold">Akumulasi</span> <span class="text-gray-500">Seluruh transaksi belanja outlet</span></p>
         </div>
 
@@ -55,8 +55,8 @@
                     </svg>
                 </div>
             </div>
-            <h3 class="text-2xl font-bold mb-2 text-blue-400 font-display">5 Order</h3>
-            <p class="text-xs"><span class="text-blue-500 font-bold">Diterima</span> <span class="text-gray-500">Telah sampai di outlet</span></p>
+            <h3 class="text-2xl font-bold mb-2 text-blue-400 font-display">{{ $totalOrder }} Order</h3>
+            <p class="text-xs"><span class="text-blue-500 font-bold">Total</span> <span class="text-gray-500">Order yang telah dilakukan</span></p>
         </div>
     </div>
 

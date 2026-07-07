@@ -14,18 +14,27 @@
     $supplierTotalRemaining = $supplierDebts->sum('remaining_amount');
     $supplierUnpaidCount = $supplierDebts->where('status', '!=', 'paid')->count();
 
-    // Branch debts
-    $branchDebts = $debts->where('creditor_type', '!=', 'supplier');
+    // Branch debts (PO from branches to current logged-in user's branch)
+    $branchDebts = $debts->where('creditor_type', '!=', 'supplier')
+        ->where('creditor_branch_id', auth()->user()->branch_id);
     $branchTotalDebt = $branchDebts->sum('total_amount');
     $branchTotalPaid = $branchDebts->sum('paid_amount');
     $branchTotalRemaining = $branchDebts->sum('remaining_amount');
     $branchUnpaidCount = $branchDebts->where('status', '!=', 'paid')->count();
+
+    // Filter pending payments to only those related to the logged-in user's branch debts
+    $filteredPendingPayments = collect();
+    if (isset($pendingPayments)) {
+        $filteredPendingPayments = $pendingPayments->filter(function ($payment) {
+            return $payment->debt && $payment->debt->creditor_branch_id === auth()->user()->branch_id;
+        });
+    }
 @endphp
 
 <!-- Alert Container -->
 <div id="alert-container" class="hidden mb-4 p-4 rounded-xl text-xs flex items-center gap-2"></div>
 
-@if(isset($pendingPayments) && $pendingPayments->count() > 0)
+@if($filteredPendingPayments->count() > 0)
     <!-- ================= SECTION: PERSETUJUAN PEMBAYARAN CABANG ================= -->
     <div class="card p-6 rounded-2xl shadow-xl border border-yellow-500/20 bg-yellow-500/5 mb-6">
         <div class="flex items-center gap-3 mb-4 text-yellow-400">
@@ -48,7 +57,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-800 text-xs text-gray-300">
-                    @foreach($pendingPayments as $payment)
+                    @foreach($filteredPendingPayments as $payment)
                         <tr class="hover:bg-gray-850/30 transition">
                             <td class="py-3 px-4 font-semibold text-white">
                                 {{ $payment->debt->debtorBranch->name ?? 'Cabang' }}

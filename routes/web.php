@@ -232,10 +232,21 @@ Route::prefix('outlet')->middleware(['auth', 'role.outlet'])->group(function () 
         $branchId = auth()->user()->branch_id ?? 'BRC-001';
 
         $deliveries = collect();
+        $totalBelanja = 0;
+        $totalOrder = 0;
+
         if ($outletId) {
             $deliveries = Deliveries::whereHas('sale', function ($query) use ($outletId) {
                 $query->where('outlet_id', $outletId);
             })->with(['sale.salesItems'])->orderBy('created_at', 'desc')->get();
+
+            $purchaseOrders = PurchaseOrders::where('outlet_id', $outletId)->get();
+            $totalOrder = $purchaseOrders->count();
+            $totalBelanja = $purchaseOrders->sum(function ($po) {
+                $notes = json_decode($po->notes, true);
+
+                return (float) ($notes['grand_total'] ?? 0);
+            });
         }
 
         $products = Product::with([
@@ -250,7 +261,7 @@ Route::prefix('outlet')->middleware(['auth', 'role.outlet'])->group(function () 
             },
         ])->orderBy('name')->get();
 
-        return view('outlet.dashboard', compact('deliveries', 'products'));
+        return view('outlet.dashboard', compact('deliveries', 'products', 'totalBelanja', 'totalOrder'));
     })->name('outlet.dashboard');
 
     Route::get('/order', function () {
