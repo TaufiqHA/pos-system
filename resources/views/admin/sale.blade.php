@@ -189,14 +189,21 @@
                 <div class="border-t border-gray-800 pt-4 mt-4">
                     <h4 class="text-xs font-bold text-white mb-2 uppercase tracking-wider">Item Penjualan</h4>
                     <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 mb-3">
-                        <div class="sm:col-span-2">
-                            <select id="create-item-product"
-                                class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-2.5 focus:outline-none focus:border-green-400">
-                                <option value="">-- Pilih Produk --</option>
-                                @foreach($products as $product)
-                                    <option value="{{ $product->id }}">{{ $product->name }} ({{ $product->sku }})</option>
-                                @endforeach
-                            </select>
+                        <div class="sm:col-span-2 flex gap-3 items-center">
+                            <!-- Image Preview of Selected Product -->
+                            <div class="w-11 h-11 rounded-xl bg-gray-900 border border-gray-800 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                <img id="create-product-image-preview" src="" alt="" class="w-full h-full object-cover hidden">
+                                <div id="create-product-image-placeholder" class="text-gray-600 text-[9px] uppercase font-bold">Image</div>
+                            </div>
+                            <div class="flex-1">
+                                <select id="create-item-product"
+                                    class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-2.5 focus:outline-none focus:border-green-400">
+                                    <option value="">-- Pilih Produk --</option>
+                                    @foreach($products as $product)
+                                        <option value="{{ $product->id }}" data-image="{{ $product->image ?? '' }}">{{ $product->name }} ({{ $product->sku }})</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
                         <div>
                             <input type="number" id="create-item-qty" placeholder="Qty" min="1"
@@ -215,6 +222,7 @@
                         <table class="w-full text-left border-collapse text-[11px]">
                             <thead>
                                 <tr class="bg-gray-900 text-gray-400 font-bold border-b border-gray-800">
+                                    <th class="p-2 w-14 text-center">Gambar</th>
                                     <th class="p-2">Produk</th>
                                     <th class="p-2 text-center">Qty</th>
                                     <th class="p-2 text-right">Harga</th>
@@ -224,7 +232,7 @@
                             </thead>
                             <tbody id="create-items-body" class="divide-y divide-gray-800 text-gray-300">
                                 <tr id="create-no-items">
-                                    <td colspan="5" class="p-4 text-center text-gray-500">Belum ada item ditambahkan</td>
+                                    <td colspan="6" class="p-4 text-center text-gray-500">Belum ada item ditambahkan</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -622,13 +630,29 @@
                 const productId = this.value;
                 const priceInput = document.getElementById('create-item-price');
                 const qtyInput = document.getElementById('create-item-qty');
+                const imgPreview = document.getElementById('create-product-image-preview');
+                const imgPlaceholder = document.getElementById('create-product-image-placeholder');
 
                 const product = availableProducts.find(p => p.id === productId);
                 if (product) {
                     priceInput.value = formatNumberWithDots(product.sell_price);
                     if (!qtyInput.value) qtyInput.value = 1;
+
+                    // Update image preview
+                    if (product.image) {
+                        imgPreview.src = product.image;
+                        imgPreview.classList.remove('hidden');
+                        imgPlaceholder.classList.add('hidden');
+                    } else {
+                        imgPreview.src = '';
+                        imgPreview.classList.add('hidden');
+                        imgPlaceholder.classList.remove('hidden');
+                    }
                 } else {
                     priceInput.value = '';
+                    imgPreview.src = '';
+                    imgPreview.classList.add('hidden');
+                    imgPlaceholder.classList.remove('hidden');
                 }
             });
 
@@ -727,13 +751,26 @@
                     product_name: product.name,
                     sku: product.sku,
                     qty: qty,
-                    price: price
+                    price: price,
+                    image: product.image ?? ''
                 });
             }
 
             productSelect.value = '';
             qtyInput.value = '';
             document.getElementById(`${prefix}-item-price`).value = '';
+
+            if (prefix === 'create') {
+                const imgPreview = document.getElementById('create-product-image-preview');
+                const imgPlaceholder = document.getElementById('create-product-image-placeholder');
+                if (imgPreview) {
+                    imgPreview.src = '';
+                    imgPreview.classList.add('hidden');
+                }
+                if (imgPlaceholder) {
+                    imgPlaceholder.classList.remove('hidden');
+                }
+            }
 
             renderItems(prefix);
         }
@@ -752,8 +789,11 @@
             const tbody = document.getElementById(`${prefix}-items-body`);
             tbody.innerHTML = '';
 
+            const isCreate = prefix === 'create';
+            const colspan = isCreate ? 6 : 5;
+
             if (itemsArray.length === 0) {
-                tbody.innerHTML = `<tr id="${prefix}-no-items"><td colspan="5" class="p-4 text-center text-gray-500">Belum ada item ditambahkan</td></tr>`;
+                tbody.innerHTML = `<tr id="${prefix}-no-items"><td colspan="${colspan}" class="p-4 text-center text-gray-500">Belum ada item ditambahkan</td></tr>`;
                 document.getElementById(`${prefix}-subtotal`).value = 0;
                 document.getElementById(`${prefix}-subtotal-display`).value = '0';
                 calculateGrandTotal(`${prefix}-`);
@@ -767,7 +807,20 @@
 
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-gray-800/20';
+
+                let imgTdHtml = '';
+                if (isCreate) {
+                    let imgHtml = '';
+                    if (item.image) {
+                        imgHtml = `<img src="${item.image}" alt="${item.product_name}" class="w-10 h-10 rounded-lg object-cover border border-gray-800/80 shadow-md mx-auto">`;
+                    } else {
+                        imgHtml = `<div class="w-10 h-10 bg-gray-850 border border-gray-800 rounded-lg flex items-center justify-center text-gray-500 text-[9px] font-semibold uppercase mx-auto">No Img</div>`;
+                    }
+                    imgTdHtml = `<td class="p-2"><div class="flex justify-center">${imgHtml}</div></td>`;
+                }
+
                 tr.innerHTML = `
+                    ${imgTdHtml}
                     <td class="p-2">
                         <div class="font-semibold text-white">${item.product_name}</div>
                         <div class="text-[9px] text-gray-500 font-mono">${item.sku}</div>
@@ -807,6 +860,22 @@
         }
         function closeCreateModal() {
             document.getElementById('create-modal').classList.add('hidden');
+            const select = document.getElementById('create-item-product');
+            if (select) select.value = '';
+            const qtyInput = document.getElementById('create-item-qty');
+            if (qtyInput) qtyInput.value = '';
+            const priceInput = document.getElementById('create-item-price');
+            if (priceInput) priceInput.value = '';
+
+            const imgPreview = document.getElementById('create-product-image-preview');
+            const imgPlaceholder = document.getElementById('create-product-image-placeholder');
+            if (imgPreview) {
+                imgPreview.src = '';
+                imgPreview.classList.add('hidden');
+            }
+            if (imgPlaceholder) {
+                imgPlaceholder.classList.remove('hidden');
+            }
             window.history.replaceState({}, document.title, window.location.pathname);
         }
 

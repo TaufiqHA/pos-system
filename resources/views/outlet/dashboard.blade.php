@@ -176,35 +176,43 @@
                 <div class="space-y-3">
                     <h4 class="text-xs font-bold tracking-wider text-gray-400 uppercase">ITEM ORDER</h4>
                     <div class="flex flex-col sm:flex-row gap-2 items-start">
-                        <div class="flex-1">
-                            <select id="po-product-select"
-                                class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-[#B4F481]">
-                                <option value="">-- Pilih Produk --</option>
-                                @foreach($products as $product)
-                                    @php
-                                        $wholesaleData = $product->wholesalePrices->sortBy('min_qty')->map(function ($wp) {
-                                            return [
-                                                'min_qty' => (int) $wp->min_qty,
-                                                'price' => (float) $wp->price
-                                            ];
-                                        })->values()->all();
-                                        $pusatPrice = $product->branchPrices->first()?->sell_price ?? $product->sell_price;
-                                        $stock = $product->productStocks->first()?->stock ?? 0;
-                                    @endphp
-                                    <option value="{{ $product->id }}"
-                                        data-sku="{{ $product->sku }}"
-                                        data-price="{{ $product->buy_price }}"
-                                        data-pusat-price="{{ $pusatPrice }}"
-                                        data-name="{{ $product->name }}"
-                                        data-stock="{{ $stock }}"
-                                        data-wholesale='{{ json_encode($wholesaleData) }}'>
-                                        {{ $product->name }} (SKU: {{ $product->sku }}) - Rp
-                                        {{ number_format($pusatPrice, 0, ',', '.') }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <div id="po-stock-info" class="hidden mt-1 text-[11px] text-[#B4F481] font-semibold">
-                                Stok Cabang: <span id="po-stock-info-val">0</span>
+                        <div class="flex-1 flex gap-3 items-start w-full">
+                            <!-- Image Preview of Selected Product -->
+                            <div class="w-12 h-12 rounded-xl bg-gray-900 border border-gray-800 flex-shrink-0 flex items-center justify-center overflow-hidden mt-1">
+                                <img id="po-product-image-preview" src="" alt="" class="w-full h-full object-cover hidden">
+                                <div id="po-product-image-placeholder" class="text-gray-600 text-[10px] uppercase font-bold">Image</div>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <select id="po-product-select"
+                                    class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-[#B4F481]">
+                                    <option value="">-- Pilih Produk --</option>
+                                    @foreach($products as $product)
+                                        @php
+                                            $wholesaleData = $product->wholesalePrices->sortBy('min_qty')->map(function ($wp) {
+                                                return [
+                                                    'min_qty' => (int) $wp->min_qty,
+                                                    'price' => (float) $wp->price
+                                                ];
+                                            })->values()->all();
+                                            $pusatPrice = $product->branchPrices->first()?->sell_price ?? $product->sell_price;
+                                            $stock = $product->productStocks->first()?->stock ?? 0;
+                                        @endphp
+                                        <option value="{{ $product->id }}"
+                                            data-sku="{{ $product->sku }}"
+                                            data-price="{{ $product->buy_price }}"
+                                            data-pusat-price="{{ $pusatPrice }}"
+                                            data-name="{{ $product->name }}"
+                                            data-stock="{{ $stock }}"
+                                            data-image="{{ $product->image ?? '' }}"
+                                            data-wholesale='{{ json_encode($wholesaleData) }}'>
+                                            {{ $product->name }} (SKU: {{ $product->sku }}) - Rp
+                                            {{ number_format($pusatPrice, 0, ',', '.') }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <div id="po-stock-info" class="hidden mt-1 text-[11px] text-[#B4F481] font-semibold">
+                                    Stok Cabang: <span id="po-stock-info-val">0</span>
+                                </div>
                             </div>
                         </div>
                         <div class="w-full sm:w-24">
@@ -246,6 +254,7 @@
                         <thead>
                             <tr
                                 class="border-b border-gray-800 text-gray-400 text-[10px] uppercase tracking-wider bg-gray-900/60">
+                                <th class="py-3 px-4 font-semibold w-16 text-center">Gambar</th>
                                 <th class="py-3 px-4 font-semibold">Produk</th>
                                 <th class="py-3 px-4 font-semibold">Qty</th>
                                 <th class="py-3 px-4 font-semibold">Harga</th>
@@ -255,7 +264,7 @@
                         </thead>
                         <tbody id="po-items-table-body">
                             <tr>
-                                <td colspan="5" class="py-8 text-center text-gray-500 font-medium">Belum ada item ditambahkan</td>
+                                <td colspan="6" class="py-8 text-center text-gray-500 font-medium">Belum ada item ditambahkan</td>
                             </tr>
                         </tbody>
                     </table>
@@ -580,6 +589,27 @@
                 updateWholesalePricesSelect();
                 updatePriceBasedOnQty();
                 updateStockDisplay();
+
+                const selectedOption = this.options[this.selectedIndex];
+                const imgPreview = document.getElementById('po-product-image-preview');
+                const imgPlaceholder = document.getElementById('po-product-image-placeholder');
+
+                if (selectedOption && selectedOption.value) {
+                    const imageSrc = selectedOption.getAttribute('data-image');
+                    if (imageSrc) {
+                        imgPreview.src = imageSrc;
+                        imgPreview.classList.remove('hidden');
+                        imgPlaceholder.classList.add('hidden');
+                    } else {
+                        imgPreview.src = '';
+                        imgPreview.classList.add('hidden');
+                        imgPlaceholder.classList.remove('hidden');
+                    }
+                } else {
+                    imgPreview.src = '';
+                    imgPreview.classList.add('hidden');
+                    imgPlaceholder.classList.remove('hidden');
+                }
             });
             document.getElementById('po-qty-input').addEventListener('input', function() {
                 updatePriceBasedOnQty();
@@ -609,6 +639,22 @@
 
         function closePoModal() {
             document.getElementById('po-modal').classList.add('hidden');
+            const select = document.getElementById('po-product-select');
+            if (select) select.value = '';
+            const qtyInput = document.getElementById('po-qty-input');
+            if (qtyInput) qtyInput.value = '';
+            const imgPreview = document.getElementById('po-product-image-preview');
+            const imgPlaceholder = document.getElementById('po-product-image-placeholder');
+            if (imgPreview) {
+                imgPreview.src = '';
+                imgPreview.classList.add('hidden');
+            }
+            if (imgPlaceholder) {
+                imgPlaceholder.classList.remove('hidden');
+            }
+            if (typeof updateStockDisplay === 'function') {
+                updateStockDisplay();
+            }
         }
 
         function formatCurrency(value) {
@@ -751,6 +797,8 @@
             const name = selectedOption.getAttribute('data-name');
             const sku = selectedOption.getAttribute('data-sku');
 
+            const image = selectedOption.getAttribute('data-image') || '';
+
             const defaultPrice = parseFloat(selectedOption.getAttribute('data-pusat-price')) || 0;
             const wholesaleStr = selectedOption.getAttribute('data-wholesale');
             let wholesalePrices = [];
@@ -795,6 +843,7 @@
                     sku: sku,
                     qty: qty,
                     price: price,
+                    image: image,
                     is_wholesale: isWholesaleApplied
                 });
             }
@@ -809,6 +858,17 @@
             document.getElementById('po-qty-warning').classList.add('hidden');
             qtyInput.classList.remove('border-red-500');
             qtyInput.classList.add('focus:border-[#B4F481]');
+
+            // Reset image preview
+            const imgPreview = document.getElementById('po-product-image-preview');
+            const imgPlaceholder = document.getElementById('po-product-image-placeholder');
+            if (imgPreview) {
+                imgPreview.src = '';
+                imgPreview.classList.add('hidden');
+            }
+            if (imgPlaceholder) {
+                imgPlaceholder.classList.remove('hidden');
+            }
 
             updatePoTable();
         }
@@ -826,7 +886,7 @@
             hiddenContainer.innerHTML = '';
 
             if (poItems.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-gray-500 font-medium">Belum ada item ditambahkan</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-gray-500 font-medium">Belum ada item ditambahkan</td></tr>`;
                 document.getElementById('po-subtotal').value = 0;
                 document.getElementById('po-subtotal-display').value = '0';
                 document.getElementById('po-grand-total').value = 0;
@@ -842,7 +902,18 @@
                 const tr = document.createElement('tr');
                 tr.className = 'border-b border-gray-800';
                 const badge = item.is_wholesale ? ' <span class="ml-1.5 inline-block bg-green-950/20 text-[#B4F481] border border-green-800/50 py-0.5 px-2 rounded-full text-[9px] font-semibold">Grosir</span>' : '';
+                
+                let imgHtml = '';
+                if (item.image) {
+                    imgHtml = `<img src="${item.image}" alt="${item.name}" class="w-10 h-10 rounded-lg object-cover border border-gray-800/80 shadow-md mx-auto">`;
+                } else {
+                    imgHtml = `<div class="w-10 h-10 bg-gray-800 border border-gray-700 rounded-lg flex items-center justify-center text-gray-500 text-[9px] font-semibold uppercase mx-auto">No Img</div>`;
+                }
+
                 tr.innerHTML = `
+                    <td class="py-3 px-4">
+                        <div class="flex justify-center">${imgHtml}</div>
+                    </td>
                     <td class="py-3 px-4">
                         <div class="font-bold text-white">${item.name}</div>
                         <div class="text-[10px] text-gray-400">SKU: ${item.sku}</div>

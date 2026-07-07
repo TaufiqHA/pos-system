@@ -140,23 +140,31 @@
                 <h4 class="text-xs font-bold text-white mb-2 uppercase tracking-wider">Item Penjualan</h4>
                 <div class="space-y-2 mb-3">
                     <div class="flex flex-col sm:flex-row gap-2">
-                        <div class="flex-1">
-                            <select id="create-item-product" onchange="updateProductPrice('create')"
-                                class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-2.5 focus:outline-none focus:border-green-400">
-                                <option value="">-- Pilih Produk --</option>
-                                @foreach($products as $product)
-                                    @php
-                                        $branchPrice = $product->branchPrices->first();
-                                        $sellPrice = $branchPrice ? $branchPrice->sell_price : $product->sell_price;
-                                        $wholesalePrices = $product->wholesalePrices->where('branch_id', auth()->user()->branch_id)->values();
-                                    @endphp
-                                    <option value="{{ $product->id }}" 
-                                        data-price="{{ $sellPrice }}"
-                                        data-wholesale='{{ json_encode($wholesalePrices) }}'>
-                                        {{ $product->name }} ({{ $product->sku }})
-                                    </option>
-                                @endforeach
-                            </select>
+                        <div class="flex-1 flex gap-3 items-center">
+                            <!-- Image Preview of Selected Product -->
+                            <div class="w-11 h-11 rounded-xl bg-gray-900 border border-gray-800 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                <img id="create-product-image-preview" src="" alt="" class="w-full h-full object-cover hidden">
+                                <div id="create-product-image-placeholder" class="text-gray-600 text-[9px] uppercase font-bold">Image</div>
+                            </div>
+                            <div class="flex-1">
+                                <select id="create-item-product" onchange="updateProductPrice('create')"
+                                    class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-2.5 focus:outline-none focus:border-green-400">
+                                    <option value="">-- Pilih Produk --</option>
+                                    @foreach($products as $product)
+                                        @php
+                                            $branchPrice = $product->branchPrices->first();
+                                            $sellPrice = $branchPrice ? $branchPrice->sell_price : $product->sell_price;
+                                            $wholesalePrices = $product->wholesalePrices->where('branch_id', auth()->user()->branch_id)->values();
+                                        @endphp
+                                        <option value="{{ $product->id }}" 
+                                            data-price="{{ $sellPrice }}"
+                                            data-image="{{ $product->image ?? '' }}"
+                                            data-wholesale='{{ json_encode($wholesalePrices) }}'>
+                                            {{ $product->name }} ({{ $product->sku }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
                         <div class="w-full sm:w-24">
                             <input type="number" id="create-item-qty" placeholder="Qty" min="1"
@@ -187,6 +195,7 @@
                     <table class="w-full text-left border-collapse text-[11px]">
                         <thead>
                             <tr class="bg-gray-900 text-gray-400 font-bold border-b border-gray-800">
+                                <th class="p-2 w-14 text-center">Gambar</th>
                                 <th class="p-2">Produk</th>
                                 <th class="p-2 text-center">Qty</th>
                                 <th class="p-2 text-right">Harga</th>
@@ -196,7 +205,7 @@
                         </thead>
                         <tbody id="create-items-body" class="divide-y divide-gray-800 text-gray-300">
                             <tr id="create-no-items">
-                                <td colspan="5" class="p-4 text-center text-gray-500">Belum ada item ditambahkan</td>
+                                <td colspan="6" class="p-4 text-center text-gray-500">Belum ada item ditambahkan</td>
                             </tr>
                         </tbody>
                     </table>
@@ -605,7 +614,25 @@
         }
 
         function openCreateModal() { document.getElementById('create-modal').classList.remove('hidden'); }
-        function closeCreateModal() { document.getElementById('create-modal').classList.add('hidden'); }
+        function closeCreateModal() {
+            document.getElementById('create-modal').classList.add('hidden');
+            const select = document.getElementById('create-item-product');
+            if (select) select.value = '';
+            const qtyInput = document.getElementById('create-item-qty');
+            if (qtyInput) qtyInput.value = '';
+            const priceInput = document.getElementById('create-item-price');
+            if (priceInput) priceInput.value = '';
+
+            const imgPreview = document.getElementById('create-product-image-preview');
+            const imgPlaceholder = document.getElementById('create-product-image-placeholder');
+            if (imgPreview) {
+                imgPreview.src = '';
+                imgPreview.classList.add('hidden');
+            }
+            if (imgPlaceholder) {
+                imgPlaceholder.classList.remove('hidden');
+            }
+        }
 
         async function openDetailModal(saleId) {
             try {
@@ -823,13 +850,27 @@
             const noItemsRow = document.getElementById(`${prefix}-no-items`);
             const productId = productSelect.value;
             if (!productId) return;
-            const productText = productSelect.options[productSelect.selectedIndex].text;
+            const selectedOption = productSelect.options[productSelect.selectedIndex];
+            const productText = selectedOption.text;
             const price = parseRupiahNumber(priceInput.value);
             const qty = parseInt(qtyInput.value) || 1;
             const subtotal = price * qty;
+            const image = selectedOption.getAttribute('data-image') || '';
+
             if (noItemsRow) noItemsRow.remove();
+
+            let imgHtml = '';
+            if (image) {
+                imgHtml = `<img src="${image}" alt="${productText}" class="w-10 h-10 rounded-lg object-cover border border-gray-800/80 shadow-md mx-auto">`;
+            } else {
+                imgHtml = `<div class="w-10 h-10 bg-gray-850 border border-gray-800 rounded-lg flex items-center justify-center text-gray-500 text-[9px] font-semibold uppercase mx-auto">No Img</div>`;
+            }
+
             const row = document.createElement('tr');
             row.innerHTML = `
+                    <td class="p-2">
+                        <div class="flex justify-center">${imgHtml}</div>
+                    </td>
                     <td class="p-2">
                         ${productText}
                         <input type="hidden" data-field="product_id" value="${productId}">
@@ -847,6 +888,17 @@
             productSelect.value = '';
             qtyInput.value = '';
             priceInput.value = '';
+
+            // Reset image preview
+            const imgPreview = document.getElementById('create-product-image-preview');
+            const imgPlaceholder = document.getElementById('create-product-image-placeholder');
+            if (imgPreview) {
+                imgPreview.src = '';
+                imgPreview.classList.add('hidden');
+            }
+            if (imgPlaceholder) {
+                imgPlaceholder.classList.remove('hidden');
+            }
 
             // Reset wholesale options
             const useWholesaleCheckbox = document.getElementById(`${prefix}-use-wholesale`);
@@ -904,6 +956,27 @@
             if (prodSelect) {
                 prodSelect.addEventListener('change', function() {
                     updateProductPrice('create');
+
+                    const selectedOption = this.options[this.selectedIndex];
+                    const imgPreview = document.getElementById('create-product-image-preview');
+                    const imgPlaceholder = document.getElementById('create-product-image-placeholder');
+
+                    if (selectedOption && selectedOption.value) {
+                        const imageSrc = selectedOption.getAttribute('data-image');
+                        if (imageSrc) {
+                            imgPreview.src = imageSrc;
+                            imgPreview.classList.remove('hidden');
+                            imgPlaceholder.classList.add('hidden');
+                        } else {
+                            imgPreview.src = '';
+                            imgPreview.classList.add('hidden');
+                            imgPlaceholder.classList.remove('hidden');
+                        }
+                    } else {
+                        imgPreview.src = '';
+                        imgPreview.classList.add('hidden');
+                        imgPlaceholder.classList.remove('hidden');
+                    }
                 });
             }
             if (qtyIn) {
