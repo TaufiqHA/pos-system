@@ -100,7 +100,8 @@
 
     <!-- ================= MODAL BOX: PO KE PUSAT ================= -->
     <div id="po-modal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="card max-w-4xl w-full p-6 rounded-2xl shadow-2xl relative border border-gray-800 max-h-[90vh] overflow-y-auto">
+        <div
+            class="card max-w-4xl w-full p-6 rounded-2xl shadow-2xl relative border border-gray-800 max-h-[90vh] overflow-y-auto">
             <!-- Tombol Close (X) -->
             <button onclick="closePoModal()"
                 class="absolute top-4 right-4 text-gray-400 hover:text-white transition cursor-pointer">
@@ -154,7 +155,7 @@
                 <!-- Section Item PO -->
                 <div class="space-y-3">
                     <h4 class="text-xs font-bold tracking-wider text-gray-400 uppercase">ITEM PO</h4>
-                    <div class="flex flex-col sm:flex-row gap-2">
+                    <div class="flex flex-col sm:flex-row gap-2 items-start">
                         <div class="flex-1">
                             <select id="po-product-select"
                                 class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-[#B4F481]">
@@ -168,22 +169,26 @@
                                             ];
                                         })->values()->all();
                                         $pusatPrice = $product->branchPrices->first()?->sell_price ?? $product->sell_price;
+                                        $pusatStock = $product->productStocks->first()?->stock ?? 0;
                                     @endphp
                                     <option value="{{ $product->id }}" 
                                         data-sku="{{ $product->sku }}"
                                         data-price="{{ $product->buy_price }}" 
                                         data-pusat-price="{{ $pusatPrice }}"
                                         data-name="{{ $product->name }}"
+                                        data-stock="{{ $pusatStock }}"
                                         data-wholesale='{{ json_encode($wholesaleData) }}'>
                                         {{ $product->name }} (SKU: {{ $product->sku }}) - Rp
-                                        {{ number_format($pusatPrice, 0, ',', '.') }}
+                                        {{ number_format($pusatPrice, 0, ',', '.') }} (Stok Pusat: {{ $pusatStock }})
                                     </option>
                                 @endforeach
                             </select>
+                            <p id="po-product-stock-display" class="text-[11px] text-gray-400 mt-1.5 hidden"></p>
                         </div>
                         <div class="w-full sm:w-24">
                             <input type="number" id="po-qty-input" placeholder="Qty" min="1"
                                 class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-[#B4F481]">
+                            <p id="po-qty-error" class="text-[9px] text-red-400 mt-1.5 hidden leading-tight"></p>
                         </div>
                         <div class="w-full sm:w-28 flex items-center gap-2 bg-gray-900 border border-gray-800 rounded-xl p-3">
                             <input type="checkbox" id="po-use-wholesale"
@@ -218,6 +223,7 @@
                             <tr
                                 class="border-b border-gray-800 text-gray-400 text-[10px] uppercase tracking-wider bg-gray-900/60">
                                 <th class="py-3 px-4 font-semibold">Produk</th>
+                                <th class="py-3 px-4 font-semibold">Stok Pusat</th>
                                 <th class="py-3 px-4 font-semibold">Qty</th>
                                 <th class="py-3 px-4 font-semibold">Harga</th>
                                 <th class="py-3 px-4 font-semibold">Subtotal</th>
@@ -226,7 +232,7 @@
                         </thead>
                         <tbody id="po-items-table-body">
                             <tr>
-                                <td colspan="5" class="py-8 text-center text-gray-500 font-medium">Belum ada item
+                                <td colspan="6" class="py-8 text-center text-gray-500 font-medium">Belum ada item
                                     ditambahkan</td>
                             </tr>
                         </tbody>
@@ -383,6 +389,18 @@
 
         function closePoModal() {
             document.getElementById('po-modal').classList.add('hidden');
+            const select = document.getElementById('po-product-select');
+            if (select) select.value = '';
+            const qtyInput = document.getElementById('po-qty-input');
+            if (qtyInput) qtyInput.value = '';
+            const stockDisplay = document.getElementById('po-product-stock-display');
+            if (stockDisplay) {
+                stockDisplay.classList.add('hidden');
+                stockDisplay.innerHTML = '';
+            }
+            if (typeof checkQtyStock === 'function') {
+                checkQtyStock();
+            }
         }
 
         function formatCurrency(value) {
@@ -503,14 +521,75 @@
             }
         }
 
+        function checkQtyStock() {
+            const select = document.getElementById('po-product-select');
+            const selectedOption = select.options[select.selectedIndex];
+            const qtyInput = document.getElementById('po-qty-input');
+            const errorText = document.getElementById('po-qty-error');
+            const btnAdd = document.querySelector('button[onclick="addPoItem()"]');
+
+            if (selectedOption && selectedOption.value) {
+                const stock = parseInt(selectedOption.getAttribute('data-stock')) || 0;
+                const qty = parseInt(qtyInput.value) || 0;
+                const productId = selectedOption.value;
+
+                // Calculate total including already added items of this product
+                let existingQty = 0;
+                const existingIndex = poItems.findIndex(item => item.product_id === productId);
+                if (existingIndex > -1) {
+                    existingQty = poItems[existingIndex].qty;
+                }
+
+                const totalQty = existingQty + qty;
+
+                if (totalQty > stock) {
+                    errorText.innerText = `Maks ${stock - existingQty} pcs`;
+                    errorText.classList.remove('hidden');
+                    qtyInput.classList.add('border-red-500');
+                    qtyInput.classList.remove('focus:border-[#B4F481]');
+                    if (btnAdd) {
+                        btnAdd.disabled = true;
+                        btnAdd.classList.add('opacity-50', 'cursor-not-allowed');
+                    }
+                    return false;
+                }
+            }
+
+            errorText.classList.add('hidden');
+            qtyInput.classList.remove('border-red-500');
+            qtyInput.classList.add('focus:border-[#B4F481]');
+            if (btnAdd) {
+                btnAdd.disabled = false;
+                btnAdd.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            return true;
+        }
+
         document.getElementById('po-product-select').addEventListener('change', function() {
             updateWholesalePricesSelect();
             updatePriceBasedOnQty();
+
+            // Update stock display text
+            const selectedOption = this.options[this.selectedIndex];
+            const stockDisplay = document.getElementById('po-product-stock-display');
+            if (selectedOption && selectedOption.value) {
+                const stock = selectedOption.getAttribute('data-stock') || 0;
+                stockDisplay.innerHTML = `Stok Gudang Pusat: <span class="font-bold text-[#B4F481]">${stock} pcs</span>`;
+                stockDisplay.classList.remove('hidden');
+            } else {
+                stockDisplay.classList.add('hidden');
+                stockDisplay.innerHTML = '';
+            }
+            checkQtyStock();
         });
-        document.getElementById('po-qty-input').addEventListener('input', updatePriceBasedOnQty);
+        document.getElementById('po-qty-input').addEventListener('input', function() {
+            updatePriceBasedOnQty();
+            checkQtyStock();
+        });
         document.getElementById('po-use-wholesale').addEventListener('change', function() {
             updateWholesalePricesSelect();
             updatePriceBasedOnQty();
+            checkQtyStock();
         });
         document.getElementById('po-wholesale-price-select').addEventListener('change', function() {
             const selectedOption = this.options[this.selectedIndex];
@@ -519,6 +598,7 @@
                 qtyInput.value = parseInt(selectedOption.value);
             }
             updatePriceBasedOnQty();
+            checkQtyStock();
         });
 
         function addPoItem() {
@@ -544,12 +624,17 @@
                 return;
             }
 
+            if (!checkQtyStock()) {
+                return;
+            }
+
             const useWholesaleCheckbox = document.getElementById('po-use-wholesale');
             const useWholesale = useWholesaleCheckbox.checked;
 
             const productId = selectedOption.value;
             const name = selectedOption.getAttribute('data-name');
             const sku = selectedOption.getAttribute('data-sku');
+            const stock = parseInt(selectedOption.getAttribute('data-stock')) || 0;
 
             // Find if the final applied price is indeed a wholesale price
             const defaultPrice = parseFloat(selectedOption.getAttribute('data-pusat-price')) || 0;
@@ -598,6 +683,7 @@
                     sku: sku,
                     qty: qty,
                     price: price,
+                    stock: stock,
                     is_wholesale: isWholesaleApplied
                 });
             }
@@ -609,6 +695,10 @@
             useWholesaleCheckbox.checked = false; // reset checkbox to default unchecked
             updateWholesalePricesSelect();
             document.getElementById('po-wholesale-info').classList.add('hidden');
+            const stockDisplay = document.getElementById('po-product-stock-display');
+            stockDisplay.classList.add('hidden');
+            stockDisplay.innerHTML = '';
+            checkQtyStock();
 
             updatePoTable();
         }
@@ -616,6 +706,7 @@
         function removePoItem(index) {
             poItems.splice(index, 1);
             updatePoTable();
+            checkQtyStock();
         }
 
         function updatePoTable() {
@@ -626,7 +717,7 @@
             hiddenContainer.innerHTML = '';
 
             if (poItems.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-gray-500 font-medium">Belum ada item ditambahkan</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-gray-500 font-medium">Belum ada item ditambahkan</td></tr>`;
                 document.getElementById('po-subtotal').value = 0;
                 document.getElementById('po-subtotal-display').value = '0';
                 document.getElementById('po-grand-total').value = 0;
@@ -643,28 +734,29 @@
                 tr.className = 'border-b border-gray-800';
                 const badge = item.is_wholesale ? ' <span class="ml-1.5 inline-block bg-green-950/20 text-[#B4F481] border border-green-800/50 py-0.5 px-2 rounded-full text-[9px] font-semibold">Grosir</span>' : '';
                 tr.innerHTML = `
-                    <td class="py-3 px-4">
-                        <div class="font-bold text-white">${item.name}</div>
-                        <div class="text-[10px] text-gray-400">SKU: ${item.sku}</div>
-                    </td>
-                    <td class="py-3 px-4 text-white">${item.qty}</td>
-                    <td class="py-3 px-4 text-white">Rp ${item.price.toLocaleString('id-ID')}${badge}</td>
-                    <td class="py-3 px-4 text-white">Rp ${itemSubtotal.toLocaleString('id-ID')}</td>
-                    <td class="py-3 px-4 text-center">
-                        <button type="button" onclick="removePoItem(${index})" class="text-red-400 hover:text-red-300 font-bold transition">Hapus</button>
-                    </td>
-                `;
+                                        <td class="py-3 px-4">
+                                            <div class="font-bold text-white">${item.name}</div>
+                                            <div class="text-[10px] text-gray-400">SKU: ${item.sku}</div>
+                                        </td>
+                                        <td class="py-3 px-4 text-white">${item.stock} pcs</td>
+                                        <td class="py-3 px-4 text-white">${item.qty}</td>
+                                        <td class="py-3 px-4 text-white">Rp ${item.price.toLocaleString('id-ID')}${badge}</td>
+                                        <td class="py-3 px-4 text-white">Rp ${itemSubtotal.toLocaleString('id-ID')}</td>
+                                        <td class="py-3 px-4 text-center">
+                                            <button type="button" onclick="removePoItem(${index})" class="text-red-400 hover:text-red-300 font-bold transition">Hapus</button>
+                                        </td>
+                                    `;
                 tbody.appendChild(tr);
 
                 // Append hidden inputs for standard form submission
                 hiddenContainer.innerHTML += `
-                    <input type="hidden" name="items[${index}][product_id]" value="${item.product_id}">
-                    <input type="hidden" name="items[${index}][name]" value="${item.name}">
-                    <input type="hidden" name="items[${index}][sku]" value="${item.sku}">
-                    <input type="hidden" name="items[${index}][qty]" value="${item.qty}">
-                    <input type="hidden" name="items[${index}][price]" value="${item.price}">
-                    <input type="hidden" name="items[${index}][is_wholesale]" value="${item.is_wholesale ? 1 : 0}">
-                `;
+                                        <input type="hidden" name="items[${index}][product_id]" value="${item.product_id}">
+                                        <input type="hidden" name="items[${index}][name]" value="${item.name}">
+                                        <input type="hidden" name="items[${index}][sku]" value="${item.sku}">
+                                        <input type="hidden" name="items[${index}][qty]" value="${item.qty}">
+                                        <input type="hidden" name="items[${index}][price]" value="${item.price}">
+                                        <input type="hidden" name="items[${index}][is_wholesale]" value="${item.is_wholesale ? 1 : 0}">
+                                    `;
             });
 
             document.getElementById('po-subtotal').value = subtotal;

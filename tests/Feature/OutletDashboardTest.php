@@ -103,4 +103,57 @@ class OutletDashboardTest extends TestCase
         $response->assertSee('2 Order');
         $response->assertSee('Order yang telah dilakukan');
     }
+
+    public function test_outlet_dashboard_excludes_rejected_and_draft_pos_from_total_belanja(): void
+    {
+        // Create 4 POs: Pending, Completed, Rejected, Draft
+        PurchaseOrders::create([
+            'id' => (string) Str::uuid(),
+            'po_number' => 'PO-001',
+            'branch_id' => $this->branch->id,
+            'outlet_id' => $this->outlet->id,
+            'user_id' => $this->outletUser->id,
+            'status' => 'Pending',
+            'notes' => json_encode(['grand_total' => 100000]),
+        ]);
+
+        PurchaseOrders::create([
+            'id' => (string) Str::uuid(),
+            'po_number' => 'PO-002',
+            'branch_id' => $this->branch->id,
+            'outlet_id' => $this->outlet->id,
+            'user_id' => $this->outletUser->id,
+            'status' => 'Completed',
+            'notes' => json_encode(['grand_total' => 200000]),
+        ]);
+
+        PurchaseOrders::create([
+            'id' => (string) Str::uuid(),
+            'po_number' => 'PO-003',
+            'branch_id' => $this->branch->id,
+            'outlet_id' => $this->outlet->id,
+            'user_id' => $this->outletUser->id,
+            'status' => 'Rejected',
+            'notes' => json_encode(['grand_total' => 500000]), // should not be counted
+        ]);
+
+        PurchaseOrders::create([
+            'id' => (string) Str::uuid(),
+            'po_number' => 'PO-004',
+            'branch_id' => $this->branch->id,
+            'outlet_id' => $this->outlet->id,
+            'user_id' => $this->outletUser->id,
+            'status' => 'Draft',
+            'notes' => json_encode(['grand_total' => 800000]), // should not be counted
+        ]);
+
+        $response = $this->actingAs($this->outletUser)->get(route('outlet.dashboard'));
+
+        $response->assertStatus(200);
+
+        // totalBelanja should only sum 100000 + 200000 = 300000
+        $response->assertViewHas('totalBelanja', 300000);
+        // totalOrder should count all 4 orders
+        $response->assertViewHas('totalOrder', 4);
+    }
 }

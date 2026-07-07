@@ -274,8 +274,11 @@ class SalesController extends Controller
             },
         ])->orderBy('name')->get();
         $outlets = Outlets::where('branch_id', $branchId)->orderBy('name')->get();
+        $outletPurchaseOrders = PurchaseOrders::whereHas('outlet', function ($query) use ($branchId) {
+            $query->where('branch_id', $branchId);
+        })->with(['outlet', 'user', 'sale'])->orderBy('created_at', 'desc')->get();
 
-        return view('cabang.penjualan', compact('sales', 'branches', 'products', 'outlets'));
+        return view('cabang.penjualan', compact('sales', 'branches', 'products', 'outlets', 'outletPurchaseOrders'));
     }
 
     public function edit($id)

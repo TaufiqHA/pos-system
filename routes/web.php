@@ -521,7 +521,9 @@ Route::prefix('outlet')->middleware(['auth', 'role.outlet'])->group(function () 
 
             $purchaseOrders = PurchaseOrders::where('outlet_id', $outletId)->get();
             $totalOrder = $purchaseOrders->count();
-            $totalBelanja = $purchaseOrders->sum(function ($po) {
+            $totalBelanja = $purchaseOrders->filter(function ($po) {
+                return ! in_array($po->status, ['Rejected', 'Draft']);
+            })->sum(function ($po) {
                 $notes = json_decode($po->notes, true);
 
                 return (float) ($notes['grand_total'] ?? 0);
@@ -541,7 +543,7 @@ Route::prefix('outlet')->middleware(['auth', 'role.outlet'])->group(function () 
                 $chartLabels[] = $indonesianMonths[$monthNum];
 
                 $sum = $purchaseOrders->filter(function ($po) use ($monthNum, $yearNum) {
-                    return $po->created_at->year === $yearNum && $po->created_at->month === $monthNum;
+                    return $po->created_at->year === $yearNum && $po->created_at->month === $monthNum && ! in_array($po->status, ['Rejected', 'Draft']);
                 })->sum(function ($po) {
                     $notes = json_decode($po->notes, true);
 

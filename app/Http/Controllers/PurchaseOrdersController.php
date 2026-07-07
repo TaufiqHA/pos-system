@@ -46,6 +46,9 @@ class PurchaseOrdersController extends Controller
                 'branchPrices' => function ($query) use ($pusatBranchId) {
                     $query->where('branch_id', $pusatBranchId);
                 },
+                'productStocks' => function ($query) use ($pusatBranchId) {
+                    $query->where('branch_id', $pusatBranchId);
+                },
             ])->orderBy('name')->get();
 
             return view('cabang.daftar-po', compact('purchaseOrders', 'products'));
