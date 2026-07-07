@@ -192,4 +192,51 @@ class PurchaseOrdersApprovalTest extends TestCase
         $response->assertStatus(200);
         $response->assertDontSee($this->purchaseOrder->po_number);
     }
+
+    public function test_approving_purchase_order_with_credit_creates_debt(): void
+    {
+        $notes = json_decode($this->purchaseOrder->notes, true);
+        $notes['payment_method'] = 'KREDIT';
+
+        $response = $this->actingAs($this->admin)->putJson(route('purchase-orders.update', $this->purchaseOrder->id), [
+            'po_number' => $this->purchaseOrder->po_number,
+            'branch_id' => $this->purchaseOrder->branch_id,
+            'user_id' => $this->purchaseOrder->user_id,
+            'status' => 'Approved',
+            'notes' => json_encode($notes),
+            'sale_id' => null,
+        ]);
+
+        $response->assertStatus(200);
+
+        $this->purchaseOrder = $this->purchaseOrder->fresh();
+        $this->assertEquals('Approved', $this->purchaseOrder->status);
+
+        $this->assertNotEmpty($this->purchaseOrder->sale_id);
+        $this->assertDatabaseHas('sales', [
+            'id' => $this->purchaseOrder->sale_id,
+            'branch_id' => $this->branch->id,
+            'user_id' => $this->cabangUser->id,
+            'status' => 'BELUM BAYAR',
+        ]);
+
+        $this->assertDatabaseHas('sales_payments', [
+            'sale_id' => $this->purchaseOrder->sale_id,
+            'method' => 'KREDIT',
+            'status' => 'BELUM BAYAR',
+        ]);
+
+        $this->assertDatabaseHas('debts', [
+            'debtor_type' => 'branch',
+            'debtor_branch_id' => $this->branch->id,
+            'creditor_type' => 'branch',
+            'creditor_branch_id' => 'BRC-001',
+            'source_type' => 'sale',
+            'sale_id' => $this->purchaseOrder->sale_id,
+            'total_amount' => 5000000,
+            'paid_amount' => 0,
+            'remaining_amount' => 5000000,
+            'status' => 'unpaid',
+        ]);
+    }
 }

@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('reference')->nullable();
             $table->text('notes')->nullable();
             $table->string('created_by')->nullable();
+            $table->string('status')->default('CONFIRMED');
 
             $table->timestamps();
 

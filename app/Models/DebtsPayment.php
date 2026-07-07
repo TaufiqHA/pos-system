@@ -25,6 +25,7 @@ class DebtsPayment extends Model
         'reference',
         'notes',
         'created_by',
+        'status',
     ];
 
     protected $casts = [

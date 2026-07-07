@@ -33,29 +33,37 @@ class DebtsPaymentController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $payment = DB::transaction(function () use ($validated) {
+        $isCabang = auth()->user()->role && auth()->user()->role->name === 'cabang';
+        $status = $isCabang ? 'PENDING' : 'CONFIRMED';
+
+        $payment = DB::transaction(function () use ($validated, $status) {
             $validated['created_by'] = auth()->id();
+            $validated['status'] = $status;
 
             $payment = DebtsPayment::create($validated);
 
-            $debt = Debts::findOrFail($payment->debt_id);
-            $debt->paid_amount += $payment->amount;
-            $debt->remaining_amount = max(0, $debt->total_amount - $debt->paid_amount);
+            if ($status === 'CONFIRMED') {
+                $debt = Debts::findOrFail($payment->debt_id);
+                $debt->paid_amount += $payment->amount;
+                $debt->remaining_amount = max(0, $debt->total_amount - $debt->paid_amount);
 
-            if ($debt->remaining_amount <= 0) {
-                $debt->status = 'paid';
-            } elseif ($debt->paid_amount > 0) {
-                $debt->status = 'partial';
-            } else {
-                $debt->status = 'unpaid';
+                if ($debt->remaining_amount <= 0) {
+                    $debt->status = 'paid';
+                } elseif ($debt->paid_amount > 0) {
+                    $debt->status = 'partial';
+                } else {
+                    $debt->status = 'unpaid';
+                }
+                $debt->save();
             }
-            $debt->save();
 
             return $payment;
         });
 
         return response()->json([
-            'message' => 'Pembayaran hutang berhasil ditambahkan',
+            'message' => $status === 'PENDING'
+                ? 'Pembayaran berhasil dikirim dan menunggu konfirmasi admin.'
+                : 'Pembayaran hutang berhasil ditambahkan',
             'data' => $payment->load(['debt', 'creator']),
         ], 201);
     }
@@ -86,7 +94,7 @@ class DebtsPaymentController extends Controller
         ]);
 
         $payment = DB::transaction(function () use ($payment, $validated) {
-            if (isset($validated['amount'])) {
+            if (isset($validated['amount']) && $payment->status === 'CONFIRMED') {
                 $diff = $validated['amount'] - $payment->amount;
 
                 $debt = Debts::findOrFail($payment->debt_id);
@@ -122,18 +130,20 @@ class DebtsPaymentController extends Controller
         $payment = DebtsPayment::findOrFail($id);
 
         DB::transaction(function () use ($payment) {
-            $debt = Debts::findOrFail($payment->debt_id);
-            $debt->paid_amount = max(0, $debt->paid_amount - $payment->amount);
-            $debt->remaining_amount = max(0, $debt->total_amount - $debt->paid_amount);
+            if ($payment->status === 'CONFIRMED') {
+                $debt = Debts::findOrFail($payment->debt_id);
+                $debt->paid_amount = max(0, $debt->paid_amount - $payment->amount);
+                $debt->remaining_amount = max(0, $debt->total_amount - $debt->paid_amount);
 
-            if ($debt->remaining_amount <= 0) {
-                $debt->status = 'paid';
-            } elseif ($debt->paid_amount > 0) {
-                $debt->status = 'partial';
-            } else {
-                $debt->status = 'unpaid';
+                if ($debt->remaining_amount <= 0) {
+                    $debt->status = 'paid';
+                } elseif ($debt->paid_amount > 0) {
+                    $debt->status = 'partial';
+                } else {
+                    $debt->status = 'unpaid';
+                }
+                $debt->save();
             }
-            $debt->save();
 
             $payment->delete();
         });
@@ -147,5 +157,66 @@ class DebtsPaymentController extends Controller
     public function delete(Request $request, $id)
     {
         return $this->destroy($request, $id);
+    }
+
+    /**
+     * Confirm a pending payment.
+     */
+    public function confirm(Request $request, $id)
+    {
+        $payment = DebtsPayment::findOrFail($id);
+
+        if ($payment->status !== 'PENDING') {
+            return response()->json([
+                'message' => 'Pembayaran ini sudah dikonfirmasi atau ditolak sebelumnya.',
+            ], 422);
+        }
+
+        $payment = DB::transaction(function () use ($payment) {
+            $payment->status = 'CONFIRMED';
+            $payment->save();
+
+            $debt = Debts::findOrFail($payment->debt_id);
+            $debt->paid_amount += $payment->amount;
+            $debt->remaining_amount = max(0, $debt->total_amount - $debt->paid_amount);
+
+            if ($debt->remaining_amount <= 0) {
+                $debt->status = 'paid';
+            } elseif ($debt->paid_amount > 0) {
+                $debt->status = 'partial';
+            } else {
+                $debt->status = 'unpaid';
+            }
+            $debt->save();
+
+            return $payment;
+        });
+
+        return response()->json([
+            'message' => 'Pembayaran berhasil dikonfirmasi.',
+            'data' => $payment->load(['debt', 'creator']),
+        ]);
+    }
+
+    /**
+     * Reject a pending payment.
+     */
+    public function reject(Request $request, $id)
+    {
+        $payment = DebtsPayment::findOrFail($id);
+
+        if ($payment->status !== 'PENDING') {
+            return response()->json([
+                'message' => 'Pembayaran ini sudah dikonfirmasi atau ditolak sebelumnya.',
+            ], 422);
+        }
+
+        $payment->status = 'REJECTED';
+        $payment->save();
+
+        return response()->json([
+            'message' => 'Pembayaran berhasil ditolak.',
+            'data' => $payment->load(['debt', 'creator']),
+        ]);
     }
 }

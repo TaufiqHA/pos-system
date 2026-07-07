@@ -115,6 +115,9 @@ Route::prefix('cabang')->middleware(['auth', 'role.cabang'])->group(function () 
             'branchPrices' => function ($query) use ($pusatBranchId) {
                 $query->where('branch_id', $pusatBranchId);
             },
+            'productStocks' => function ($query) use ($pusatBranchId) {
+                $query->where('branch_id', $pusatBranchId);
+            },
         ])->orderBy('name')->get();
         $deliveries = Deliveries::where('created_by', '!=', auth()->id())
             ->whereHas('sale', function ($query) {
@@ -155,6 +158,9 @@ Route::prefix('cabang')->middleware(['auth', 'role.cabang'])->group(function () 
     Route::post('/wholesale-prices', [WholesalePriceController::class, 'store'])->name('cabang.wholesale-prices.store');
     Route::put('/wholesale-prices/{id}', [WholesalePriceController::class, 'update'])->name('cabang.wholesale-prices.update');
     Route::delete('/wholesale-prices/{id}', [WholesalePriceController::class, 'destroy'])->name('cabang.wholesale-prices.destroy');
+
+    // Hutang Cabang Route
+    Route::get('/hutang', [DebtsController::class, 'cabangIndex'])->name('cabang.hutang');
 });
 
 // Outlet Dashboard Routes
@@ -220,6 +226,8 @@ Route::prefix('auth')->group(function () {
         Route::delete('debts/{id}/delete', [DebtsController::class, 'delete'])->name('debts.delete');
         Route::resource('debts-payments', DebtsPaymentController::class);
         Route::delete('debts-payments/{id}/delete', [DebtsPaymentController::class, 'delete'])->name('debts-payments.delete');
+        Route::post('debts-payments/{id}/confirm', [DebtsPaymentController::class, 'confirm'])->name('debts-payments.confirm');
+        Route::post('debts-payments/{id}/reject', [DebtsPaymentController::class, 'reject'])->name('debts-payments.reject');
         // Sales Routes
         Route::resource('sales', SalesController::class);
 

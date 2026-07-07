@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\Debts;
+use App\Models\DebtsPayment;
 use App\Models\Outlets;
 use App\Models\Suppliers;
 use Illuminate\Http\Request;
@@ -191,7 +192,7 @@ class DebtsController extends Controller
      */
     public function adminIndex(Request $request)
     {
-        $debts = Debts::where('creditor_type', 'supplier')->with([
+        $debts = Debts::with([
             'debtorBranch',
             'debtorOutlet',
             'supplier',
@@ -201,14 +202,48 @@ class DebtsController extends Controller
             'payments.creator',
         ])->orderBy('created_at', 'desc')->get();
 
+        $pendingPayments = DebtsPayment::where('status', 'PENDING')->with([
+            'debt.debtorBranch',
+            'creator',
+        ])->orderBy('created_at', 'desc')->get();
+
         if ($request->wantsJson()) {
-            return response()->json($debts);
+            return response()->json([
+                'debts' => $debts,
+                'pending_payments' => $pendingPayments,
+            ]);
         }
 
         $suppliers = Suppliers::all();
         $branches = Branch::all();
         $outlets = Outlets::all();
 
-        return view('admin.hutang', compact('debts', 'suppliers', 'branches', 'outlets'));
+        return view('admin.hutang', compact('debts', 'suppliers', 'branches', 'outlets', 'pendingPayments'));
+    }
+
+    /**
+     * Display a listing of the resource for cabang panel.
+     */
+    public function cabangIndex(Request $request)
+    {
+        $branchId = auth()->user()->branch_id;
+
+        $debts = Debts::where('debtor_type', 'branch')
+            ->where('debtor_branch_id', $branchId)
+            ->with([
+                'debtorBranch',
+                'debtorOutlet',
+                'supplier',
+                'creditorBranch',
+                'purchase',
+                'sale',
+                'payments.creator',
+            ])->orderBy('created_at', 'desc')->get();
+
+        if ($request->wantsJson()) {
+            return response()->json($debts);
+        }
+
+        return view('cabang.hutang', compact('debts'));
     }
 }

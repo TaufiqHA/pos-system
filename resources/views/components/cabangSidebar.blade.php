@@ -153,8 +153,8 @@
                 <li class="hover:text-white cursor-pointer transition">
                     <a href="#" class="block w-full">Laporan Keuangan</a>
                 </li>
-                <li class="hover:text-white cursor-pointer transition">
-                    <a href="#" class="block w-full">Hutang</a>
+                <li class="{{ request()->routeIs('cabang.hutang') ? 'text-[#B4F481] font-bold' : '' }} hover:text-white cursor-pointer transition">
+                    <a href="{{ route('cabang.hutang') }}" class="block w-full">Hutang</a>
                 </li>
             </ul>
         </div>

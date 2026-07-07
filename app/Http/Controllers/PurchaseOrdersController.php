@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Debts;
 use App\Models\Deliveries;
 use App\Models\Product;
 use App\Models\ProductStock;
@@ -185,6 +186,10 @@ class PurchaseOrdersController extends Controller
                         $saleBranchId = $purchaseOrder->outlet->branch_id ?? null;
                     }
 
+                    $paymentMethod = $notesData['payment_method'] ?? 'TUNAI';
+                    $paymentStatus = ($paymentMethod === 'TUNAI' || $paymentMethod === 'TRANSFER') ? 'LUNAS' : 'BELUM BAYAR';
+                    $paidAt = $paymentStatus === 'LUNAS' ? now() : null;
+
                     $sale = Sales::create([
                         'id' => (string) Str::uuid(),
                         'invoice' => $invoice,
@@ -197,7 +202,7 @@ class PurchaseOrdersController extends Controller
                         'discount' => $notesData['discount'] ?? 0,
                         'tax' => $notesData['tax'] ?? 0,
                         'grand_total' => $notesData['grand_total'] ?? 0,
-                        'status' => 'LUNAS',
+                        'status' => $paymentStatus,
                     ]);
 
                     $items = $notesData['items'] ?? [];
@@ -260,10 +265,6 @@ class PurchaseOrdersController extends Controller
                         }
                     }
 
-                    $paymentMethod = $notesData['payment_method'] ?? 'TUNAI';
-                    $paymentStatus = ($paymentMethod === 'TUNAI' || $paymentMethod === 'TRANSFER') ? 'LUNAS' : 'BELUM BAYAR';
-                    $paidAt = $paymentStatus === 'LUNAS' ? now() : null;
-
                     SalesPayment::create([
                         'id' => (string) Str::uuid(),
                         'sale_id' => $sale->id,
@@ -282,6 +283,27 @@ class PurchaseOrdersController extends Controller
                         'sent_at' => null,
                         'received_at' => null,
                     ]);
+
+                    if ($paymentMethod === 'KREDIT') {
+                        Debts::create([
+                            'debtor_type' => $purchaseOrder->branch_id ? 'branch' : 'outlet',
+                            'debtor_branch_id' => $purchaseOrder->branch_id,
+                            'debtor_outlet_id' => $purchaseOrder->outlet_id,
+                            'creditor_type' => 'branch',
+                            'supplier_id' => null,
+                            'creditor_branch_id' => 'BRC-001',
+                            'source_type' => 'sale',
+                            'sale_id' => $sale->id,
+                            'purchase_id' => null,
+                            'invoice_number' => $sale->invoice,
+                            'total_amount' => $sale->grand_total,
+                            'paid_amount' => 0,
+                            'remaining_amount' => $sale->grand_total,
+                            'status' => 'unpaid',
+                            'due_date' => now()->addDays(30),
+                            'notes' => 'Hutang otomatis dari approval PO #'.$purchaseOrder->po_number,
+                        ]);
+                    }
 
                     $purchaseOrder->update(['sale_id' => $sale->id]);
                 });

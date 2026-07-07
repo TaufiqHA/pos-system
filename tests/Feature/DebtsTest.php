@@ -210,4 +210,56 @@ class DebtsTest extends TestCase
             'id' => $debt->id,
         ]);
     }
+
+    public function test_cabang_user_can_view_their_debts(): void
+    {
+        $cabangRole = Role::firstOrCreate(['name' => 'cabang'], ['id' => (string) Str::uuid()]);
+        $cabangUser = User::factory()->create([
+            'role_id' => $cabangRole->id,
+            'branch_id' => $this->branch->id,
+        ]);
+
+        Branch::create([
+            'id' => 'BRC-001',
+            'name' => 'Gudang Pusat',
+            'address' => 'Jl. Pusat No. 1',
+            'phone' => '081111111',
+        ]);
+
+        $debt = Debts::create([
+            'id' => (string) Str::uuid(),
+            'debtor_type' => 'branch',
+            'debtor_branch_id' => $this->branch->id,
+            'creditor_type' => 'branch',
+            'creditor_branch_id' => 'BRC-001',
+            'total_amount' => 5000000,
+            'paid_amount' => 0,
+            'remaining_amount' => 5000000,
+            'status' => 'unpaid',
+        ]);
+
+        $otherBranch = Branch::create([
+            'id' => (string) Str::uuid(),
+            'name' => 'Branch B',
+            'address' => 'Jl. Branch B',
+            'phone' => '021333333',
+        ]);
+        $otherDebt = Debts::create([
+            'id' => (string) Str::uuid(),
+            'debtor_type' => 'branch',
+            'debtor_branch_id' => $otherBranch->id,
+            'creditor_type' => 'branch',
+            'creditor_branch_id' => 'BRC-001',
+            'total_amount' => 7000000,
+            'paid_amount' => 0,
+            'remaining_amount' => 7000000,
+            'status' => 'unpaid',
+        ]);
+
+        $response = $this->actingAs($cabangUser)->get(route('cabang.hutang'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Rp 5.000.000');
+        $response->assertDontSee('Rp 7.000.000');
+    }
 }
