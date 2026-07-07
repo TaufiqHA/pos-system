@@ -54,9 +54,9 @@
         </a>
 
         <!-- History -->
-        <a href="{{ Route::has('outlet.history') ? route('outlet.history') : (Route::has('outlet.histories.index') ? route('outlet.histories.index') : '#') }}"
-            class="block {{ request()->routeIs('outlet.history*') || request()->routeIs('outlet.histories*') ? 'bg-indigo-950/60 text-white border border-indigo-700/50 shadow-md shadow-indigo-950/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/50' }} rounded-xl p-3 flex items-center space-x-3 transition cursor-pointer">
-            <svg class="w-5 h-5 {{ request()->routeIs('outlet.history*') || request()->routeIs('outlet.histories*') ? 'text-[#B4F481]' : 'text-gray-400' }}"
+        <a href="{{ route('outlet.history') }}"
+            class="block {{ request()->routeIs('outlet.history') ? 'bg-indigo-950/60 text-white border border-indigo-700/50 shadow-md shadow-indigo-950/30' : 'text-gray-400 hover:text-white hover:bg-gray-800/50' }} rounded-xl p-3 flex items-center space-x-3 transition cursor-pointer">
+            <svg class="w-5 h-5 {{ request()->routeIs('outlet.history') ? 'text-[#B4F481]' : 'text-gray-400' }}"
                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z">

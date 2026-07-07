@@ -245,6 +245,9 @@ Route::prefix('outlet')->middleware(['auth', 'role.outlet'])->group(function () 
             'branchPrices' => function ($query) use ($branchId) {
                 $query->where('branch_id', $branchId);
             },
+            'productStocks' => function ($query) use ($branchId) {
+                $query->where('branch_id', $branchId);
+            },
         ])->orderBy('name')->get();
 
         return view('outlet.dashboard', compact('deliveries', 'products'));
@@ -266,10 +269,23 @@ Route::prefix('outlet')->middleware(['auth', 'role.outlet'])->group(function () 
             'branchPrices' => function ($query) use ($branchId) {
                 $query->where('branch_id', $branchId);
             },
+            'productStocks' => function ($query) use ($branchId) {
+                $query->where('branch_id', $branchId);
+            },
         ])->orderBy('name')->get();
 
         return view('outlet.order', compact('purchaseOrders', 'products'));
     })->name('outlet.order');
+
+    Route::get('/history', function () {
+        $outletId = auth()->user()->outlet_id;
+        $purchaseOrders = PurchaseOrders::where('outlet_id', $outletId)
+            ->with(['branch', 'user', 'sale.debt'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('outlet.history', compact('purchaseOrders'));
+    })->name('outlet.history');
 });
 
 // Auth Routes

@@ -175,7 +175,7 @@
                 <!-- Section Item PO -->
                 <div class="space-y-3">
                     <h4 class="text-xs font-bold tracking-wider text-gray-400 uppercase">ITEM ORDER</h4>
-                    <div class="flex flex-col sm:flex-row gap-2">
+                    <div class="flex flex-col sm:flex-row gap-2 items-start">
                         <div class="flex-1">
                             <select id="po-product-select"
                                 class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-[#B4F481]">
@@ -189,22 +189,30 @@
                                             ];
                                         })->values()->all();
                                         $pusatPrice = $product->branchPrices->first()?->sell_price ?? $product->sell_price;
+                                        $stock = $product->productStocks->first()?->stock ?? 0;
                                     @endphp
                                     <option value="{{ $product->id }}"
                                         data-sku="{{ $product->sku }}"
                                         data-price="{{ $product->buy_price }}"
                                         data-pusat-price="{{ $pusatPrice }}"
                                         data-name="{{ $product->name }}"
+                                        data-stock="{{ $stock }}"
                                         data-wholesale='{{ json_encode($wholesaleData) }}'>
                                         {{ $product->name }} (SKU: {{ $product->sku }}) - Rp
                                         {{ number_format($pusatPrice, 0, ',', '.') }}
                                     </option>
                                 @endforeach
                             </select>
+                            <div id="po-stock-info" class="hidden mt-1 text-[11px] text-[#B4F481] font-semibold">
+                                Stok Cabang: <span id="po-stock-info-val">0</span>
+                            </div>
                         </div>
                         <div class="w-full sm:w-24">
                             <input type="number" id="po-qty-input" placeholder="Qty" min="1"
                                 class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-[#B4F481]">
+                            <div id="po-qty-warning" class="hidden mt-1 text-[10px] text-red-400 font-semibold leading-tight">
+                                Melebihi stok cabang!
+                            </div>
                         </div>
                         <div class="w-full sm:w-28 flex items-center gap-2 bg-gray-900 border border-gray-800 rounded-xl p-3">
                             <input type="checkbox" id="po-use-wholesale"
@@ -537,14 +545,50 @@
                     }
                 }
             });
+            function updateStockDisplay() {
+                const select = document.getElementById('po-product-select');
+                const selectedOption = select.options[select.selectedIndex];
+                const qtyInput = document.getElementById('po-qty-input');
+                const stockInfo = document.getElementById('po-stock-info');
+                const stockInfoVal = document.getElementById('po-stock-info-val');
+                const qtyWarning = document.getElementById('po-qty-warning');
+
+                if (selectedOption && selectedOption.value) {
+                    const stock = parseInt(selectedOption.getAttribute('data-stock')) || 0;
+                    stockInfoVal.textContent = stock;
+                    stockInfo.classList.remove('hidden');
+
+                    const qty = parseInt(qtyInput.value) || 0;
+                    if (qty > stock) {
+                        qtyWarning.classList.remove('hidden');
+                        qtyInput.classList.add('border-red-500');
+                        qtyInput.classList.remove('focus:border-[#B4F481]');
+                    } else {
+                        qtyWarning.classList.add('hidden');
+                        qtyInput.classList.remove('border-red-500');
+                        qtyInput.classList.add('focus:border-[#B4F481]');
+                    }
+                } else {
+                    stockInfo.classList.add('hidden');
+                    qtyWarning.classList.add('hidden');
+                    qtyInput.classList.remove('border-red-500');
+                    qtyInput.classList.add('focus:border-[#B4F481]');
+                }
+            }
+
             document.getElementById('po-product-select').addEventListener('change', function() {
                 updateWholesalePricesSelect();
                 updatePriceBasedOnQty();
+                updateStockDisplay();
             });
-            document.getElementById('po-qty-input').addEventListener('input', updatePriceBasedOnQty);
+            document.getElementById('po-qty-input').addEventListener('input', function() {
+                updatePriceBasedOnQty();
+                updateStockDisplay();
+            });
             document.getElementById('po-use-wholesale').addEventListener('change', function() {
                 updateWholesalePricesSelect();
                 updatePriceBasedOnQty();
+                updateStockDisplay();
             });
             document.getElementById('po-wholesale-price-select').addEventListener('change', function() {
                 const selectedOption = this.options[this.selectedIndex];
@@ -553,6 +597,7 @@
                     qtyInput.value = parseInt(selectedOption.value);
                 }
                 updatePriceBasedOnQty();
+                updateStockDisplay();
             });
         });
 
@@ -760,6 +805,10 @@
             useWholesaleCheckbox.checked = false;
             updateWholesalePricesSelect();
             document.getElementById('po-wholesale-info').classList.add('hidden');
+            document.getElementById('po-stock-info').classList.add('hidden');
+            document.getElementById('po-qty-warning').classList.add('hidden');
+            qtyInput.classList.remove('border-red-500');
+            qtyInput.classList.add('focus:border-[#B4F481]');
 
             updatePoTable();
         }
