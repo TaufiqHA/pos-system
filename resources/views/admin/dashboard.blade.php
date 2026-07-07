@@ -34,8 +34,8 @@
                 </span>
             @endif
         </button>
-        <button
-            class="w-full sm:w-auto justify-center px-5 py-2 rounded-full bg-[#B4F481] text-black font-bold text-xs tracking-wider hover:bg-[#a0dc72] transition flex items-center space-x-2">
+        <button onclick="openUpcomingProductsModal()"
+            class="w-full sm:w-auto justify-center px-5 py-2 rounded-full bg-[#B4F481] text-black font-bold text-xs tracking-wider hover:bg-[#a0dc72] transition flex items-center space-x-2 cursor-pointer">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path>
             </svg>
@@ -584,6 +584,469 @@
             }
             document.getElementById('form-status').value = status;
             document.getElementById('approval-form').submit();
+        }
+    </script>
+
+    <!-- ================= MODAL BOX: UPCOMING PRODUCTS LIST ================= -->
+    <div id="upcoming-products-modal"
+        class="fixed inset-0 z-40 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div
+            class="card max-w-5xl w-full p-0 rounded-2xl shadow-2xl relative border border-gray-800 max-h-[85vh] flex flex-col overflow-hidden">
+            <!-- Close Button -->
+            <button onclick="closeUpcomingProductsModal()"
+                class="absolute top-4 right-4 text-gray-400 hover:text-white transition cursor-pointer z-50">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+
+            <!-- Header Modal -->
+            <div class="p-6 border-b border-gray-800 bg-gray-900/40 flex justify-between items-center pr-12">
+                <div>
+                    <h3 class="text-base font-bold tracking-wide font-display text-white">Daftar Produk Baru (Upcoming)</h3>
+                    <p class="text-[11px] text-gray-400 mt-1">Kelola daftar ide atau rencana produk baru yang akan datang</p>
+                </div>
+                <button onclick="openCreateUpcomingProductModal()"
+                    class="bg-[#B4F481] hover:bg-[#a0dc72] text-black font-bold text-xs py-2 px-4 rounded-xl transition flex items-center gap-2 cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Tambah Rencana Produk
+                </button>
+            </div>
+
+            <!-- Content Area - Table list -->
+            <div class="flex-1 overflow-y-auto p-6 bg-[#0B1120]/20">
+                <div class="overflow-x-auto font-sans">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="border-b border-gray-800 text-gray-400 font-bold uppercase tracking-wider">
+                                <th class="pb-3 px-4 w-16 text-center">Gambar</th>
+                                <th class="pb-3 px-4">Nama Produk</th>
+                                <th class="pb-3 px-4">Deskripsi</th>
+                                <th class="pb-3 px-4">Pengunggah</th>
+                                <th class="pb-3 px-4 text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="upcoming-products-table-body" class="divide-y divide-gray-800 text-gray-300">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL BOX: CREATE UPCOMING PRODUCT ================= -->
+    <div id="create-upcoming-product-modal"
+        class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="card max-w-lg w-full p-6 rounded-2xl shadow-2xl relative border border-gray-850">
+            <button onclick="closeCreateUpcomingProductModal()"
+                class="absolute top-4 right-4 text-gray-400 hover:text-white transition cursor-pointer">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            <div class="mb-6">
+                <h3 class="text-base font-bold tracking-wide font-display text-white">Tambah Produk Baru</h3>
+                <p class="text-[11px] text-gray-400 mt-1">Daftarkan rencana produk baru ke sistem</p>
+            </div>
+            <form onsubmit="submitCreateUpcomingProduct(event)" id="create-upcoming-form" enctype="multipart/form-data" class="space-y-4 text-xs">
+                <div class="space-y-1">
+                    <label class="block font-bold text-gray-300">Nama Produk *</label>
+                    <input type="text" name="name" required placeholder="Contoh: Susu Oat Premium"
+                        class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="block font-bold text-gray-300">Deskripsi</label>
+                    <textarea name="description" rows="3" placeholder="Detail produk baru..."
+                        class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400"></textarea>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="block font-bold text-gray-300">Gambar Produk</label>
+                    <input type="file" name="image" accept="image/*"
+                        class="w-full bg-gray-900 border border-gray-800 text-gray-300 rounded-xl p-3 focus:outline-none focus:border-green-400">
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" onclick="closeCreateUpcomingProductModal()"
+                        class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 px-6 rounded-xl transition cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="submit"
+                        class="bg-[#B4F481] hover:bg-green-400 text-black font-bold py-2.5 px-8 rounded-xl transition shadow-lg cursor-pointer">
+                        Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= MODAL BOX: EDIT UPCOMING PRODUCT ================= -->
+    <div id="edit-upcoming-product-modal"
+        class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="card max-w-lg w-full p-6 rounded-2xl shadow-2xl relative border border-gray-850">
+            <button onclick="closeEditUpcomingProductModal()"
+                class="absolute top-4 right-4 text-gray-400 hover:text-white transition cursor-pointer">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            <div class="mb-6">
+                <h3 class="text-base font-bold tracking-wide font-display text-white">Edit Rencana Produk</h3>
+                <p class="text-[11px] text-gray-400 mt-1">Ubah rencana detail produk baru</p>
+            </div>
+            <form onsubmit="submitEditUpcomingProduct(event)" id="edit-upcoming-form" enctype="multipart/form-data" class="space-y-4 text-xs">
+                <input type="hidden" id="edit-upcoming-id">
+                
+                <div class="space-y-1">
+                    <label class="block font-bold text-gray-300">Nama Produk *</label>
+                    <input type="text" name="name" id="edit-upcoming-name" required
+                        class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="block font-bold text-gray-300">Deskripsi</label>
+                    <textarea name="description" id="edit-upcoming-description" rows="3"
+                        class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400"></textarea>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="block font-bold text-gray-300">Gambar Produk</label>
+                    <div id="edit-upcoming-image-preview-container" class="mb-2 hidden">
+                        <img id="edit-upcoming-image-preview" src="" class="w-20 h-20 rounded-lg object-cover border border-gray-800">
+                        <div class="mt-1 flex items-center gap-2">
+                            <input type="checkbox" name="delete_image" id="edit-upcoming-delete-image" value="1">
+                            <label for="edit-upcoming-delete-image" class="text-red-400 text-[10px] cursor-pointer">Hapus gambar saat ini</label>
+                        </div>
+                    </div>
+                    <input type="file" name="image" accept="image/*"
+                        class="w-full bg-gray-900 border border-gray-800 text-gray-300 rounded-xl p-3 focus:outline-none focus:border-green-400">
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" onclick="closeEditUpcomingProductModal()"
+                        class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 px-6 rounded-xl transition cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="submit"
+                        class="bg-[#B4F481] hover:bg-green-400 text-black font-bold py-2.5 px-8 rounded-xl transition shadow-lg cursor-pointer">
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= MODAL BOX: DETAIL UPCOMING PRODUCT ================= -->
+    <div id="detail-upcoming-product-modal"
+        class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="card max-w-md w-full p-6 rounded-2xl shadow-2xl relative border border-gray-850">
+            <button onclick="closeDetailUpcomingProductModal()"
+                class="absolute top-4 right-4 text-gray-400 hover:text-white transition cursor-pointer">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            <div class="mb-6">
+                <h3 class="text-base font-bold tracking-wide font-display text-white">Produk yang akan rilis</h3>
+                <p class="text-[11px] text-gray-400 mt-1">Informasi lengkap rencana produk baru</p>
+            </div>
+            
+            <div class="space-y-4 text-xs text-gray-300">
+                <!-- Large Image Preview -->
+                <div class="flex justify-center bg-gray-950 p-4 rounded-xl border border-gray-800">
+                    <img id="detail-upcoming-image" src="" alt="Upcoming Product Image" class="max-h-48 rounded-lg object-contain">
+                </div>
+
+                <div class="space-y-1">
+                    <span class="text-gray-400 text-[10px] uppercase font-bold tracking-wider font-display">Nama Produk</span>
+                    <p id="detail-upcoming-name-view" class="text-sm font-bold text-white"></p>
+                </div>
+
+                <div class="space-y-1">
+                    <span class="text-gray-400 text-[10px] uppercase font-bold tracking-wider font-display">Deskripsi</span>
+                    <p id="detail-upcoming-description-view" class="leading-relaxed bg-gray-900/60 p-3 rounded-xl border border-gray-800/50 whitespace-pre-line"></p>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-6">
+                <button type="button" onclick="closeDetailUpcomingProductModal()"
+                    class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 px-6 rounded-xl transition cursor-pointer">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openUpcomingProductsModal() {
+            document.getElementById('upcoming-products-modal').classList.remove('hidden');
+            fetchUpcomingProducts();
+        }
+
+        function closeUpcomingProductsModal() {
+            document.getElementById('upcoming-products-modal').classList.add('hidden');
+        }
+
+        function fetchUpcomingProducts() {
+            const tableBody = document.getElementById('upcoming-products-table-body');
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="py-8 text-center text-gray-500">Loading...</td>
+                </tr>
+            `;
+
+            fetch('/admin/upcoming-products', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                tableBody.innerHTML = '';
+                if (data.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="py-8 text-center text-gray-500">Belum ada produk baru terdaftar.</td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                data.forEach(item => {
+                    const imgHtml = item.image 
+                        ? `<img src="${item.image}" alt="${item.name}" class="w-10 h-10 rounded-lg object-cover border border-gray-800 mx-auto shadow-md">`
+                        : `<div class="w-10 h-10 rounded-lg bg-gray-900 border border-gray-800 flex items-center justify-center text-gray-600 text-[9px] font-bold mx-auto">N/A</div>`;
+                    
+                    const descText = item.description 
+                        ? (item.description.length > 50 ? item.description.substring(0, 50) + '...' : item.description)
+                        : '-';
+                    
+                    const creatorName = item.creator ? item.creator.name : 'Unknown';
+
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-800/30 transition';
+                    row.innerHTML = `
+                        <td class="py-3 px-4 text-center align-middle">${imgHtml}</td>
+                        <td class="py-3 px-4 font-semibold text-white align-middle">${escapeHtml(item.name)}</td>
+                        <td class="py-3 px-4 text-gray-400 align-middle whitespace-pre-line">${escapeHtml(descText)}</td>
+                        <td class="py-3 px-4 text-gray-400 align-middle">${escapeHtml(creatorName)}</td>
+                        <td class="py-3 px-4 text-right align-middle whitespace-nowrap">
+                            <div class="flex justify-end items-center gap-2">
+                                <button onclick="openDetailUpcomingProductModal('${item.id}')" class="text-blue-400 hover:text-blue-300 font-semibold transition px-2 py-1 hover:bg-blue-500/10 rounded cursor-pointer">
+                                    Detail
+                                </button>
+                                <button onclick="openEditUpcomingProductModal('${item.id}')" class="text-yellow-400 hover:text-yellow-300 font-semibold transition px-2 py-1 hover:bg-yellow-500/10 rounded cursor-pointer">
+                                    Edit
+                                </button>
+                                <button onclick="deleteUpcomingProduct('${item.id}')" class="text-red-500 hover:text-red-400 font-semibold transition px-2 py-1 hover:bg-red-500/10 rounded cursor-pointer">
+                                    Hapus
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching upcoming products:', error);
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="py-8 text-center text-red-400">Gagal memuat data.</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // --- CREATE ACTION ---
+        function openCreateUpcomingProductModal() {
+            document.getElementById('create-upcoming-form').reset();
+            document.getElementById('create-upcoming-product-modal').classList.remove('hidden');
+        }
+
+        function closeCreateUpcomingProductModal() {
+            document.getElementById('create-upcoming-product-modal').classList.add('hidden');
+        }
+
+        function submitCreateUpcomingProduct(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+
+            fetch('/admin/upcoming-products', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Gagal menyimpan data.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('Produk baru berhasil disimpan.');
+                closeCreateUpcomingProductModal();
+                fetchUpcomingProducts();
+            })
+            .catch(error => {
+                console.error('Error creating upcoming product:', error);
+                alert('Terjadi kesalahan saat menyimpan produk.');
+            });
+        }
+
+        // --- DETAIL ACTION ---
+        function openDetailUpcomingProductModal(id) {
+            fetch(`/admin/upcoming-products/${id}`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(item => {
+                const img = document.getElementById('detail-upcoming-image');
+                if (item.image) {
+                    img.src = item.image;
+                    img.classList.remove('hidden');
+                } else {
+                    img.src = '';
+                    img.classList.add('hidden');
+                }
+
+                document.getElementById('detail-upcoming-name-view').innerText = item.name;
+                document.getElementById('detail-upcoming-description-view').innerText = item.description || '-';
+
+                document.getElementById('detail-upcoming-product-modal').classList.remove('hidden');
+            })
+            .catch(error => {
+                console.error('Error fetching detail:', error);
+                alert('Gagal mengambil rincian detail produk.');
+            });
+        }
+
+        function closeDetailUpcomingProductModal() {
+            document.getElementById('detail-upcoming-product-modal').classList.add('hidden');
+        }
+
+        // --- EDIT ACTION ---
+        function openEditUpcomingProductModal(id) {
+            fetch(`/admin/upcoming-products/${id}`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(item => {
+                document.getElementById('edit-upcoming-form').reset();
+                document.getElementById('edit-upcoming-id').value = item.id;
+                document.getElementById('edit-upcoming-name').value = item.name;
+                document.getElementById('edit-upcoming-description').value = item.description || '';
+
+                const previewContainer = document.getElementById('edit-upcoming-image-preview-container');
+                const previewImg = document.getElementById('edit-upcoming-image-preview');
+                document.getElementById('edit-upcoming-delete-image').checked = false;
+                if (item.image) {
+                    previewImg.src = item.image;
+                    previewContainer.classList.remove('hidden');
+                } else {
+                    previewContainer.classList.add('hidden');
+                }
+
+                document.getElementById('edit-upcoming-product-modal').classList.remove('hidden');
+            })
+            .catch(error => {
+                console.error('Error fetching data for edit:', error);
+                alert('Gagal mengambil data produk.');
+            });
+        }
+
+        function closeEditUpcomingProductModal() {
+            document.getElementById('edit-upcoming-product-modal').classList.add('hidden');
+        }
+
+        function submitEditUpcomingProduct(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const id = document.getElementById('edit-upcoming-id').value;
+
+            // Method override for Laravel PUT request
+            formData.append('_method', 'PUT');
+
+            fetch(`/admin/upcoming-products/${id}`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Gagal memperbarui data.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('Produk baru berhasil diperbarui.');
+                closeEditUpcomingProductModal();
+                fetchUpcomingProducts();
+            })
+            .catch(error => {
+                console.error('Error updating upcoming product:', error);
+                alert('Terjadi kesalahan saat memperbarui produk.');
+            });
+        }
+
+        // --- DELETE ACTION ---
+        function deleteUpcomingProduct(id) {
+            if (!confirm('Apakah Anda yakin ingin menghapus produk baru ini dari rencana?')) {
+                return;
+            }
+
+            fetch(`/admin/upcoming-products/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Gagal menghapus data.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('Produk baru berhasil dihapus.');
+                fetchUpcomingProducts();
+            })
+            .catch(error => {
+                console.error('Error deleting upcoming product:', error);
+                alert('Terjadi kesalahan saat menghapus produk.');
+            });
         }
     </script>
 @endsection

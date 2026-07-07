@@ -20,6 +20,7 @@ use App\Http\Controllers\SalesItemController;
 use App\Http\Controllers\SalesPaymentController;
 use App\Http\Controllers\StockHistoriesController;
 use App\Http\Controllers\SuppliersController;
+use App\Http\Controllers\UpcomingProductsController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WholesalePriceController;
 use App\Http\Controllers\WilayahController;
@@ -296,6 +297,7 @@ Route::prefix('admin')->middleware(['auth', 'role.admin'])->group(function () {
     Route::get('/products/check-sku', [ProductController::class, 'checkSku'])->name('products.check_sku');
     Route::resource('categories', CategoryController::class);
     Route::resource('products', ProductController::class);
+    Route::resource('upcoming-products', UpcomingProductsController::class);
     Route::resource('product-stocks', ProductStockController::class);
     Route::resource('suppliers', SuppliersController::class);
     Route::resource('users', UserController::class);
@@ -500,6 +502,8 @@ Route::prefix('cabang')->middleware(['auth', 'role.cabang'])->group(function () 
             'transaksiTerakhir'
         ));
     })->name('cabang.laporan');
+
+    Route::get('/upcoming-products', [UpcomingProductsController::class, 'index'])->name('cabang.upcoming-products.index');
 });
 
 // Outlet Dashboard Routes
@@ -602,6 +606,8 @@ Route::prefix('outlet')->middleware(['auth', 'role.outlet'])->group(function () 
 
         return view('outlet.history', compact('purchaseOrders'));
     })->name('outlet.history');
+
+    Route::get('/upcoming-products', [UpcomingProductsController::class, 'index'])->name('outlet.upcoming-products.index');
 });
 
 // Auth Routes

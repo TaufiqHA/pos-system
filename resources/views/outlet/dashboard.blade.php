@@ -60,19 +60,45 @@
         </div>
     </div>
 
-    <!-- Area Chart Grafik Tren Penjualan Outlet -->
-    <div class="card p-6 rounded-xl mb-8 border-gray-700 z-10 shadow-lg shadow-black/15">
-        <div class="flex justify-between items-center mb-6">
-            <div class="flex items-center space-x-3">
-                <div class="w-1 h-5 bg-[#B4F481] rounded-full"></div>
-                <h3 class="font-bold text-sm tracking-wide font-display text-white">TREN TOTAL BELANJA OUTLET BULANAN</h3>
+    <!-- Area Chart & New Product Banner -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 z-10">
+        <!-- Area Chart Grafik Tren Penjualan Outlet -->
+        <div class="card p-6 rounded-xl border-gray-700 shadow-lg shadow-black/15 lg:col-span-2">
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center space-x-3">
+                    <div class="w-1 h-5 bg-[#B4F481] rounded-full"></div>
+                    <h3 class="font-bold text-sm tracking-wide font-display text-white">TREN TOTAL BELANJA OUTLET BULANAN</h3>
+                </div>
+                <span
+                    class="text-[9px] text-[#B4F481] font-bold tracking-widest border border-green-900 bg-green-950/40 px-2.5 py-1 rounded-md">LIVE UPDATE</span>
             </div>
-            <span
-                class="text-[9px] text-[#B4F481] font-bold tracking-widest border border-green-900 bg-green-950/40 px-2.5 py-1 rounded-md">LIVE UPDATE</span>
+            <!-- CANVAS FOR CHART.JS -->
+            <div class="h-64 w-full relative">
+                <canvas id="salesChartOutlet"></canvas>
+            </div>
         </div>
-        <!-- CANVAS FOR CHART.JS -->
-        <div class="h-64 w-full relative">
-            <canvas id="salesChartOutlet"></canvas>
+
+        <!-- Banner Produk Baru -->
+        <div id="upcoming-product-banner" onclick="handleBannerClick()" class="card p-0 rounded-xl border-gray-700 shadow-lg shadow-black/15 overflow-hidden relative group min-h-[320px] cursor-pointer">
+            <!-- Loading indicator -->
+            <div id="banner-loading" class="absolute inset-0 flex items-center justify-center bg-gray-900/80 z-20">
+                <span class="text-xs text-gray-400">Loading...</span>
+            </div>
+
+            <!-- Slides Container -->
+            <div id="banner-slides-container" class="absolute inset-0 w-full h-full z-0">
+                <!-- Slides will be inserted here dynamically -->
+            </div>
+
+            <!-- Dot Indicators -->
+            <div id="banner-dots" class="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5 z-10">
+                <!-- Dots will be inserted here dynamically -->
+            </div>
+
+            <!-- Header Badge -->
+            <div class="absolute top-4 left-4 z-10 bg-black/60 backdrop-blur-md border border-gray-850 px-3 py-1 rounded-full text-[9px] font-bold tracking-widest text-[#B4F481] uppercase">
+                Produk yang Akan Rilis
+            </div>
         </div>
     </div>
 
@@ -1038,5 +1064,229 @@
                 alert('Terjadi kesalahan koneksi.');
             }
         }
+        let upcomingProductsData = [];
+        let currentSlideIndex = 0;
+        let slideInterval = null;
+
+        function handleBannerClick() {
+            if (upcomingProductsData.length > 0 && upcomingProductsData[currentSlideIndex]) {
+                openDetailUpcomingProductModalOutlet(upcomingProductsData[currentSlideIndex].id);
+            }
+        }
+
+        function initUpcomingProductsBanner() {
+            fetch('/outlet/upcoming-products', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                upcomingProductsData = data;
+                const slidesContainer = document.getElementById('banner-slides-container');
+                const dotsContainer = document.getElementById('banner-dots');
+                const loadingEl = document.getElementById('banner-loading');
+
+                if (loadingEl) loadingEl.classList.add('hidden');
+
+                if (!data || data.length === 0) {
+                    slidesContainer.innerHTML = `
+                        <div class="absolute inset-0 flex flex-col items-center justify-center p-6 bg-gray-900 text-center">
+                            <svg class="w-10 h-10 text-gray-700 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                            </svg>
+                            <h4 class="font-bold text-xs text-white">Nantikan Produk Baru</h4>
+                            <p class="text-[10px] text-gray-400 mt-1 max-w-xs leading-normal">Rencana produk baru menarik sedang dipersiapkan oleh Pusat.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Render Slides
+                slidesContainer.innerHTML = '';
+                dotsContainer.innerHTML = '';
+
+                data.forEach((item, index) => {
+                    const slide = document.createElement('div');
+                    slide.id = `banner-slide-${index}`;
+                    slide.className = `absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out ${index === 0 ? 'opacity-100 z-10' : 'opacity-0 z-0'}`;
+                    
+                    const imgHtml = item.image 
+                        ? `<img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover">`
+                        : `<div class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 to-gray-950 p-6 text-center">
+                                <svg class="w-12 h-12 text-gray-700 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <span class="font-bold text-xs text-white">${escapeHtml(item.name)}</span>
+                           </div>`;
+                    
+                    slide.innerHTML = imgHtml;
+                    slidesContainer.appendChild(slide);
+
+                    // Create dot indicator
+                    if (data.length > 1) {
+                        const dot = document.createElement('button');
+                        dot.className = `w-2 h-2 rounded-full transition-all duration-300 ${index === 0 ? 'bg-[#B4F481] scale-125' : 'bg-gray-600 hover:bg-gray-400'}`;
+                        dot.onclick = (e) => {
+                            e.stopPropagation();
+                            showSlide(index);
+                        };
+                        dotsContainer.appendChild(dot);
+                    }
+                });
+
+                // Start autoplay if there's more than 1 slide
+                if (data.length > 1) {
+                    startAutoplay();
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching upcoming products for banner:', error);
+                const slidesContainer = document.getElementById('banner-slides-container');
+                const loadingEl = document.getElementById('banner-loading');
+                if (loadingEl) loadingEl.classList.add('hidden');
+                slidesContainer.innerHTML = `
+                    <div class="absolute inset-0 flex items-center justify-center bg-gray-900 text-red-400 text-xs">
+                        Gagal memuat data.
+                    </div>
+                `;
+            });
+        }
+
+        function showSlide(index) {
+            if (upcomingProductsData.length <= 1) return;
+
+            stopAutoplay();
+
+            const oldSlide = document.getElementById(`banner-slide-${currentSlideIndex}`);
+            const newSlide = document.getElementById(`banner-slide-${index}`);
+            const dots = document.getElementById('banner-dots').children;
+
+            if (oldSlide && newSlide) {
+                oldSlide.classList.remove('opacity-100', 'z-10');
+                oldSlide.classList.add('opacity-0', 'z-0');
+
+                newSlide.classList.remove('opacity-0', 'z-0');
+                newSlide.classList.add('opacity-100', 'z-10');
+
+                if (dots[currentSlideIndex]) {
+                    dots[currentSlideIndex].className = 'w-2 h-2 rounded-full bg-gray-600 hover:bg-gray-400 transition-all duration-300';
+                }
+                if (dots[index]) {
+                    dots[index].className = 'w-2 h-2 rounded-full bg-[#B4F481] scale-125 transition-all duration-300';
+                }
+
+                currentSlideIndex = index;
+            }
+
+            startAutoplay();
+        }
+
+        function startAutoplay() {
+            slideInterval = setInterval(() => {
+                let nextIndex = (currentSlideIndex + 1) % upcomingProductsData.length;
+                showSlide(nextIndex);
+            }, 4000);
+        }
+
+        function stopAutoplay() {
+            if (slideInterval) {
+                clearInterval(slideInterval);
+            }
+        }
+
+        function openDetailUpcomingProductModalOutlet(id) {
+            fetch(`/outlet/upcoming-products`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const item = data.find(p => p.id === id);
+                if (!item) return;
+
+                const img = document.getElementById('detail-upcoming-image-outlet');
+                if (item.image) {
+                    img.src = item.image;
+                    img.classList.remove('hidden');
+                } else {
+                    img.src = '';
+                    img.classList.add('hidden');
+                }
+
+                document.getElementById('detail-upcoming-name-view-outlet').innerText = item.name;
+                document.getElementById('detail-upcoming-description-view-outlet').innerText = item.description || '-';
+
+                document.getElementById('detail-upcoming-product-modal-outlet').classList.remove('hidden');
+            })
+            .catch(error => {
+                console.error('Error fetching detail:', error);
+                alert('Gagal mengambil rincian detail produk.');
+            });
+        }
+
+        function closeDetailUpcomingProductModalOutlet() {
+            document.getElementById('detail-upcoming-product-modal-outlet').classList.add('hidden');
+        }
+
+        // Helper escape HTML
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Initialize upcoming products banner on load
+        document.addEventListener('DOMContentLoaded', function () {
+            initUpcomingProductsBanner();
+        });
     </script>
+
+    <!-- ================= MODAL BOX: DETAIL UPCOMING PRODUCT (OUTLET) ================= -->
+    <div id="detail-upcoming-product-modal-outlet"
+        class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="card max-w-md w-full p-6 rounded-2xl shadow-2xl relative border border-gray-850 font-sans">
+            <button onclick="closeDetailUpcomingProductModalOutlet()"
+                class="absolute top-4 right-4 text-gray-400 hover:text-white transition cursor-pointer">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            <div class="mb-6">
+                <h3 class="text-base font-bold tracking-wide font-display text-white">Produk yang akan rilis</h3>
+                <p class="text-[11px] text-gray-400 mt-1">Informasi lengkap rencana produk baru dari Pusat</p>
+            </div>
+            
+            <div class="space-y-4 text-xs text-gray-300">
+                <!-- Large Image Preview -->
+                <div class="flex justify-center bg-gray-950 p-4 rounded-xl border border-gray-800">
+                    <img id="detail-upcoming-image-outlet" src="" alt="Upcoming Product Image" class="max-h-48 rounded-lg object-contain">
+                </div>
+
+                <div class="space-y-1">
+                    <span class="text-gray-400 text-[10px] uppercase font-bold tracking-wider font-display">Nama Produk</span>
+                    <p id="detail-upcoming-name-view-outlet" class="text-sm font-bold text-white"></p>
+                </div>
+
+                <div class="space-y-1">
+                    <span class="text-gray-400 text-[10px] uppercase font-bold tracking-wider font-display">Deskripsi</span>
+                    <p id="detail-upcoming-description-view-outlet" class="leading-relaxed bg-gray-900/60 p-3 rounded-xl border border-gray-850 whitespace-pre-line"></p>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-6">
+                <button type="button" onclick="closeDetailUpcomingProductModalOutlet()"
+                    class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 px-6 rounded-xl transition cursor-pointer">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
 @endsection
