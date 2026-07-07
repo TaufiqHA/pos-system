@@ -43,7 +43,8 @@
         <table class="w-full text-left border-collapse whitespace-nowrap">
             <thead>
                 <tr class="border-b border-gray-800 text-gray-400 text-xs font-bold uppercase tracking-wider">
-                    <th class="pb-3 pl-4 pr-4">SKU</th>
+                    <th class="pb-3 pl-4 pr-2 w-12 text-center">Gambar</th>
+                    <th class="pb-3 px-4">SKU</th>
                     <th class="pb-3 px-4">Nama Produk</th>
                     <th class="pb-3 px-4">Kategori</th>
                     <th class="pb-3 px-4 text-right">Harga Beli</th>
@@ -54,8 +55,17 @@
             <tbody class="divide-y divide-gray-800 text-xs text-gray-300">
                 @forelse($products as $product)
                     <tr class="hover:bg-gray-800/30 transition">
-                        <td class="py-4 pl-4 pr-4 font-mono text-gray-400">{{ $product->sku }}</td>
-                        <td class="py-4 px-4 font-semibold text-white">
+                        <td class="py-3 pl-4 pr-2 align-middle text-center">
+                            @if($product->image)
+                                <img src="{{ $product->image }}" alt="{{ $product->name }}" class="w-10 h-10 rounded-lg object-cover border border-gray-800/80 shadow-md mx-auto hover:scale-105 transition duration-200">
+                            @else
+                                <div class="w-10 h-10 rounded-lg bg-gray-900/50 border border-gray-800 flex items-center justify-center text-gray-600 text-[9px] font-bold mx-auto">
+                                    N/A
+                                </div>
+                            @endif
+                        </td>
+                        <td class="py-3 px-4 font-mono text-gray-400 align-middle">{{ $product->sku }}</td>
+                        <td class="py-3 px-4 font-semibold text-white align-middle">
                             <div>
                                 <span class="block">{{ $product->name }}</span>
                                 @if($product->is_wholesale)
@@ -63,18 +73,18 @@
                                 @endif
                             </div>
                         </td>
-                        <td class="py-4 px-4">
+                        <td class="py-3 px-4 align-middle">
                             <span class="bg-indigo-900/40 text-indigo-300 border border-indigo-800/50 py-0.5 px-2 rounded-full text-[10px] font-semibold">
                                 {{ $product->category->name ?? '-' }}
                             </span>
                         </td>
-                        <td class="py-4 px-4 text-right text-gray-400 font-medium">
+                        <td class="py-3 px-4 text-right text-gray-400 font-medium align-middle">
                             Rp {{ number_format($product->buy_price, 0, ',', '.') }}
                         </td>
-                        <td class="py-4 px-4 text-right font-bold text-[#B4F481]">
+                        <td class="py-3 px-4 text-right font-bold text-[#B4F481] align-middle">
                             Rp {{ number_format($product->sell_price, 0, ',', '.') }}
                         </td>
-                        <td class="py-4 pl-4 pr-4 text-right whitespace-nowrap">
+                        <td class="py-3 pl-4 pr-4 text-right whitespace-nowrap align-middle">
                             <div class="flex justify-end items-center gap-2">
                                 @if($product->is_wholesale)
                                     <button onclick="openWholesaleModal('{{ $product->id }}')" class="text-green-400 hover:text-green-300 font-semibold transition px-2 py-1 hover:bg-green-500/10 rounded cursor-pointer">
@@ -99,7 +109,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="py-8 text-center text-gray-500">Belum ada produk terdaftar.</td>
+                        <td colspan="7" class="py-8 text-center text-gray-500">Belum ada produk terdaftar.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -119,7 +129,7 @@
             <h3 class="text-base font-bold tracking-wide font-display text-white">Tambah Produk Baru</h3>
             <p class="text-[11px] text-gray-400 mt-1">Buat produk baru dengan detail harga dan SKU</p>
         </div>
-        <form action="{{ route('products.store') }}" method="POST" class="space-y-4 text-xs">
+        <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4 text-xs">
             @csrf
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="space-y-1">
@@ -193,9 +203,24 @@
                 <textarea name="description" id="create-description" rows="2" placeholder="Deskripsi produk..." class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400">{{ !old('_method') ? old('description') : '' }}</textarea>
             </div>
 
-            <div class="space-y-1">
-                <label for="create-image" class="block font-bold text-gray-300">URL Gambar</label>
-                <input type="text" name="image" id="create-image" value="{{ !old('_method') ? old('image') : '' }}" placeholder="https://example.com/image.jpg" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400">
+            <div class="space-y-2">
+                <label for="create-image" class="block font-bold text-gray-300">Gambar Produk</label>
+                <div class="flex items-center gap-4">
+                    <div id="create-preview-container" class="w-20 h-20 bg-gray-900 border border-gray-800 rounded-xl flex items-center justify-center overflow-hidden">
+                        <span id="create-preview-placeholder" class="text-[10px] text-gray-500 font-semibold text-center px-1">Belum ada gambar</span>
+                        <img id="create-preview-img" class="w-full h-full object-cover hidden" src="" alt="Preview">
+                    </div>
+                    <div class="flex-1">
+                        <input type="file" name="image" id="create-image" accept="image/*" class="hidden" onchange="previewImage(this, 'create-preview-img', 'create-preview-placeholder')">
+                        <label for="create-image" class="inline-flex items-center justify-center bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white rounded-xl py-2 px-4 font-semibold cursor-pointer transition text-xs shadow-md">
+                            Pilih File Gambar
+                        </label>
+                        <p class="text-[10px] text-gray-500 mt-1.5">Format: JPG, JPEG, PNG, GIF, SVG (Maks. 2MB)</p>
+                    </div>
+                </div>
+                @if($errors->has('image') && !old('_method'))
+                    <p class="text-red-500 text-[10px] mt-1">{{ $errors->first('image') }}</p>
+                @endif
             </div>
 
             <div class="pt-4 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 border-t border-gray-800">
@@ -222,7 +247,7 @@
             <h3 class="text-base font-bold tracking-wide font-display text-white">Edit Produk</h3>
             <p class="text-[11px] text-gray-400 mt-1">Ubah detail produk yang sudah ada</p>
         </div>
-        <form id="edit-form" action="{{ old('id') ? route('products.update', old('id')) : '#' }}" method="POST" class="space-y-4 text-xs">
+        <form id="edit-form" action="{{ old('id') ? route('products.update', old('id')) : '#' }}" method="POST" enctype="multipart/form-data" class="space-y-4 text-xs">
             @csrf
             @method('PUT')
             <input type="hidden" name="id" id="edit-id" value="{{ old('id') }}">
@@ -299,9 +324,30 @@
                 <textarea name="description" id="edit-description" rows="2" placeholder="Deskripsi produk..." class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400">{{ old('_method') === 'PUT' ? old('description') : '' }}</textarea>
             </div>
 
-            <div class="space-y-1">
-                <label for="edit-image" class="block font-bold text-gray-300">URL Gambar</label>
-                <input type="text" name="image" id="edit-image" value="{{ old('_method') === 'PUT' ? old('image') : '' }}" placeholder="https://example.com/image.jpg" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400">
+            <div class="space-y-2">
+                <label for="edit-image" class="block font-bold text-gray-300">Gambar Produk</label>
+                <div class="flex items-center gap-4">
+                    <div id="edit-preview-container" class="w-20 h-20 bg-gray-900 border border-gray-800 rounded-xl flex items-center justify-center overflow-hidden">
+                        <span id="edit-preview-placeholder" class="text-[10px] text-gray-500 font-semibold text-center px-1">Belum ada gambar</span>
+                        <img id="edit-preview-img" class="w-full h-full object-cover hidden" src="" alt="Preview">
+                    </div>
+                    <div class="flex-1 space-y-2">
+                        <input type="file" name="image" id="edit-image" accept="image/*" class="hidden" onchange="previewImage(this, 'edit-preview-img', 'edit-preview-placeholder')">
+                        <div class="flex items-center gap-2">
+                            <label for="edit-image" class="inline-flex items-center justify-center bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white rounded-xl py-2 px-4 font-semibold cursor-pointer transition text-xs shadow-md">
+                                Ubah Gambar
+                            </label>
+                            <button type="button" id="edit-clear-image-btn" onclick="clearEditImage()" class="hidden inline-flex items-center justify-center bg-red-950/20 hover:bg-red-900/30 border border-red-800/50 text-red-400 rounded-xl py-2 px-4 font-semibold cursor-pointer transition text-xs shadow-md">
+                                Hapus Gambar
+                            </button>
+                        </div>
+                        <input type="hidden" name="delete_image" id="edit-delete-image" value="0">
+                        <p class="text-[10px] text-gray-500">Format: JPG, JPEG, PNG, GIF, SVG (Maks. 2MB)</p>
+                    </div>
+                </div>
+                @if($errors->has('image') && old('_method') === 'PUT')
+                    <p class="text-red-500 text-[10px] mt-1">{{ $errors->first('image') }}</p>
+                @endif
             </div>
 
             <div class="pt-4 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 border-t border-gray-800">
@@ -538,6 +584,44 @@
         });
     });
 
+    // Image Upload Preview and Action Functions
+    function previewImage(input, imgId, placeholderId) {
+        const img = document.getElementById(imgId);
+        const placeholder = document.getElementById(placeholderId);
+        
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                img.src = e.target.result;
+                img.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+            }
+            
+            reader.readAsDataURL(input.files[0]);
+            
+            if (imgId === 'edit-preview-img') {
+                document.getElementById('edit-clear-image-btn').classList.remove('hidden');
+                document.getElementById('edit-delete-image').value = '0';
+            }
+        }
+    }
+
+    function clearEditImage() {
+        const img = document.getElementById('edit-preview-img');
+        const placeholder = document.getElementById('edit-preview-placeholder');
+        const fileInput = document.getElementById('edit-image');
+        const clearBtn = document.getElementById('edit-clear-image-btn');
+        const deleteImageInput = document.getElementById('edit-delete-image');
+        
+        fileInput.value = '';
+        img.src = '';
+        img.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+        clearBtn.classList.add('hidden');
+        deleteImageInput.value = '1';
+    }
+
     // Create Modal
     function openCreateModal() {
         // Reset SKU checking states
@@ -549,6 +633,22 @@
         if (createSkuInput) {
             createSkuInput.classList.remove('border-red-500');
         }
+        
+        // Reset Image file input and preview
+        const createPreviewImg = document.getElementById('create-preview-img');
+        const createPreviewPlaceholder = document.getElementById('create-preview-placeholder');
+        const createImgInput = document.getElementById('create-image');
+        if (createPreviewImg) {
+            createPreviewImg.src = '';
+            createPreviewImg.classList.add('hidden');
+        }
+        if (createPreviewPlaceholder) {
+            createPreviewPlaceholder.classList.remove('hidden');
+        }
+        if (createImgInput) {
+            createImgInput.value = '';
+        }
+
         const createForm = document.querySelector('#create-modal form');
         if (createForm) {
             const submitBtn = createForm.querySelector('button[type="submit"]');
@@ -577,7 +677,27 @@
         document.getElementById('edit-sell_price').value = product.sell_price ? parseInt(product.sell_price, 10).toLocaleString('id-ID').replace(/,/g, '.') : '0';
         document.getElementById('edit-is_wholesale').value = product.is_wholesale ? '1' : '0';
         document.getElementById('edit-description').value = product.description || '';
-        document.getElementById('edit-image').value = product.image || '';
+        
+        // Reset file input & delete flag
+        document.getElementById('edit-image').value = '';
+        document.getElementById('edit-delete-image').value = '0';
+        
+        // Setup existing image preview
+        const editPreviewImg = document.getElementById('edit-preview-img');
+        const editPreviewPlaceholder = document.getElementById('edit-preview-placeholder');
+        const editClearBtn = document.getElementById('edit-clear-image-btn');
+        
+        if (product.image) {
+            editPreviewImg.src = product.image;
+            editPreviewImg.classList.remove('hidden');
+            editPreviewPlaceholder.classList.add('hidden');
+            editClearBtn.classList.remove('hidden');
+        } else {
+            editPreviewImg.src = '';
+            editPreviewImg.classList.add('hidden');
+            editPreviewPlaceholder.classList.remove('hidden');
+            editClearBtn.classList.add('hidden');
+        }
         
         // Reset SKU checking states
         const editSkuMessage = document.getElementById('edit-sku-message');

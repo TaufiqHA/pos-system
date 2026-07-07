@@ -8,6 +8,8 @@ use App\Models\Product;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -308,5 +310,114 @@ class ProductTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertJson(['exists' => true]);
+    }
+
+    public function test_can_store_product_with_image(): void
+    {
+        Storage::fake('public');
+
+        $file = UploadedFile::fake()->image('product.jpg');
+
+        $response = $this->actingAs($this->user)->post(route('products.store'), [
+            'category_id' => $this->category->id,
+            'sku' => 'SKU-IMG-01',
+            'name' => 'Laptop Razer',
+            'buy_price' => 15000000,
+            'sell_price' => 18000000,
+            'image' => $file,
+        ]);
+
+        $response->assertStatus(302);
+        $response->assertRedirect(route('products.index'));
+
+        $product = Product::where('sku', 'SKU-IMG-01')->firstOrFail();
+        $this->assertNotNull($product->image);
+        $this->assertStringStartsWith('/storage/products/', $product->image);
+
+        // Assert file exists in fake storage
+        $storedName = str_replace('/storage/products/', '', $product->image);
+        Storage::disk('public')->assertExists('products/'.$storedName);
+    }
+
+    public function test_can_update_product_with_image_and_deletes_old_image(): void
+    {
+        Storage::fake('public');
+
+        // Create initial product with fake image
+        $oldFile = UploadedFile::fake()->image('old_product.jpg');
+        $oldPath = $oldFile->store('products', 'public');
+
+        $product = Product::create([
+            'id' => Str::uuid()->toString(),
+            'category_id' => $this->category->id,
+            'sku' => 'SKU-IMG-02',
+            'name' => 'Laptop MSI',
+            'buy_price' => 12000000,
+            'sell_price' => 14000000,
+            'image' => '/storage/'.$oldPath,
+        ]);
+
+        Storage::disk('public')->assertExists($oldPath);
+
+        // Upload new image
+        $newFile = UploadedFile::fake()->image('new_product.jpg');
+
+        $response = $this->actingAs($this->user)->put(route('products.update', $product->id), [
+            'category_id' => $this->category->id,
+            'sku' => 'SKU-IMG-02',
+            'name' => 'Laptop MSI Leopard',
+            'buy_price' => 12500000,
+            'sell_price' => 14500000,
+            'image' => $newFile,
+        ]);
+
+        $response->assertStatus(302);
+
+        $product->refresh();
+        $this->assertNotNull($product->image);
+        $this->assertStringStartsWith('/storage/products/', $product->image);
+
+        $newStoredName = str_replace('/storage/products/', '', $product->image);
+        Storage::disk('public')->assertExists('products/'.$newStoredName);
+
+        // Assert old file was deleted
+        Storage::disk('public')->assertMissing($oldPath);
+    }
+
+    public function test_can_clear_product_image_using_delete_image_flag(): void
+    {
+        Storage::fake('public');
+
+        $oldFile = UploadedFile::fake()->image('old_product.jpg');
+        $oldPath = $oldFile->store('products', 'public');
+
+        $product = Product::create([
+            'id' => Str::uuid()->toString(),
+            'category_id' => $this->category->id,
+            'sku' => 'SKU-IMG-03',
+            'name' => 'Laptop Lenovo Legion',
+            'buy_price' => 12000000,
+            'sell_price' => 14000000,
+            'image' => '/storage/'.$oldPath,
+        ]);
+
+        Storage::disk('public')->assertExists($oldPath);
+
+        $response = $this->actingAs($this->user)->put(route('products.update', $product->id), [
+            'category_id' => $this->category->id,
+            'sku' => 'SKU-IMG-03',
+            'name' => 'Laptop Lenovo Legion',
+            'buy_price' => 12000000,
+            'sell_price' => 14000000,
+            'delete_image' => '1',
+        ]);
+
+        $response->assertStatus(302);
+
+        $product->refresh();
+        $this->assertNull($product->image);
+
+        // Assert old file was deleted
+        Storage::disk('public')->assertMissing($oldPath);
     }
 }

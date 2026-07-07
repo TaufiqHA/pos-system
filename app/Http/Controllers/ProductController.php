@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductStock;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ProductController extends Controller
@@ -47,10 +48,16 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
             'buy_price' => 'required|numeric',
             'sell_price' => 'required|numeric',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
-        $data = $request->all();
+        $data = $request->except('image');
         $data['id'] = Str::uuid()->toString();
+
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('products', 'public');
+            $data['image'] = '/storage/'.$path;
+        }
 
         $product = Product::create($data);
 
@@ -90,9 +97,28 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
             'buy_price' => 'required|numeric',
             'sell_price' => 'required|numeric',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
-        $product->update($request->all());
+        $data = $request->except('image');
+
+        if ($request->hasFile('image')) {
+            // Hapus gambar lama jika ada
+            if ($product->image && str_starts_with($product->image, '/storage/')) {
+                $oldPath = str_replace('/storage/', '', $product->image);
+                Storage::disk('public')->delete($oldPath);
+            }
+            $path = $request->file('image')->store('products', 'public');
+            $data['image'] = '/storage/'.$path;
+        } elseif ($request->boolean('delete_image')) {
+            if ($product->image && str_starts_with($product->image, '/storage/')) {
+                $oldPath = str_replace('/storage/', '', $product->image);
+                Storage::disk('public')->delete($oldPath);
+            }
+            $data['image'] = null;
+        }
+
+        $product->update($data);
 
         return redirect()->route('products.index')->with('success', 'Product updated successfully.');
     }
