@@ -93,7 +93,7 @@
 
         <!-- Menu Kategori: Data Cabang -->
         <div class="space-y-2">
-            <div class="flex justify-between items-center {{ request()->routeIs('wilayah.*') || request()->routeIs('branches.*') || request()->routeIs('suppliers.*') ? 'text-white' : 'text-gray-400' }} px-2 cursor-pointer hover:text-white transition" onclick="toggleDropdown('cabang-menu', 'cabang-icon')">
+            <div class="flex justify-between items-center {{ request()->routeIs('wilayah.*') || request()->routeIs('branches.*') || request()->routeIs('suppliers.*') || request()->routeIs('admin.laporan-cabang') ? 'text-white' : 'text-gray-400' }} px-2 cursor-pointer hover:text-white transition" onclick="toggleDropdown('cabang-menu', 'cabang-icon')">
                 <span class="text-[10px] font-bold tracking-wider uppercase">Data Cabang</span>
                 <svg id="cabang-icon" class="w-3 h-3 transform transition-transform duration-200 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -106,7 +106,9 @@
                 <li class="hover:text-white transition {{ request()->routeIs('branches.*') ? 'text-[#B4F481] font-semibold' : '' }}">
                     <a href="{{ route('branches.index') }}" class="block w-full">Daftar Cabang</a>
                 </li>
-                <li class="hover:text-white cursor-pointer transition">Laporan Cabang</li>
+                <li class="hover:text-white transition {{ request()->routeIs('admin.laporan-cabang') ? 'text-[#B4F481] font-semibold' : '' }}">
+                    <a href="{{ route('admin.laporan-cabang') }}" class="block w-full">Laporan Cabang</a>
+                </li>
                 <li class="hover:text-white transition {{ request()->routeIs('suppliers.*') ? 'text-[#B4F481] font-semibold' : '' }}">
                     <a href="{{ route('suppliers.index') }}" class="block w-full">Daftar Supplier</a>
                 </li>

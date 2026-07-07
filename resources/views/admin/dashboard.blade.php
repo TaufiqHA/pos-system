@@ -56,9 +56,15 @@
                     </svg>
                 </div>
             </div>
-            <h3 class="text-2xl font-bold mb-2 text-white font-display">Rp 110.000</h3>
-            <p class="text-xs"><span class="text-green-400 font-bold">+14.2%</span> <span class="text-gray-500">Dari bulan
-                    lalu</span></p>
+            <h3 class="text-2xl font-bold mb-2 text-white font-display">Rp {{ number_format($widgetOmset, 0, ',', '.') }}</h3>
+            <p class="text-xs">
+                @if($omsetTrendPercent >= 0)
+                    <span class="text-green-400 font-bold">+{{ number_format($omsetTrendPercent, 1) }}%</span>
+                @else
+                    <span class="text-red-500 font-bold">{{ number_format($omsetTrendPercent, 1) }}%</span>
+                @endif
+                <span class="text-gray-500">Dari bulan lalu</span>
+            </p>
         </div>
 
         <!-- Indikator 2: Hutang Supplier -->
@@ -73,9 +79,8 @@
                     </svg>
                 </div>
             </div>
-            <h3 class="text-2xl font-bold mb-2 text-yellow-500 font-display">Rp 0</h3>
-            <p class="text-xs"><span class="text-yellow-500 font-bold">Penting</span> <span class="text-gray-500">Bulan
-                    ini</span></p>
+            <h3 class="text-2xl font-bold mb-2 text-yellow-500 font-display">Rp {{ number_format($hutangSupplier, 0, ',', '.') }}</h3>
+            <p class="text-xs"><span class="text-yellow-500 font-bold">Penting</span> <span class="text-gray-500">Bulan ini</span></p>
         </div>
 
         <!-- Indikator 3: Hutang Cabang -->
@@ -89,9 +94,8 @@
                     </svg>
                 </div>
             </div>
-            <h3 class="text-2xl font-bold mb-2 text-red-400 font-display">Rp 55.000</h3>
-            <p class="text-xs"><span class="text-red-500 font-bold">Net Hutang</span> <span class="text-gray-500">Sisa
-                    saldo</span></p>
+            <h3 class="text-2xl font-bold mb-2 text-red-400 font-display">Rp {{ number_format($hutangCabang, 0, ',', '.') }}</h3>
+            <p class="text-xs"><span class="text-red-500 font-bold">Net Hutang</span> <span class="text-gray-500">Sisa saldo</span></p>
         </div>
 
         <!-- Indikator 4: Total SKU -->
@@ -105,9 +109,8 @@
                     </svg>
                 </div>
             </div>
-            <h3 class="text-2xl font-bold mb-2 text-blue-400 font-display">1 Item</h3>
-            <p class="text-xs"><span class="text-blue-500 font-bold">5 Unit</span> <span class="text-gray-500">Siap
-                    jual</span></p>
+            <h3 class="text-2xl font-bold mb-2 text-blue-400 font-display">{{ number_format($totalSku) }} {{ $totalSku > 1 ? 'Items' : 'Item' }}</h3>
+            <p class="text-xs"><span class="text-blue-500 font-bold">{{ number_format($totalStok) }} {{ $totalStok > 1 ? 'Units' : 'Unit' }}</span> <span class="text-gray-500">Siap jual</span></p>
         </div>
     </div>
 
@@ -137,7 +140,7 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             <!-- Box 1: Produk & Stok -->
-            <div
+            <a href="{{ route('products.index') }}"
                 class="card p-5 rounded-xl flex items-center justify-between hover:bg-gray-800/80 cursor-pointer transition border border-gray-750 shadow-md group">
                 <div class="pr-2">
                     <p class="text-[9px] text-[#B4F481] font-bold mb-1 tracking-widest uppercase">Produk</p>
@@ -149,10 +152,10 @@
                     class="w-12 h-12 bg-white/5 rounded-xl border border-gray-700/80 flex-shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
                     <img src="https://cdn-icons-png.flaticon.com/512/3144/3144456.png" class="w-6 h-6 invert" alt="Icon">
                 </div>
-            </div>
+            </a>
 
             <!-- Box 2: Transaksi -->
-            <div
+            <a href="{{ route('sales.index') }}"
                 class="card p-5 rounded-xl flex items-center justify-between hover:bg-gray-800/80 cursor-pointer transition border border-gray-750 shadow-md group">
                 <div class="pr-2">
                     <p class="text-[9px] text-blue-400 font-bold mb-1 tracking-widest uppercase">Kasir</p>
@@ -165,10 +168,10 @@
                     class="w-12 h-12 bg-white/5 rounded-xl border border-gray-700/80 flex-shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
                     <img src="https://cdn-icons-png.flaticon.com/512/3135/3135706.png" class="w-6 h-6 invert" alt="Icon">
                 </div>
-            </div>
+            </a>
 
             <!-- Box 3: Data Cabang -->
-            <div
+            <a href="{{ route('branches.index') }}"
                 class="card p-5 rounded-xl flex items-center justify-between hover:bg-gray-800/80 cursor-pointer transition border border-gray-750 shadow-md group">
                 <div class="pr-2">
                     <p class="text-[9px] text-purple-400 font-bold mb-1 tracking-widest uppercase">Cabang</p>
@@ -182,10 +185,10 @@
                     class="w-12 h-12 bg-white/5 rounded-xl border border-gray-700/80 flex-shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
                     <img src="https://cdn-icons-png.flaticon.com/512/869/869636.png" class="w-6 h-6 invert" alt="Icon">
                 </div>
-            </div>
+            </a>
 
             <!-- Box 4: Keuangan -->
-            <div
+            <a href="{{ route('admin.laporan') }}"
                 class="card p-5 rounded-xl flex items-center justify-between hover:bg-gray-800/80 cursor-pointer transition border border-gray-750 shadow-md group">
                 <div class="pr-2">
                     <p class="text-[9px] text-yellow-400 font-bold mb-1 tracking-widest uppercase">Laporan</p>
@@ -199,7 +202,7 @@
                     class="w-12 h-12 bg-white/5 rounded-xl border border-gray-700/80 flex-shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
                     <img src="https://cdn-icons-png.flaticon.com/512/2916/2916315.png" class="w-6 h-6 invert" alt="Icon">
                 </div>
-            </div>
+            </a>
         </div>
     </div>
 
@@ -217,10 +220,10 @@
             new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul'],
+                    labels: {!! json_encode($chartLabels) !!},
                     datasets: [{
                         label: 'Omset Penjualan',
-                        data: [45000, 60000, 52000, 88000, 71000, 95000, 110000],
+                        data: {!! json_encode($chartValues) !!},
                         borderColor: '#B4F481',
                         borderWidth: 3,
                         backgroundColor: gradient,

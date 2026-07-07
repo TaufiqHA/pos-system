@@ -24,6 +24,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\WholesalePriceController;
 use App\Http\Controllers\WilayahController;
 use App\Http\Middleware\AuthCheck;
+use App\Models\Branch;
+use App\Models\Category;
 use App\Models\Debts;
 use App\Models\Deliveries;
 use App\Models\Product;
@@ -31,6 +33,7 @@ use App\Models\ProductStock;
 use App\Models\PurchaseOrders;
 use App\Models\Sales;
 use App\Models\SalesItem;
+use App\Models\Wilayah;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -76,7 +79,61 @@ Route::prefix('admin')->middleware(['auth', 'role.admin'])->group(function () {
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('admin.dashboard', compact('purchaseOrders'));
+        // Calculate widget metrics
+        $widgetOmset = Sales::sum('grand_total');
+
+        $omsetBulanIni = Sales::whereMonth('date', now()->month)->whereYear('date', now()->year)->sum('grand_total');
+        $omsetBulanLalu = Sales::whereMonth('date', now()->subMonth()->month)->whereYear('date', now()->subMonth()->year)->sum('grand_total');
+        $omsetTrendPercent = 0;
+        if ($omsetBulanLalu > 0) {
+            $omsetTrendPercent = (($omsetBulanIni - $omsetBulanLalu) / $omsetBulanLalu) * 100;
+        } elseif ($omsetBulanIni > 0) {
+            $omsetTrendPercent = 100.0;
+        }
+
+        $hutangSupplier = Debts::whereNotNull('supplier_id')->sum('remaining_amount');
+        $hutangCabang = Debts::where('debtor_type', 'branch')->where('creditor_type', 'branch')->sum('remaining_amount');
+        $totalSku = Product::count();
+        $totalStok = ProductStock::sum('stock') ?? 0;
+
+        // Calculate dynamic monthly sales trend for the last 7 months
+        $startDate = now()->subMonths(6)->startOfMonth();
+        $monthlySalesData = Sales::where('date', '>=', $startDate)
+            ->select('grand_total', 'date')
+            ->get();
+
+        $chartLabels = [];
+        $chartValues = [];
+        $indonesianMonths = [
+            1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'Mei', 6 => 'Jun',
+            7 => 'Jul', 8 => 'Agu', 9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des',
+        ];
+
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subMonths($i);
+            $monthNum = (int) $date->format('m');
+            $yearNum = (int) $date->format('Y');
+
+            $chartLabels[] = $indonesianMonths[$monthNum];
+
+            $sum = $monthlySalesData->filter(function ($sale) use ($monthNum, $yearNum) {
+                return $sale->date->year === $yearNum && $sale->date->month === $monthNum;
+            })->sum('grand_total');
+
+            $chartValues[] = (float) $sum;
+        }
+
+        return view('admin.dashboard', compact(
+            'purchaseOrders',
+            'widgetOmset',
+            'omsetTrendPercent',
+            'hutangSupplier',
+            'hutangCabang',
+            'totalSku',
+            'totalStok',
+            'chartLabels',
+            'chartValues'
+        ));
     })->name('admin.dashboard');
     Route::get('/monitoring-stock', [ProductStockController::class, 'index'])->name('admin.monitoring-stock');
     Route::get('/laporan', function () {
@@ -113,6 +170,111 @@ Route::prefix('admin')->middleware(['auth', 'role.admin'])->group(function () {
             'transaksiTerakhir'
         ));
     })->name('admin.laporan');
+
+    Route::get('/laporan-cabang', function (Request $request) {
+        $tab = $request->query('tab', 'manajemen');
+
+        $wilayahs = Wilayah::orderBy('name')->get();
+
+        // Cascading Branch Filter - Exclude admin branches
+        $branchesQuery = Branch::whereDoesntHave('users', function ($q) {
+            $q->whereHas('role', function ($r) {
+                $r->where('name', 'admin');
+            });
+        });
+        if ($request->filled('wilayah_id')) {
+            $branchesQuery->where('wilayah_id', $request->wilayah_id);
+        }
+        $branches = $branchesQuery->orderBy('name')->get();
+
+        // Handle filter reset if branch does not belong to selected wilayah or is an admin branch
+        if ($request->filled('wilayah_id') && $request->filled('branch_id')) {
+            $branchExists = Branch::where('id', $request->branch_id)
+                ->where('wilayah_id', $request->wilayah_id)
+                ->whereDoesntHave('users', function ($q) {
+                    $q->whereHas('role', function ($r) {
+                        $r->where('name', 'admin');
+                    });
+                })
+                ->exists();
+            if (! $branchExists) {
+                $request->merge(['branch_id' => null]);
+            }
+        }
+
+        $categories = Category::orderBy('name')->get();
+
+        $regions = [];
+        $stocks = collect();
+        $transactions = collect();
+
+        if ($tab === 'manajemen') {
+            $regions = Wilayah::with(['branches' => function ($q) {
+                $q->withCount('outlets');
+            }])->orderBy('name')->get();
+        } elseif ($tab === 'stok') {
+            $stocksQuery = ProductStock::with(['product.category', 'branch.wilayah'])
+                ->whereHas('branch', function ($q) {
+                    $q->whereDoesntHave('users', function ($qu) {
+                        $qu->whereHas('role', function ($r) {
+                            $r->where('name', 'admin');
+                        });
+                    });
+                });
+
+            if ($request->filled('wilayah_id')) {
+                $stocksQuery->whereHas('branch', function ($q) use ($request) {
+                    $q->where('wilayah_id', $request->wilayah_id);
+                });
+            }
+            if ($request->filled('branch_id')) {
+                $stocksQuery->where('branch_id', $request->branch_id);
+            }
+            if ($request->filled('category_id')) {
+                $stocksQuery->whereHas('product', function ($q) use ($request) {
+                    $q->where('category_id', $request->category_id);
+                });
+            }
+
+            $stocks = $stocksQuery->orderBy('stock', 'desc')->get();
+        } elseif ($tab === 'transaksi') {
+            $transactionsQuery = Sales::with(['branch.wilayah', 'outlet', 'salesItems.product'])
+                ->whereNotNull('outlet_id')
+                ->whereHas('branch', function ($q) {
+                    $q->whereDoesntHave('users', function ($qu) {
+                        $qu->whereHas('role', function ($r) {
+                            $r->where('name', 'admin');
+                        });
+                    });
+                });
+
+            if ($request->filled('wilayah_id')) {
+                $transactionsQuery->whereHas('branch', function ($q) use ($request) {
+                    $q->where('wilayah_id', $request->wilayah_id);
+                });
+            }
+            if ($request->filled('branch_id')) {
+                $transactionsQuery->where('branch_id', $request->branch_id);
+            }
+            if ($request->filled('category_id')) {
+                $transactionsQuery->whereHas('salesItems.product', function ($q) use ($request) {
+                    $q->where('category_id', $request->category_id);
+                });
+            }
+
+            $transactions = $transactionsQuery->orderBy('date', 'desc')->get();
+        }
+
+        return view('admin.laporan-cabang', compact(
+            'tab',
+            'wilayahs',
+            'branches',
+            'categories',
+            'regions',
+            'stocks',
+            'transactions'
+        ));
+    })->name('admin.laporan-cabang');
 
     Route::get('/products/check-sku', [ProductController::class, 'checkSku'])->name('products.check_sku');
     Route::resource('categories', CategoryController::class);
