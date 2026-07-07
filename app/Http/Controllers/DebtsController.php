@@ -240,10 +240,38 @@ class DebtsController extends Controller
                 'payments.creator',
             ])->orderBy('created_at', 'desc')->get();
 
+        $outletDebts = Debts::where('debtor_type', 'outlet')
+            ->where('creditor_type', 'branch')
+            ->where('creditor_branch_id', $branchId)
+            ->with([
+                'debtorBranch',
+                'debtorOutlet',
+                'supplier',
+                'creditorBranch',
+                'purchase',
+                'sale',
+                'payments.creator',
+            ])->orderBy('created_at', 'desc')->get();
+
+        $pendingPayments = DebtsPayment::where('status', 'PENDING')
+            ->whereHas('debt', function ($query) use ($branchId) {
+                $query->where('debtor_type', 'outlet')
+                    ->where('creditor_type', 'branch')
+                    ->where('creditor_branch_id', $branchId);
+            })
+            ->with([
+                'debt.debtorOutlet',
+                'creator',
+            ])->orderBy('created_at', 'desc')->get();
+
         if ($request->wantsJson()) {
-            return response()->json($debts);
+            return response()->json([
+                'debts' => $debts,
+                'outlet_debts' => $outletDebts,
+                'pending_payments' => $pendingPayments,
+            ]);
         }
 
-        return view('cabang.hutang', compact('debts'));
+        return view('cabang.hutang', compact('debts', 'outletDebts', 'pendingPayments'));
     }
 }

@@ -33,8 +33,9 @@ class DebtsPaymentController extends Controller
             'notes' => 'nullable|string',
         ]);
 
+        $debtModel = Debts::findOrFail($validated['debt_id']);
         $isCabang = auth()->user()->role && auth()->user()->role->name === 'cabang';
-        $status = $isCabang ? 'PENDING' : 'CONFIRMED';
+        $status = ($isCabang && $debtModel->debtor_type === 'branch') ? 'PENDING' : 'CONFIRMED';
 
         $payment = DB::transaction(function () use ($validated, $status) {
             $validated['created_by'] = auth()->id();

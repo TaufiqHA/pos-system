@@ -262,4 +262,60 @@ class DebtsTest extends TestCase
         $response->assertSee('Rp 5.000.000');
         $response->assertDontSee('Rp 7.000.000');
     }
+
+    public function test_cabang_user_can_view_outlet_debts(): void
+    {
+        $cabangRole = Role::firstOrCreate(['name' => 'cabang'], ['id' => (string) Str::uuid()]);
+        $cabangUser = User::factory()->create([
+            'role_id' => $cabangRole->id,
+            'branch_id' => $this->branch->id,
+        ]);
+
+        Branch::create([
+            'id' => 'BRC-001',
+            'name' => 'Gudang Pusat',
+            'address' => 'Jl. Pusat No. 1',
+            'phone' => '081111111',
+        ]);
+
+        // Branch's debt to Center
+        Debts::create([
+            'id' => (string) Str::uuid(),
+            'debtor_type' => 'branch',
+            'debtor_branch_id' => $this->branch->id,
+            'creditor_type' => 'branch',
+            'creditor_branch_id' => 'BRC-001',
+            'total_amount' => 5000000,
+            'paid_amount' => 0,
+            'remaining_amount' => 5000000,
+            'status' => 'unpaid',
+        ]);
+
+        // Outlet's debt to Branch
+        $outletDebt = Debts::create([
+            'id' => (string) Str::uuid(),
+            'debtor_type' => 'outlet',
+            'debtor_outlet_id' => $this->outlet->id,
+            'creditor_type' => 'branch',
+            'creditor_branch_id' => $this->branch->id,
+            'total_amount' => 2500000,
+            'paid_amount' => 0,
+            'remaining_amount' => 2500000,
+            'status' => 'unpaid',
+        ]);
+
+        // JSON response
+        $responseJson = $this->actingAs($cabangUser)->getJson(route('cabang.hutang'));
+        $responseJson->assertStatus(200)
+            ->assertJsonFragment([
+                'id' => $outletDebt->id,
+                'debtor_type' => 'outlet',
+                'total_amount' => 2500000,
+            ]);
+
+        // HTML response
+        $responseHtml = $this->actingAs($cabangUser)->get(route('cabang.hutang'));
+        $responseHtml->assertStatus(200);
+        $responseHtml->assertSee('Rp 2.500.000');
+    }
 }

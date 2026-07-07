@@ -291,7 +291,7 @@ class PurchaseOrdersController extends Controller
                             'debtor_outlet_id' => $purchaseOrder->outlet_id,
                             'creditor_type' => 'branch',
                             'supplier_id' => null,
-                            'creditor_branch_id' => 'BRC-001',
+                            'creditor_branch_id' => $purchaseOrder->branch_id ? 'BRC-001' : ($purchaseOrder->outlet->branch_id ?? 'BRC-001'),
                             'source_type' => 'sale',
                             'sale_id' => $sale->id,
                             'purchase_id' => null,
