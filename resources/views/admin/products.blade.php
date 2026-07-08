@@ -134,14 +134,19 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="space-y-1">
                     <label for="create-category_id" class="block font-bold text-gray-300">Kategori *</label>
-                    <select name="category_id" id="create-category_id" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @if($errors->has('category_id') && !old('_method')) border-red-500 @endif">
-                        <option value="">-- Pilih Kategori --</option>
-                        @foreach($categories as $category)
-                            <option value="{{ $category->id }}" {{ (!old('_method') && old('category_id') == $category->id) ? 'selected' : '' }}>
-                                {{ $category->name }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <div class="flex gap-2">
+                        <select name="category_id" id="create-category_id" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @if($errors->has('category_id') && !old('_method')) border-red-500 @endif">
+                            <option value="">-- Pilih Kategori --</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}" {{ (!old('_method') && old('category_id') == $category->id) ? 'selected' : '' }}>
+                                    {{ $category->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <button type="button" onclick="openCategoriesManageModal()" class="bg-[#B4F481]/15 hover:bg-[#B4F481]/30 text-[#B4F481] font-semibold text-xs px-4 rounded-xl border border-[#B4F481]/30 transition cursor-pointer whitespace-nowrap">
+                            Kelola
+                        </button>
+                    </div>
                     @if($errors->has('category_id') && !old('_method'))
                         <p class="text-red-500 text-[10px] mt-1">{{ $errors->first('category_id') }}</p>
                     @endif
@@ -168,7 +173,19 @@
 
                 <div class="space-y-1">
                     <label for="create-unit" class="block font-bold text-gray-300">Satuan</label>
-                    <input type="text" name="unit" id="create-unit" value="{{ !old('_method') ? old('unit') : '' }}" placeholder="Contoh: pcs, pack" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400">
+                    <div class="flex gap-2">
+                        <select name="unit" id="create-unit" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400">
+                            <option value="">-- Pilih Satuan --</option>
+                            @foreach($units as $u)
+                                <option value="{{ $u->name }}" {{ (!old('_method') && old('unit') == $u->name) ? 'selected' : '' }}>
+                                    {{ $u->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <button type="button" onclick="openUnitsManageModal()" class="bg-[#B4F481]/15 hover:bg-[#B4F481]/30 text-[#B4F481] font-semibold text-xs px-4 rounded-xl border border-[#B4F481]/30 transition cursor-pointer whitespace-nowrap">
+                            Kelola
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -255,14 +272,19 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="space-y-1">
                     <label for="edit-category_id" class="block font-bold text-gray-300">Kategori *</label>
-                    <select name="category_id" id="edit-category_id" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @if($errors->has('category_id') && old('_method') === 'PUT') border-red-500 @endif">
-                        <option value="">-- Pilih Kategori --</option>
-                        @foreach($categories as $category)
-                            <option value="{{ $category->id }}" {{ (old('_method') === 'PUT' && old('category_id') == $category->id) ? 'selected' : '' }}>
-                                {{ $category->name }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <div class="flex gap-2">
+                        <select name="category_id" id="edit-category_id" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @if($errors->has('category_id') && old('_method') === 'PUT') border-red-500 @endif">
+                            <option value="">-- Pilih Kategori --</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}" {{ (old('_method') === 'PUT' && old('category_id') == $category->id) ? 'selected' : '' }}>
+                                    {{ $category->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <button type="button" onclick="openCategoriesManageModal()" class="bg-[#B4F481]/15 hover:bg-[#B4F481]/30 text-[#B4F481] font-semibold text-xs px-4 rounded-xl border border-[#B4F481]/30 transition cursor-pointer whitespace-nowrap">
+                            Kelola
+                        </button>
+                    </div>
                     @if($errors->has('category_id') && old('_method') === 'PUT')
                         <p class="text-red-500 text-[10px] mt-1">{{ $errors->first('category_id') }}</p>
                     @endif
@@ -289,7 +311,19 @@
 
                 <div class="space-y-1">
                     <label for="edit-unit" class="block font-bold text-gray-300">Satuan</label>
-                    <input type="text" name="unit" id="edit-unit" value="{{ old('_method') === 'PUT' ? old('unit') : '' }}" placeholder="Contoh: pcs, pack" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400">
+                    <div class="flex gap-2">
+                        <select name="unit" id="edit-unit" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400">
+                            <option value="">-- Pilih Satuan --</option>
+                            @foreach($units as $u)
+                                <option value="{{ $u->name }}" {{ (old('_method') === 'PUT' && old('unit') == $u->name) ? 'selected' : '' }}>
+                                    {{ $u->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <button type="button" onclick="openUnitsManageModal()" class="bg-[#B4F481]/15 hover:bg-[#B4F481]/30 text-[#B4F481] font-semibold text-xs px-4 rounded-xl border border-[#B4F481]/30 transition cursor-pointer whitespace-nowrap">
+                            Kelola
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -453,6 +487,116 @@
         <div class="pt-4 flex items-center justify-end border-t border-gray-800">
             <button onclick="closeDetailModal()" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 px-6 rounded-xl transition cursor-pointer">
                 Tutup
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ================= MODAL BOX: KELOLA SATUAN ================= -->
+<div id="units-manage-modal" class="fixed inset-0 z-[60] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div class="card max-w-md w-full p-6 rounded-2xl shadow-2xl relative border border-gray-800 my-8">
+        <button onclick="closeUnitsManageModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+        <div class="mb-6">
+            <h3 class="text-base font-bold tracking-wide font-display text-white font-semibold">Kelola Satuan Produk</h3>
+            <p class="text-[11px] text-gray-400 mt-1">Tambahkan atau hapus satuan standar produk Anda</p>
+        </div>
+
+        <div class="space-y-4 text-xs">
+            <!-- Alert message inside modal -->
+            <div id="units-modal-alert" class="hidden p-3 rounded-xl text-[11px]"></div>
+
+            <!-- Form tambah satuan -->
+            <div class="bg-gray-900/50 p-4 rounded-2xl border border-gray-800 space-y-3">
+                <h4 class="text-white font-bold text-xs">Tambah Satuan Baru</h4>
+                <div class="flex gap-2">
+                    <input type="text" id="new-unit-name" placeholder="Contoh: Pcs, Box, Kg, Lusin" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400">
+                    <button type="button" onclick="submitAddUnit()" class="bg-[#B4F481] hover:bg-green-400 text-black font-bold px-4 rounded-xl transition shadow-lg shadow-[#B4F481]/20 cursor-pointer whitespace-nowrap">
+                        Simpan
+                    </button>
+                </div>
+            </div>
+
+            <!-- List satuan terdaftar -->
+            <div class="bg-gray-900/50 p-4 rounded-2xl border border-gray-800 flex flex-col">
+                <h4 class="text-white font-bold text-xs border-b border-gray-800 pb-2 mb-3">Daftar Satuan Terdaftar</h4>
+                <div class="overflow-y-auto max-h-48 custom-scrollbar">
+                    <table class="w-full text-left border-collapse whitespace-nowrap">
+                        <thead>
+                            <tr class="border-b border-gray-800 text-gray-500 text-[10px] font-bold uppercase tracking-wider">
+                                <th class="pb-2 pl-2">Nama Satuan</th>
+                                <th class="pb-2 text-right pr-2">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="units-list-body" class="divide-y divide-gray-800 text-gray-300">
+                            <!-- Diisi dinamis lewat JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="pt-4 mt-6 flex items-center justify-end border-t border-gray-800">
+            <button onclick="closeUnitsManageModal()" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 px-6 rounded-xl transition cursor-pointer">
+                Selesai
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ================= MODAL BOX: KELOLA KATEGORI ================= -->
+<div id="categories-manage-modal" class="fixed inset-0 z-[60] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div class="card max-w-md w-full p-6 rounded-2xl shadow-2xl relative border border-gray-800 my-8">
+        <button onclick="closeCategoriesManageModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+        <div class="mb-6">
+            <h3 class="text-base font-bold tracking-wide font-display text-white font-semibold">Kelola Kategori Produk</h3>
+            <p class="text-[11px] text-gray-400 mt-1">Tambahkan atau hapus kategori produk Anda</p>
+        </div>
+
+        <div class="space-y-4 text-xs">
+            <!-- Alert message inside modal -->
+            <div id="categories-modal-alert" class="hidden p-3 rounded-xl text-[11px]"></div>
+
+            <!-- Form tambah kategori -->
+            <div class="bg-gray-900/50 p-4 rounded-2xl border border-gray-800 space-y-3">
+                <h4 class="text-white font-bold text-xs">Tambah Kategori Baru</h4>
+                <div class="flex gap-2">
+                    <input type="text" id="new-category-name" placeholder="Contoh: Makanan, Minuman, Elektronik" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400">
+                    <button type="button" onclick="submitAddCategory()" class="bg-[#B4F481] hover:bg-green-400 text-black font-bold px-4 rounded-xl transition shadow-lg shadow-[#B4F481]/20 cursor-pointer whitespace-nowrap">
+                        Simpan
+                    </button>
+                </div>
+            </div>
+
+            <!-- List kategori terdaftar -->
+            <div class="bg-gray-900/50 p-4 rounded-2xl border border-gray-800 flex flex-col">
+                <h4 class="text-white font-bold text-xs border-b border-gray-800 pb-2 mb-3">Daftar Kategori Terdaftar</h4>
+                <div class="overflow-y-auto max-h-48 custom-scrollbar">
+                    <table class="w-full text-left border-collapse whitespace-nowrap">
+                        <thead>
+                            <tr class="border-b border-gray-800 text-gray-500 text-[10px] font-bold uppercase tracking-wider">
+                                <th class="pb-2 pl-2">Nama Kategori</th>
+                                <th class="pb-2 text-right pr-2">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categories-list-body" class="divide-y divide-gray-800 text-gray-300">
+                            <!-- Diisi dinamis lewat JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="pt-4 mt-6 flex items-center justify-end border-t border-gray-800">
+            <button onclick="closeCategoriesManageModal()" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 px-6 rounded-xl transition cursor-pointer">
+                Selesai
             </button>
         </div>
     </div>
@@ -1056,5 +1200,413 @@
             checkSku(this, document.getElementById('edit-sku-message'), productId);
         }, 300);
     });
+
+    // === MASTER SATUAN (UNITS) MANAGEMENT ===
+    function openUnitsManageModal() {
+        document.getElementById('units-manage-modal').classList.remove('hidden');
+        loadUnitsList();
+    }
+
+    function closeUnitsManageModal() {
+        document.getElementById('units-manage-modal').classList.add('hidden');
+        document.getElementById('new-unit-name').value = '';
+        const alertBox = document.getElementById('units-modal-alert');
+        alertBox.className = 'hidden';
+        alertBox.textContent = '';
+    }
+
+    async function loadUnitsList() {
+        const listBody = document.getElementById('units-list-body');
+        listBody.innerHTML = '<tr><td colspan="2" class="py-4 text-center text-gray-500">Memuat data...</td></tr>';
+
+        try {
+            const response = await fetch('/admin/units', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            const units = await response.json();
+
+            listBody.innerHTML = '';
+            
+            if (units.length === 0) {
+                listBody.innerHTML = '<tr><td colspan="2" class="py-4 text-center text-gray-500">Belum ada satuan.</td></tr>';
+                return;
+            }
+
+            units.forEach(unit => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-800/30 transition';
+                tr.innerHTML = `
+                    <td class="py-2.5 pl-2 font-semibold text-white">${unit.name}</td>
+                    <td class="py-2.5 pr-2 text-right">
+                        <button type="button" onclick="deleteUnit('${unit.id}', '${unit.name}')" class="text-red-500 hover:text-red-400 font-semibold transition px-2 py-1 hover:bg-red-500/10 rounded cursor-pointer">
+                            Hapus
+                        </button>
+                    </td>
+                `;
+                listBody.appendChild(tr);
+            });
+
+            // Sync select dropdowns on the products page
+            syncUnitSelectDropdowns(units);
+
+        } catch (error) {
+            console.error('Error loading units:', error);
+            listBody.innerHTML = '<tr><td colspan="2" class="py-4 text-center text-red-500">Gagal memuat data.</td></tr>';
+        }
+    }
+
+    function syncUnitSelectDropdowns(units, selectValue = null) {
+        const dropdowns = [
+            document.getElementById('create-unit'),
+            document.getElementById('edit-unit')
+        ];
+
+        dropdowns.forEach(dropdown => {
+            if (!dropdown) return;
+            const currentValue = selectValue || dropdown.value;
+            
+            dropdown.innerHTML = '<option value="">-- Pilih Satuan --</option>';
+            units.forEach(unit => {
+                const option = document.createElement('option');
+                option.value = unit.name;
+                option.textContent = unit.name;
+                if (unit.name === currentValue) {
+                    option.selected = true;
+                }
+                dropdown.appendChild(option);
+            });
+        });
+    }
+
+    async function submitAddUnit() {
+        const nameInput = document.getElementById('new-unit-name');
+        const name = nameInput.value.trim();
+        const alertBox = document.getElementById('units-modal-alert');
+
+        if (!name) {
+            showAlertBox('Nama satuan tidak boleh kosong.', 'error');
+            return;
+        }
+
+        const tokenInput = document.querySelector('input[name="_token"]');
+        const token = tokenInput ? tokenInput.value : '';
+
+        try {
+            const response = await fetch('/admin/units', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': token
+                },
+                body: JSON.stringify({ name: name })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                nameInput.value = '';
+                showAlertBox('Satuan berhasil ditambahkan.', 'success');
+                // Reload list and set newly added unit as selected in dropdowns
+                const listResponse = await fetch('/admin/units', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                const units = await listResponse.json();
+                syncUnitSelectDropdowns(units, name);
+                loadUnitsList();
+            } else {
+                const message = result.errors && result.errors.name ? result.errors.name[0] : (result.message || 'Gagal menambahkan satuan.');
+                showAlertBox(message, 'error');
+            }
+        } catch (error) {
+            console.error('Error adding unit:', error);
+            showAlertBox('Terjadi kesalahan jaringan.', 'error');
+        }
+    }
+
+    async function deleteUnit(id, name) {
+        if (!confirm(`Apakah Anda yakin ingin menghapus satuan "${name}"?`)) {
+            return;
+        }
+
+        const tokenInput = document.querySelector('input[name="_token"]');
+        const token = tokenInput ? tokenInput.value : '';
+
+        try {
+            const response = await fetch(`/admin/units/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': token
+                }
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                showAlertBox('Satuan berhasil dihapus.', 'success');
+                // Reload list
+                const listResponse = await fetch('/admin/units', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                const units = await listResponse.json();
+                
+                // If the deleted unit was currently selected, reset it
+                const createSelect = document.getElementById('create-unit');
+                const editSelect = document.getElementById('edit-unit');
+                const createVal = createSelect && createSelect.value === name ? '' : null;
+                const editVal = editSelect && editSelect.value === name ? '' : null;
+                
+                syncUnitSelectDropdowns(units);
+                if (createVal === '') createSelect.value = '';
+                if (editVal === '') editSelect.value = '';
+                
+                loadUnitsList();
+            } else {
+                showAlertBox(result.message || 'Gagal menghapus satuan.', 'error');
+            }
+        } catch (error) {
+            console.error('Error deleting unit:', error);
+            showAlertBox('Terjadi kesalahan jaringan.', 'error');
+        }
+    }
+
+    function showAlertBox(message, type) {
+        const alertBox = document.getElementById('units-modal-alert');
+        alertBox.classList.remove('hidden');
+        alertBox.textContent = message;
+
+        if (type === 'success') {
+            alertBox.className = 'p-3 rounded-xl text-[11px] bg-green-500/10 border border-green-500/30 text-green-400';
+        } else {
+            alertBox.className = 'p-3 rounded-xl text-[11px] bg-red-500/10 border border-red-500/30 text-red-400';
+        }
+
+        // Auto hide alert after 4 seconds
+        setTimeout(() => {
+            alertBox.classList.add('hidden');
+        }, 4000);
+    }
+    // === MASTER KATEGORI (CATEGORIES) MANAGEMENT ===
+    function openCategoriesManageModal() {
+        document.getElementById('categories-manage-modal').classList.remove('hidden');
+        loadCategoriesList();
+    }
+
+    function closeCategoriesManageModal() {
+        document.getElementById('categories-manage-modal').classList.add('hidden');
+        document.getElementById('new-category-name').value = '';
+        const alertBox = document.getElementById('categories-modal-alert');
+        alertBox.className = 'hidden';
+        alertBox.textContent = '';
+    }
+
+    async function loadCategoriesList() {
+        const listBody = document.getElementById('categories-list-body');
+        listBody.innerHTML = '<tr><td colspan="2" class="py-4 text-center text-gray-500">Memuat data...</td></tr>';
+
+        try {
+            const response = await fetch('/admin/categories', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            const categories = await response.json();
+
+            listBody.innerHTML = '';
+            
+            if (categories.length === 0) {
+                listBody.innerHTML = '<tr><td colspan="2" class="py-4 text-center text-gray-500">Belum ada kategori.</td></tr>';
+                return;
+            }
+
+            categories.forEach(category => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-800/30 transition';
+                tr.innerHTML = `
+                    <td class="py-2.5 pl-2 font-semibold text-white">${category.name}</td>
+                    <td class="py-2.5 pr-2 text-right">
+                        <button type="button" onclick="deleteCategory('${category.id}', '${category.name}')" class="text-red-500 hover:text-red-400 font-semibold transition px-2 py-1 hover:bg-red-500/10 rounded cursor-pointer">
+                            Hapus
+                        </button>
+                    </td>
+                `;
+                listBody.appendChild(tr);
+            });
+
+            // Sync select dropdowns on the products page
+            syncCategorySelectDropdowns(categories);
+
+        } catch (error) {
+            console.error('Error loading categories:', error);
+            listBody.innerHTML = '<tr><td colspan="2" class="py-4 text-center text-red-500">Gagal memuat data.</td></tr>';
+        }
+    }
+
+    function syncCategorySelectDropdowns(categories, selectValue = null) {
+        const dropdowns = [
+            document.getElementById('create-category_id'),
+            document.getElementById('edit-category_id'),
+            document.querySelector('select[name="category_id"]')
+        ];
+
+        dropdowns.forEach(dropdown => {
+            if (!dropdown) return;
+            const currentValue = selectValue || dropdown.value;
+            
+            const isFilter = dropdown.name === 'category_id' && !dropdown.id;
+            dropdown.innerHTML = isFilter 
+                ? '<option value="">-- Semua Kategori --</option>' 
+                : '<option value="">-- Pilih Kategori --</option>';
+                
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.id;
+                option.textContent = category.name;
+                if (category.id === currentValue) {
+                    option.selected = true;
+                }
+                dropdown.appendChild(option);
+            });
+        });
+    }
+
+    async function submitAddCategory() {
+        const nameInput = document.getElementById('new-category-name');
+        const name = nameInput.value.trim();
+        const alertBox = document.getElementById('categories-modal-alert');
+
+        if (!name) {
+            showCategoryAlertBox('Nama kategori tidak boleh kosong.', 'error');
+            return;
+        }
+
+        const tokenInput = document.querySelector('input[name="_token"]');
+        const token = tokenInput ? tokenInput.value : '';
+
+        try {
+            const response = await fetch('/admin/categories', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': token
+                },
+                body: JSON.stringify({ name: name })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                nameInput.value = '';
+                showCategoryAlertBox('Kategori berhasil ditambahkan.', 'success');
+                // Reload list and set newly added category as selected in dropdowns
+                const listResponse = await fetch('/admin/categories', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                const categories = await listResponse.json();
+                
+                // Find the newly added category's ID by name
+                const addedCategory = categories.find(c => c.name === name);
+                const addedId = addedCategory ? addedCategory.id : null;
+                
+                syncCategorySelectDropdowns(categories, addedId);
+                loadCategoriesList();
+            } else {
+                const message = result.errors && result.errors.name ? result.errors.name[0] : (result.message || 'Gagal menambahkan kategori.');
+                showCategoryAlertBox(message, 'error');
+            }
+        } catch (error) {
+            console.error('Error adding category:', error);
+            showCategoryAlertBox('Terjadi kesalahan jaringan.', 'error');
+        }
+    }
+
+    async function deleteCategory(id, name) {
+        if (!confirm(`Apakah Anda yakin ingin menghapus kategori "${name}"?`)) {
+            return;
+        }
+
+        const tokenInput = document.querySelector('input[name="_token"]');
+        const token = tokenInput ? tokenInput.value : '';
+
+        try {
+            const response = await fetch(`/admin/categories/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': token
+                }
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                showCategoryAlertBox('Kategori berhasil dihapus.', 'success');
+                // Reload list
+                const listResponse = await fetch('/admin/categories', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                const categories = await listResponse.json();
+                
+                // If the deleted category was currently selected, reset it
+                const createSelect = document.getElementById('create-category_id');
+                const editSelect = document.getElementById('edit-category_id');
+                const filterSelect = document.querySelector('select[name="category_id"]');
+                const createVal = createSelect && createSelect.value === id ? '' : null;
+                const editVal = editSelect && editSelect.value === id ? '' : null;
+                const filterVal = filterSelect && filterSelect.value === id ? '' : null;
+                
+                syncCategorySelectDropdowns(categories);
+                if (createVal === '') createSelect.value = '';
+                if (editVal === '') editSelect.value = '';
+                if (filterVal === '') filterSelect.value = '';
+                
+                loadCategoriesList();
+            } else {
+                showCategoryAlertBox(result.message || 'Gagal menghapus kategori.', 'error');
+            }
+        } catch (error) {
+            console.error('Error deleting category:', error);
+            showCategoryAlertBox('Terjadi kesalahan jaringan.', 'error');
+        }
+    }
+
+    function showCategoryAlertBox(message, type) {
+        const alertBox = document.getElementById('categories-modal-alert');
+        alertBox.classList.remove('hidden');
+        alertBox.textContent = message;
+
+        if (type === 'success') {
+            alertBox.className = 'p-3 rounded-xl text-[11px] bg-green-500/10 border border-green-500/30 text-green-400';
+        } else {
+            alertBox.className = 'p-3 rounded-xl text-[11px] bg-red-500/10 border border-red-500/30 text-red-400';
+        }
+
+        // Auto hide alert after 4 seconds
+        setTimeout(() => {
+            alertBox.classList.add('hidden');
+        }, 4000);
+    }
 </script>
 @endsection

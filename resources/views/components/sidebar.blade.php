@@ -46,9 +46,7 @@
                 <li class="hover:text-white transition {{ request()->routeIs('products.*') ? 'text-[#B4F481] font-semibold' : '' }}">
                     <a href="{{ route('products.index') }}" class="block w-full">Daftar Produk</a>
                 </li>
-                <li class="hover:text-white transition {{ request()->routeIs('categories.*') ? 'text-[#B4F481] font-semibold' : '' }}">
-                    <a href="{{ route('categories.index') }}" class="block w-full">Daftar Kategori</a>
-                </li>
+
                 <li class="hover:text-white transition {{ request()->routeIs('admin.monitoring-stock') ? 'text-[#B4F481] font-semibold' : '' }}">
                     <a href="{{ route('admin.monitoring-stock') }}" class="block w-full">Monitoring Stok</a>
                 </li>

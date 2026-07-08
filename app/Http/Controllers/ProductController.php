@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductStock;
+use App\Models\Units;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -31,8 +32,9 @@ class ProductController extends Controller
         $products = $query->get();
         $categories = Category::all(); // Needed for the modal select dropdown
         $branches = Branch::all();
+        $units = Units::all();
 
-        return view('admin.products', compact('products', 'categories', 'branches'));
+        return view('admin.products', compact('products', 'categories', 'branches', 'units'));
     }
 
     public function create()

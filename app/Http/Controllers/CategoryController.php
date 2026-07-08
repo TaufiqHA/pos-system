@@ -8,9 +8,13 @@ use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $categories = Category::all();
+
+        if ($request->wantsJson() || $request->expectsJson()) {
+            return response()->json($categories);
+        }
 
         return view('admin.categories', compact('categories'));
     }
@@ -26,10 +30,17 @@ class CategoryController extends Controller
             'name' => 'required|string|unique:categories,name|max:255',
         ]);
 
-        Category::create([
+        $category = Category::create([
             'id' => Str::uuid()->toString(),
             'name' => $request->name,
         ]);
+
+        if ($request->wantsJson() || $request->expectsJson()) {
+            return response()->json([
+                'message' => 'Category created successfully.',
+                'data' => $category,
+            ], 201);
+        }
 
         return redirect()->route('categories.index')->with('success', 'Category created successfully.');
     }
@@ -54,12 +65,25 @@ class CategoryController extends Controller
             'name' => $request->name,
         ]);
 
+        if ($request->wantsJson() || $request->expectsJson()) {
+            return response()->json([
+                'message' => 'Category updated successfully.',
+                'data' => $category,
+            ]);
+        }
+
         return redirect()->route('categories.index')->with('success', 'Category updated successfully.');
     }
 
-    public function destroy(Category $category)
+    public function destroy(Request $request, Category $category)
     {
         $category->delete();
+
+        if ($request->wantsJson() || $request->expectsJson()) {
+            return response()->json([
+                'message' => 'Category deleted successfully.',
+            ]);
+        }
 
         return redirect()->route('categories.index')->with('success', 'Category deleted successfully.');
     }

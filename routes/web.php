@@ -20,6 +20,7 @@ use App\Http\Controllers\SalesItemController;
 use App\Http\Controllers\SalesPaymentController;
 use App\Http\Controllers\StockHistoriesController;
 use App\Http\Controllers\SuppliersController;
+use App\Http\Controllers\UnitsController;
 use App\Http\Controllers\UpcomingProductsController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WholesalePriceController;
@@ -300,6 +301,7 @@ Route::prefix('admin')->middleware(['auth', 'role.admin'])->group(function () {
     Route::resource('upcoming-products', UpcomingProductsController::class);
     Route::resource('product-stocks', ProductStockController::class);
     Route::resource('suppliers', SuppliersController::class);
+    Route::resource('units', UnitsController::class);
     Route::resource('users', UserController::class);
     Route::resource('purchases', PurchasesController::class);
     Route::get('/hutang', [DebtsController::class, 'adminIndex'])->name('admin.hutang');
