@@ -74,7 +74,7 @@ Route::prefix('admin')->middleware(['auth', 'role.admin'])->group(function () {
             $query->where('parent_id', auth()->id());
         })
             ->where(function ($query) {
-                $query->where('status', '!=', 'Approved')
+                $query->whereNotIn('status', ['Approved', 'Completed'])
                     ->orWhereDate('updated_at', '>=', now()->toDateString());
             })
             ->with(['branch', 'user'])
@@ -369,7 +369,7 @@ Route::prefix('cabang')->middleware(['auth', 'role.cabang'])->group(function () 
             ->where('remaining_amount', '>', 0)
             ->count();
 
-        $totalProduk = Product::count();
+        $totalProduk = ProductStock::where('branch_id', $branchId)->count();
         $totalStok = ProductStock::where('branch_id', $branchId)->sum('stock') ?? 0;
 
         // Prepare chart data (rolling last 6 months)

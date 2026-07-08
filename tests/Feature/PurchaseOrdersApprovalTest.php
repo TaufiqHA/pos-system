@@ -239,4 +239,31 @@ class PurchaseOrdersApprovalTest extends TestCase
             'status' => 'unpaid',
         ]);
     }
+
+    public function test_completed_purchase_order_is_hidden_on_dashboard_after_midnight(): void
+    {
+        // Assert it is currently visible on the dashboard as Pending
+        $response = $this->actingAs($this->admin)->get(route('admin.dashboard'));
+        $response->assertStatus(200);
+        $response->assertSee($this->purchaseOrder->po_number);
+
+        // Update status to Completed today
+        $this->purchaseOrder->update([
+            'status' => 'Completed',
+            'updated_at' => now(),
+        ]);
+
+        // Verify it is still visible on the dashboard today as Completed
+        $response = $this->actingAs($this->admin)->get(route('admin.dashboard'));
+        $response->assertStatus(200);
+        $response->assertSee($this->purchaseOrder->po_number);
+
+        // Travel to the next day
+        $this->travel(1)->days();
+
+        // Verify it is now hidden from the dashboard
+        $response = $this->actingAs($this->admin)->get(route('admin.dashboard'));
+        $response->assertStatus(200);
+        $response->assertDontSee($this->purchaseOrder->po_number);
+    }
 }
