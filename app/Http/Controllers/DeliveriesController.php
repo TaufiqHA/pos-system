@@ -171,7 +171,21 @@ class DeliveriesController extends Controller
                             } else {
                                 if ($stockRecord) {
                                     $previousStock = $stockRecord->stock;
-                                    $stockRecord->increment('stock', $qty);
+
+                                    $oldStock = max(0, $stockRecord->stock);
+                                    $oldCost = $stockRecord->average_cost;
+                                    $newQty = $qty;
+                                    $newPrice = $price;
+
+                                    $totalQty = $oldStock + $newQty;
+                                    $newAverageCost = $totalQty > 0
+                                        ? (($oldStock * $oldCost) + ($newQty * $newPrice)) / $totalQty
+                                        : $newPrice;
+
+                                    $stockRecord->update([
+                                        'stock' => $stockRecord->stock + $qty,
+                                        'average_cost' => $newAverageCost,
+                                    ]);
                                 } else {
                                     $stockRecord = ProductStock::create([
                                         'id' => (string) Str::uuid(),

@@ -209,9 +209,18 @@ class PurchaseOrdersController extends Controller
                     ]);
 
                     $items = $notesData['items'] ?? [];
+                    $pusatBranchId = auth()->user()->branch_id ?? 'BRC-001';
                     foreach ($items as $item) {
                         $product = Product::find($item['product_id']);
                         if ($product) {
+                            $pusatStock = ProductStock::where('product_id', $product->id)
+                                ->where('branch_id', $pusatBranchId)
+                                ->first();
+
+                            $cost = ($pusatStock && $pusatStock->average_cost > 0)
+                                ? $pusatStock->average_cost
+                                : $product->buy_price;
+
                             SalesItem::create([
                                 'id' => (string) Str::uuid(),
                                 'sale_id' => $sale->id,
@@ -221,19 +230,14 @@ class PurchaseOrdersController extends Controller
                                 'unit' => $product->unit ?? 'pcs',
                                 'qty' => $item['qty'],
                                 'price' => $item['price'],
-                                'cost' => $product->buy_price,
+                                'cost' => $cost,
                                 'subtotal' => $item['qty'] * $item['price'],
                                 'is_wholesale' => ! empty($item['is_wholesale']),
                             ]);
 
                             // Kurangi stok Gudang Pusat (hanya jika PO bukan untuk outlet)
                             if (empty($purchaseOrder->outlet_id)) {
-                                $pusatBranchId = auth()->user()->branch_id ?? 'BRC-001';
                                 $qty = $item['qty'];
-
-                                $pusatStock = ProductStock::where('product_id', $product->id)
-                                    ->where('branch_id', $pusatBranchId)
-                                    ->first();
 
                                 $previousStock = 0;
                                 if ($pusatStock) {

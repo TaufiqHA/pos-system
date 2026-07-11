@@ -131,6 +131,14 @@ class SalesController extends Controller
                 foreach ($request->items as $item) {
                     $product = Product::find($item['product_id']);
                     if ($product) {
+                        $stockRecord = ProductStock::where('product_id', $product->id)
+                            ->where('branch_id', $sale->branch_id)
+                            ->first();
+
+                        $cost = ($stockRecord && $stockRecord->average_cost > 0)
+                            ? $stockRecord->average_cost
+                            : $product->buy_price;
+
                         SalesItem::create([
                             'id' => (string) Str::uuid(),
                             'sale_id' => $sale->id,
@@ -140,7 +148,7 @@ class SalesController extends Controller
                             'unit' => $product->unit ?? 'pcs',
                             'qty' => $item['qty'],
                             'price' => $item['price'],
-                            'cost' => $product->buy_price,
+                            'cost' => $cost,
                             'subtotal' => $item['qty'] * $item['price'],
                             'is_wholesale' => false,
                         ]);
@@ -355,6 +363,14 @@ class SalesController extends Controller
                     foreach ($request->items as $item) {
                         $product = Product::find($item['product_id']);
                         if ($product) {
+                            $stockRecord = ProductStock::where('product_id', $product->id)
+                                ->where('branch_id', $sale->branch_id)
+                                ->first();
+
+                            $cost = ($stockRecord && $stockRecord->average_cost > 0)
+                                ? $stockRecord->average_cost
+                                : $product->buy_price;
+
                             SalesItem::create([
                                 'id' => (string) Str::uuid(),
                                 'sale_id' => $sale->id,
@@ -364,7 +380,7 @@ class SalesController extends Controller
                                 'unit' => $product->unit ?? 'pcs',
                                 'qty' => $item['qty'],
                                 'price' => $item['price'],
-                                'cost' => $product->buy_price,
+                                'cost' => $cost,
                                 'subtotal' => $item['qty'] * $item['price'],
                                 'is_wholesale' => false,
                             ]);

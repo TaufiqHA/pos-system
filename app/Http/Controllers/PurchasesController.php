@@ -107,7 +107,20 @@ class PurchasesController extends Controller
                                 ->first();
 
                             if ($stockRecord) {
-                                $stockRecord->increment('stock', $item['qty']);
+                                $oldStock = max(0, $stockRecord->stock);
+                                $oldCost = $stockRecord->average_cost;
+                                $newQty = $item['qty'];
+                                $newPrice = $item['price'];
+
+                                $totalQty = $oldStock + $newQty;
+                                $newAverageCost = $totalQty > 0
+                                    ? (($oldStock * $oldCost) + ($newQty * $newPrice)) / $totalQty
+                                    : $newPrice;
+
+                                $stockRecord->update([
+                                    'stock' => $stockRecord->stock + $newQty,
+                                    'average_cost' => $newAverageCost,
+                                ]);
                             } else {
                                 ProductStock::create([
                                     'id' => (string) Str::uuid(),
