@@ -54,7 +54,12 @@ class SalesController extends Controller
             return response()->json($sales);
         }
 
-        $products = Product::all();
+        $adminBranchId = auth()->user()->branch_id ?? 'BRC-001';
+        $products = Product::with([
+            'wholesalePrices' => function ($query) use ($adminBranchId) {
+                $query->where('branch_id', $adminBranchId);
+            }
+        ])->orderBy('name')->get();
         $branches = Branch::whereDoesntHave('users', function ($query) {
             $query->whereHas('role', function ($q) {
                 $q->where('name', 'admin');
@@ -104,6 +109,7 @@ class SalesController extends Controller
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.qty' => 'required|integer|min:1',
             'items.*.price' => 'required|numeric|min:0',
+            'items.*.is_wholesale' => 'nullable|boolean',
         ]);
 
         $validated['id'] = (string) Str::uuid();
@@ -150,7 +156,7 @@ class SalesController extends Controller
                             'price' => $item['price'],
                             'cost' => $cost,
                             'subtotal' => $item['qty'] * $item['price'],
-                            'is_wholesale' => false,
+                            'is_wholesale' => ! empty($item['is_wholesale']),
                         ]);
 
                         if ($isCabang && $branchId) {
@@ -320,6 +326,7 @@ class SalesController extends Controller
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.qty' => 'required|integer|min:1',
             'items.*.price' => 'required|numeric|min:0',
+            'items.*.is_wholesale' => 'nullable|boolean',
         ]);
 
         $validated['discount'] = $validated['discount'] ?? 0;
@@ -382,7 +389,7 @@ class SalesController extends Controller
                                 'price' => $item['price'],
                                 'cost' => $cost,
                                 'subtotal' => $item['qty'] * $item['price'],
-                                'is_wholesale' => false,
+                                'is_wholesale' => ! empty($item['is_wholesale']),
                             ]);
 
                             if ($isCabang && $branchId) {

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Branch;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\Wilayah;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -12,16 +13,59 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $users = User::with('role', 'branch')->get();
+        $query = User::with(['role', 'branch.wilayah', 'outlet.branch.wilayah']);
+
+        // Search filter (name, email, phone)
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+
+        // Branch filter (direct or via outlet)
+        if ($request->filled('branch_id')) {
+            $branchId = $request->input('branch_id');
+            $query->where(function ($q) use ($branchId) {
+                $q->where('branch_id', $branchId)
+                    ->orWhereHas('outlet', function ($oq) use ($branchId) {
+                        $oq->where('branch_id', $branchId);
+                    });
+            });
+        }
+
+        // Wilayah filter (via branch or outlet branch)
+        if ($request->filled('wilayah_id')) {
+            $wilayahId = $request->input('wilayah_id');
+            $query->where(function ($q) use ($wilayahId) {
+                $q->whereHas('branch', function ($bq) use ($wilayahId) {
+                    $bq->where('wilayah_id', $wilayahId);
+                })
+                ->orWhereHas('outlet.branch', function ($bq) use ($wilayahId) {
+                    $bq->where('wilayah_id', $wilayahId);
+                });
+            });
+        }
+
+        $users = $query->get();
 
         if ($request->wantsJson()) {
             return response()->json($users);
         }
 
         $roles = Role::all();
-        $branches = Branch::all();
+        
+        // Exclude branches connected to admin users
+        $adminBranchIds = User::whereHas('role', function ($q) {
+            $q->where('name', 'admin');
+        })->whereNotNull('branch_id')->pluck('branch_id')->all();
 
-        return view('admin.users', compact('users', 'roles', 'branches'));
+        $branches = Branch::whereNotIn('id', $adminBranchIds)->orderBy('name')->get();
+        $wilayahs = Wilayah::orderBy('name')->get();
+
+        return view('admin.users', compact('users', 'roles', 'branches', 'wilayahs'));
     }
 
     public function create()
@@ -38,6 +82,7 @@ class UserController extends Controller
             'role_id' => 'required|exists:roles,id',
             'branch_id' => 'nullable|exists:branches,id',
             'status' => 'required|in:active,inactive',
+            'phone' => 'nullable|string|max:20',
         ]);
 
         $validated['id'] = (string) Str::uuid();
@@ -74,6 +119,7 @@ class UserController extends Controller
             'role_id' => 'required|exists:roles,id',
             'branch_id' => 'nullable|exists:branches,id',
             'status' => 'required|in:active,inactive',
+            'phone' => 'nullable|string|max:20',
         ]);
 
         if (empty($validated['password'])) {

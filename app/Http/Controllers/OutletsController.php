@@ -58,6 +58,7 @@ class OutletsController extends Controller
             'email' => $validated['email'],
             'password' => $validated['password'], // will be hashed via mutator
             'status' => 'active', // default status
+            'phone' => $validated['phone'],
         ];
         User::create($outletUserData);
 

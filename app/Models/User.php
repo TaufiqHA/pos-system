@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['id', 'role_id', 'branch_id', 'parent_id', 'customer_id', 'outlet_id', 'name', 'email', 'password', 'status'])]
+#[Fillable(['id', 'role_id', 'branch_id', 'parent_id', 'customer_id', 'outlet_id', 'name', 'email', 'password', 'status', 'phone'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -55,6 +55,11 @@ class User extends Authenticatable
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function outlet(): BelongsTo
+    {
+        return $this->belongsTo(Outlets::class, 'outlet_id');
     }
 
     public function stockHistories(): HasMany

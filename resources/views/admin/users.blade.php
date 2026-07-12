@@ -7,9 +7,38 @@
 
 @section('content')
 <div class="card p-6 rounded-2xl shadow-xl">
-    <div class="flex justify-between items-center mb-6">
-        <div></div>
-        <button onclick="openCreateModal()" class="w-full sm:w-auto justify-center bg-[#B4F481] hover:bg-green-400 text-black font-semibold text-xs py-2.5 px-4 rounded-xl transition flex items-center gap-2 shadow-lg shadow-[#B4F481]/20 cursor-pointer">
+    <div class="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 mb-6">
+        <!-- Filter & Search Form -->
+        <form method="GET" action="{{ route('users.index') }}" class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama, email, atau telp..." class="w-full sm:w-64 bg-gray-900 border border-gray-800 text-white rounded-xl py-2.5 px-4 focus:outline-none focus:border-[#B4F481] text-xs shadow-lg shadow-gray-900/20">
+            
+            <select name="wilayah_id" onchange="this.form.submit()" class="w-full sm:w-auto bg-gray-900 border border-gray-800 text-white rounded-xl py-2.5 px-4 focus:outline-none focus:border-[#B4F481] text-xs shadow-lg shadow-gray-900/20 cursor-pointer">
+                <option value="">-- Semua Wilayah --</option>
+                @foreach($wilayahs as $wilayah)
+                    <option value="{{ $wilayah->id }}" {{ request('wilayah_id') == $wilayah->id ? 'selected' : '' }}>
+                        {{ $wilayah->name }}
+                    </option>
+                @endforeach
+            </select>
+
+            <select name="branch_id" onchange="this.form.submit()" class="w-full sm:w-auto bg-gray-900 border border-gray-800 text-white rounded-xl py-2.5 px-4 focus:outline-none focus:border-[#B4F481] text-xs shadow-lg shadow-gray-900/20 cursor-pointer">
+                <option value="">-- Semua Cabang --</option>
+                @foreach($branches as $branch)
+                    <option value="{{ $branch->id }}" {{ request('branch_id') == $branch->id ? 'selected' : '' }}>
+                        {{ $branch->name }}
+                    </option>
+                @endforeach
+            </select>
+
+            @if(request('search') || request('wilayah_id') || request('branch_id'))
+                <a href="{{ route('users.index') }}" class="w-full sm:w-auto text-center justify-center bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold text-xs py-2.5 px-4 rounded-xl transition flex items-center gap-1 cursor-pointer">
+                    Reset
+                </a>
+            @endif
+            <button type="submit" class="hidden">Cari</button>
+        </form>
+
+        <button onclick="openCreateModal()" class="w-full md:w-auto justify-center bg-[#B4F481] hover:bg-green-400 text-black font-semibold text-xs py-2.5 px-4 rounded-xl transition flex items-center gap-2 shadow-lg shadow-[#B4F481]/20 cursor-pointer">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
             </svg>
@@ -33,6 +62,10 @@
                     <th class="pb-3 pl-4 pr-4">No</th>
                     <th class="pb-3 px-4">Nama</th>
                     <th class="pb-3 px-4">Email</th>
+                    <th class="pb-3 px-4">No. Telepon</th>
+                    <th class="pb-3 px-4">Cabang</th>
+                    <th class="pb-3 px-4">Wilayah</th>
+                    <th class="pb-3 px-4">Outlet</th>
                     <th class="pb-3 px-4">Role</th>
                     <th class="pb-3 px-4">Status</th>
                     <th class="pb-3 pl-4 pr-4 text-right">Aksi</th>
@@ -44,6 +77,39 @@
                         <td class="py-4 pl-4 pr-4 font-semibold text-gray-400">{{ $loop->iteration }}</td>
                         <td class="py-4 px-4 font-semibold text-white">{{ $user->name }}</td>
                         <td class="py-4 px-4 text-gray-400">{{ $user->email }}</td>
+                        <td class="py-4 px-4 text-gray-400">{{ $user->phone ?? '-' }}</td>
+                        
+                        <!-- Cabang -->
+                        <td class="py-4 px-4 text-gray-400">
+                            @if($user->role && $user->role->name === 'cabang' && $user->branch)
+                                {{ $user->branch->name }}
+                            @elseif($user->role && $user->role->name === 'outlet' && $user->outlet && $user->outlet->branch)
+                                {{ $user->outlet->branch->name }}
+                            @else
+                                -
+                            @endif
+                        </td>
+
+                        <!-- Wilayah -->
+                        <td class="py-4 px-4 text-gray-400">
+                            @if($user->role && $user->role->name === 'cabang' && $user->branch && $user->branch->wilayah)
+                                {{ $user->branch->wilayah->name }}
+                            @elseif($user->role && $user->role->name === 'outlet' && $user->outlet && $user->outlet->branch && $user->outlet->branch->wilayah)
+                                {{ $user->outlet->branch->wilayah->name }}
+                            @else
+                                -
+                            @endif
+                        </td>
+
+                        <!-- Outlet -->
+                        <td class="py-4 px-4 text-gray-400">
+                            @if($user->role && $user->role->name === 'outlet' && $user->outlet)
+                                {{ $user->outlet->name }}
+                            @else
+                                -
+                            @endif
+                        </td>
+
                         <td class="py-4 px-4">
                             <span class="inline-block bg-indigo-500/10 text-indigo-400 py-0.5 px-2 rounded text-[10px] font-semibold uppercase">{{ $user->role->name ?? '-' }}</span>
                         </td>
@@ -56,10 +122,10 @@
                         </td>
                         <td class="py-4 pl-4 pr-4 text-right whitespace-nowrap">
                             <div class="flex justify-end items-center gap-2">
-                                <button onclick="openDetailModal({{ json_encode($user->load('role', 'branch')) }})" class="text-blue-400 hover:text-blue-300 font-semibold transition px-2 py-1 hover:bg-blue-500/10 rounded cursor-pointer">
+                                <button onclick="openDetailModal({{ json_encode($user->load('role', 'branch.wilayah', 'outlet.branch.wilayah')) }})" class="text-blue-400 hover:text-blue-300 font-semibold transition px-2 py-1 hover:bg-blue-500/10 rounded cursor-pointer">
                                     Detail
                                 </button>
-                                <button onclick="openEditModal({{ json_encode($user->load('role', 'branch')) }})" class="text-yellow-400 hover:text-yellow-300 font-semibold transition px-2 py-1 hover:bg-yellow-500/10 rounded cursor-pointer">
+                                <button onclick="openEditModal({{ json_encode($user->load('role', 'branch.wilayah', 'outlet.branch.wilayah')) }})" class="text-yellow-400 hover:text-yellow-300 font-semibold transition px-2 py-1 hover:bg-yellow-500/10 rounded cursor-pointer">
                                     Edit
                                 </button>
                                 <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Apakah Anda yakin ingin menghapus user ini?')">
@@ -74,7 +140,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="py-8 text-center text-gray-500">Belum ada user terdaftar.</td>
+                        <td colspan="10" class="py-8 text-center text-gray-500">Belum ada user terdaftar.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -112,6 +178,16 @@
                 <input type="email" name="email" id="create-email" value="{{ !old('_method') ? old('email') : '' }}" placeholder="Contoh: john@example.com" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @if($errors->any() && !old('_method') && $errors->has('email')) border-red-500 @endif" required>
                 @if($errors->any() && !old('_method'))
                     @error('email')
+                        <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p>
+                    @enderror
+                @endif
+            </div>
+
+            <div class="space-y-1">
+                <label for="create-phone" class="block font-bold text-gray-300">No. Telepon</label>
+                <input type="text" name="phone" id="create-phone" value="{{ !old('_method') ? old('phone') : '' }}" placeholder="Contoh: 08123456789" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @if($errors->any() && !old('_method') && $errors->has('phone')) border-red-500 @endif">
+                @if($errors->any() && !old('_method'))
+                    @error('phone')
                         <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p>
                     @enderror
                 @endif
@@ -200,6 +276,16 @@
             </div>
 
             <div class="space-y-1">
+                <label for="edit-phone" class="block font-bold text-gray-300">No. Telepon</label>
+                <input type="text" name="phone" id="edit-phone" value="{{ old('_method') === 'PUT' ? old('phone') : '' }}" placeholder="Contoh: 08123456789" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @if($errors->any() && old('_method') === 'PUT' && $errors->has('phone')) border-red-500 @endif">
+                @if($errors->any() && old('_method') === 'PUT')
+                    @error('phone')
+                        <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p>
+                    @enderror
+                @endif
+            </div>
+
+            <div class="space-y-1">
                 <label for="edit-password" class="block font-bold text-gray-300">Password</label>
                 <input type="password" name="password" id="edit-password" placeholder="Kosongkan jika tidak diubah" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @if($errors->any() && old('_method') === 'PUT' && $errors->has('password')) border-red-500 @endif">
                 @if($errors->any() && old('_method') === 'PUT')
@@ -271,6 +357,10 @@
                     <p id="detail-email" class="text-white mt-0.5"></p>
                 </div>
                 <div>
+                    <p class="text-gray-500 font-bold uppercase tracking-wider text-[9px]">No. Telepon</p>
+                    <p id="detail-phone" class="text-white mt-0.5">-</p>
+                </div>
+                <div>
                     <p class="text-gray-500 font-bold uppercase tracking-wider text-[9px]">Role</p>
                     <p id="detail-role" class="text-white mt-0.5"></p>
                 </div>
@@ -281,6 +371,14 @@
                 <div>
                     <p class="text-gray-500 font-bold uppercase tracking-wider text-[9px]">Terdaftar Pada</p>
                     <p id="detail-created" class="text-white mt-0.5"></p>
+                </div>
+                <div id="detail-branch-container" class="hidden">
+                    <p class="text-gray-500 font-bold uppercase tracking-wider text-[9px]">Cabang & Wilayah</p>
+                    <p id="detail-branch-info" class="text-white mt-0.5">-</p>
+                </div>
+                <div id="detail-outlet-container" class="hidden">
+                    <p class="text-gray-500 font-bold uppercase tracking-wider text-[9px]">Outlet & Cabang</p>
+                    <p id="detail-outlet-info" class="text-white mt-0.5">-</p>
                 </div>
             </div>
 
@@ -333,6 +431,7 @@
         document.getElementById('edit-id').value = user.id;
         document.getElementById('edit-name').value = user.name;
         document.getElementById('edit-email').value = user.email;
+        document.getElementById('edit-phone').value = user.phone || '';
         document.getElementById('edit-role_id').value = user.role_id || '';
         document.getElementById('edit-status').value = user.status || 'active';
         document.getElementById('edit-form').action = `/admin/users/${user.id}`;
@@ -347,8 +446,25 @@
         document.getElementById('detail-id').textContent = user.id;
         document.getElementById('detail-name').textContent = user.name;
         document.getElementById('detail-email').textContent = user.email;
+        document.getElementById('detail-phone').textContent = user.phone || '-';
         document.getElementById('detail-role').textContent = user.role ? user.role.name : '-';
         document.getElementById('detail-status').textContent = user.status || '-';
+
+        const branchContainer = document.getElementById('detail-branch-container');
+        const outletContainer = document.getElementById('detail-outlet-container');
+        
+        branchContainer.classList.add('hidden');
+        outletContainer.classList.add('hidden');
+
+        if (user.role && user.role.name === 'cabang' && user.branch) {
+            const wilayahName = user.branch.wilayah ? user.branch.wilayah.name : '-';
+            document.getElementById('detail-branch-info').textContent = `${user.branch.name} (Wilayah: ${wilayahName})`;
+            branchContainer.classList.remove('hidden');
+        } else if (user.role && user.role.name === 'outlet' && user.outlet) {
+            const branchName = (user.outlet.branch && user.outlet.branch.name) ? user.outlet.branch.name : '-';
+            document.getElementById('detail-outlet-info').textContent = `${user.outlet.name} (Cabang: ${branchName})`;
+            outletContainer.classList.remove('hidden');
+        }
 
         const createdDate = user.created_at ? new Date(user.created_at).toLocaleString('id-ID') : '-';
         document.getElementById('detail-created').textContent = createdDate;

@@ -44,9 +44,20 @@
                             <td class="py-4 px-4 text-gray-400 font-medium">
                                 {{ $history->created_at ? $history->created_at->format('d-m-Y H:i') : '-' }}
                             </td>
-                            <td class="py-4 px-4 font-semibold text-white">
-                                {{ $history->product->name ?? 'Produk Tidak Ditemukan' }}
-                                <div class="text-[10px] text-gray-500 font-mono">SKU: {{ $history->product->sku ?? '-' }}</div>
+                            <td class="py-4 px-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                        @if($history->product && $history->product->image)
+                                            <img src="{{ $history->product->image }}" alt="{{ $history->product->name }}" class="w-full h-full object-cover">
+                                        @else
+                                            <div class="text-[9px] uppercase font-bold text-gray-600">No Img</div>
+                                        @endif
+                                    </div>
+                                    <div>
+                                        <span class="block font-semibold text-white">{{ $history->product->name ?? 'Produk Tidak Ditemukan' }}</span>
+                                        <div class="text-[10px] text-gray-500 font-mono">SKU: {{ $history->product->sku ?? '-' }}</div>
+                                    </div>
+                                </div>
                             </td>
                             <td class="py-4 px-4">
                                 <span class="inline-flex items-center gap-1.5 py-0.5 px-2 rounded-full text-[10px] font-semibold 

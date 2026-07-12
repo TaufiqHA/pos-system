@@ -62,8 +62,19 @@
                 @forelse($stocks as $stock)
                     <tr class="hover:bg-gray-800/30 transition">
                         <td class="py-4 pl-4 pr-4 font-semibold text-gray-400">{{ $loop->iteration }}</td>
-                        <td class="py-4 px-4 font-semibold text-white">
-                            {{ $stock->product->name ?? $stock->product_id }}
+                        <td class="py-4 px-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                    @if($stock->product && $stock->product->image)
+                                        <img src="{{ $stock->product->image }}" alt="{{ $stock->product->name }}" class="w-full h-full object-cover">
+                                    @else
+                                        <div class="text-[9px] uppercase font-bold text-gray-600">No Img</div>
+                                    @endif
+                                </div>
+                                <div>
+                                    <span class="block font-semibold text-white">{{ $stock->product->name ?? $stock->product_id }}</span>
+                                </div>
+                            </div>
                         </td>
                         <td class="py-4 px-4 font-mono text-gray-400">
                             {{ $stock->product->sku ?? '-' }}

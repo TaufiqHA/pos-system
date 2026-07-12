@@ -153,7 +153,7 @@
                         <input type="number" id="create-item-qty" placeholder="Qty" min="1" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-2.5 focus:outline-none focus:border-green-400">
                     </div>
                     <div class="flex gap-2">
-                        <input type="text" id="create-item-price" placeholder="Harga" class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-2.5 focus:outline-none cursor-not-allowed" readonly>
+                        <input type="text" id="create-item-price" placeholder="Harga" oninput="formatPriceInput(this)" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-2.5 focus:outline-none focus:border-green-400">
                         <button type="button" onclick="addItem('create')" class="bg-[#B4F481] hover:bg-green-400 text-black px-3.5 rounded-xl font-bold cursor-pointer">+</button>
                     </div>
                 </div>
@@ -302,7 +302,7 @@
                         <input type="number" id="edit-item-qty" placeholder="Qty" min="1" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-2.5 focus:outline-none focus:border-green-400">
                     </div>
                     <div class="flex gap-2">
-                        <input type="text" id="edit-item-price" placeholder="Harga" class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-2.5 focus:outline-none cursor-not-allowed" readonly>
+                        <input type="text" id="edit-item-price" placeholder="Harga" oninput="formatPriceInput(this)" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-2.5 focus:outline-none focus:border-green-400">
                         <button type="button" onclick="addItem('edit')" class="bg-[#B4F481] hover:bg-green-400 text-black px-3.5 rounded-xl font-bold cursor-pointer">+</button>
                     </div>
                 </div>
@@ -559,6 +559,13 @@
         return new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(num);
     }
 
+    function formatPriceInput(input) {
+        let cleanVal = input.value.replace(/\D/g, '');
+        if (!cleanVal) cleanVal = '0';
+        const num = parseFloat(cleanVal);
+        input.value = formatNumberWithDots(num);
+    }
+
     // Helper to format inputs with dots on typing
     function formatInputWithDots(input, hiddenId, prefix) {
         let cleanVal = input.value.replace(/\D/g, '');
@@ -620,7 +627,8 @@
         const product = availableProducts.find(p => p.id === productId);
         if (!product) return;
 
-        const price = parseFloat(product.buy_price) || 0;
+        const priceVal = document.getElementById(`${prefix}-item-price`).value.replace(/\D/g, '');
+        const price = parseFloat(priceVal) || 0;
         if (price < 0) {
             alert('Harga tidak boleh kurang dari 0.');
             return;

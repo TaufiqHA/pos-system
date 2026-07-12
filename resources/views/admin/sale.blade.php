@@ -141,7 +141,7 @@
     <div id="create-modal"
         class="fixed inset-0 z-50 {{ $errors->any() && !old('_method') ? '' : 'hidden' }} bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div
-            class="card max-w-2xl w-full p-6 rounded-2xl shadow-2xl relative border border-gray-800 max-h-[90vh] overflow-y-auto">
+            class="card max-w-4xl w-full p-6 rounded-2xl shadow-2xl relative border border-gray-800 max-h-[90vh] overflow-y-auto">
             <button onclick="closeCreateModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white transition">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -188,35 +188,65 @@
 
                 <div class="border-t border-gray-800 pt-4 mt-4">
                     <h4 class="text-xs font-bold text-white mb-2 uppercase tracking-wider">Item Penjualan</h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 mb-3">
-                        <div class="sm:col-span-2 flex gap-3 items-center">
+                    <div class="flex flex-col sm:flex-row gap-2 items-start mb-3">
+                        <div class="flex-1 flex gap-3 items-start w-full">
                             <!-- Image Preview of Selected Product -->
-                            <div class="w-11 h-11 rounded-xl bg-gray-900 border border-gray-800 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                            <div class="w-11 h-11 rounded-xl bg-gray-900 border border-gray-800 flex-shrink-0 flex items-center justify-center overflow-hidden mt-0.5">
                                 <img id="create-product-image-preview" src="" alt="" class="w-full h-full object-cover hidden">
                                 <div id="create-product-image-placeholder" class="text-gray-600 text-[9px] uppercase font-bold">Image</div>
                             </div>
-                            <div class="flex-1">
+                            <div class="flex-1 min-w-0">
                                 <select id="create-item-product"
                                     class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-2.5 focus:outline-none focus:border-green-400">
                                     <option value="">-- Pilih Produk --</option>
                                     @foreach($products as $product)
-                                        <option value="{{ $product->id }}" data-image="{{ $product->image ?? '' }}">{{ $product->name }} ({{ $product->sku }})</option>
+                                        @php
+                                            $wholesaleData = $product->wholesalePrices->sortBy('min_qty')->map(function ($wp) {
+                                                return [
+                                                    'min_qty' => (int) $wp->min_qty,
+                                                    'price' => (float) $wp->price
+                                                ];
+                                            })->values()->all();
+                                        @endphp
+                                        <option value="{{ $product->id }}" 
+                                            data-sku="{{ $product->sku }}"
+                                            data-price="{{ $product->sell_price }}"
+                                            data-name="{{ $product->name }}"
+                                            data-image="{{ $product->image ?? '' }}"
+                                            data-wholesale='{{ json_encode($wholesaleData) }}'>
+                                            {{ $product->name }} ({{ $product->sku }}) - Rp {{ number_format($product->sell_price, 0, ',', '.') }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
                         </div>
-                        <div>
+                        <div class="w-full sm:w-20">
                             <input type="number" id="create-item-qty" placeholder="Qty" min="1"
                                 class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-2.5 focus:outline-none focus:border-green-400">
                         </div>
-                        <div class="flex gap-2">
-                            <input type="text" id="create-item-price" placeholder="Harga"
-                                class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-2.5 focus:outline-none cursor-not-allowed"
-                                readonly>
-                            <button type="button" onclick="addItem('create')"
-                                class="bg-[#B4F481] hover:bg-green-400 text-black px-3.5 rounded-xl font-bold cursor-pointer">+</button>
+                        <div class="w-full sm:w-24 flex items-center gap-2 bg-gray-900 border border-gray-800 rounded-xl p-2.5">
+                            <input type="checkbox" id="create-use-wholesale"
+                                class="w-4 h-4 rounded text-green-400 bg-gray-950 border-gray-800 focus:ring-0 accent-green-400 cursor-pointer">
+                            <label for="create-use-wholesale" class="text-gray-300 font-bold cursor-pointer select-none">Grosir</label>
                         </div>
+                        <div id="create-wholesale-select-container" class="hidden w-full sm:w-40">
+                            <select id="create-wholesale-price-select"
+                                class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-2.5 focus:outline-none focus:border-green-400">
+                                <option value="">-- Tingkat --</option>
+                            </select>
+                        </div>
+                        <div class="w-full sm:w-28">
+                            <input type="text" id="create-item-price" placeholder="Harga" readonly
+                                class="w-full bg-gray-950 border border-gray-800 text-gray-400 rounded-xl p-2.5 cursor-not-allowed focus:outline-none">
+                        </div>
+                        <button type="button" onclick="addItem('create')"
+                            class="bg-[#B4F481] hover:bg-green-400 text-black font-bold p-2.5 rounded-xl transition w-full sm:w-10 flex items-center justify-center cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                        </button>
                     </div>
+                    <div id="create-wholesale-info" class="hidden text-[10px] text-[#B4F481] bg-[#B4F481]/10 border border-[#B4F481]/30 p-2.5 rounded-xl flex flex-wrap gap-2 items-center mb-3"></div>
 
                     <div class="overflow-x-auto max-h-[150px] overflow-y-auto mb-4 border border-gray-800 rounded-xl">
                         <table class="w-full text-left border-collapse text-[11px]">
@@ -627,17 +657,15 @@
             }
 
             document.getElementById('create-item-product').addEventListener('change', function () {
+                updateWholesalePricesSelect('create');
+                updatePriceBasedOnQty('create');
+
                 const productId = this.value;
-                const priceInput = document.getElementById('create-item-price');
-                const qtyInput = document.getElementById('create-item-qty');
                 const imgPreview = document.getElementById('create-product-image-preview');
                 const imgPlaceholder = document.getElementById('create-product-image-placeholder');
 
                 const product = availableProducts.find(p => p.id === productId);
                 if (product) {
-                    priceInput.value = formatNumberWithDots(product.sell_price);
-                    if (!qtyInput.value) qtyInput.value = 1;
-
                     // Update image preview
                     if (product.image) {
                         imgPreview.src = product.image;
@@ -649,11 +677,28 @@
                         imgPlaceholder.classList.remove('hidden');
                     }
                 } else {
-                    priceInput.value = '';
                     imgPreview.src = '';
                     imgPreview.classList.add('hidden');
                     imgPlaceholder.classList.remove('hidden');
                 }
+            });
+
+            document.getElementById('create-item-qty').addEventListener('input', function() {
+                updatePriceBasedOnQty('create');
+            });
+
+            document.getElementById('create-use-wholesale').addEventListener('change', function() {
+                updateWholesalePricesSelect('create');
+                updatePriceBasedOnQty('create');
+            });
+
+            document.getElementById('create-wholesale-price-select').addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const qtyInput = document.getElementById('create-item-qty');
+                if (selectedOption && selectedOption.value) {
+                    qtyInput.value = parseInt(selectedOption.value);
+                }
+                updatePriceBasedOnQty('create');
             });
 
             document.getElementById('edit-item-product').addEventListener('change', function () {
@@ -670,6 +715,114 @@
                 }
             });
         });
+
+        function updateWholesalePricesSelect(prefix) {
+            const select = document.getElementById(`${prefix}-item-product`);
+            const selectedOption = select.options[select.selectedIndex];
+            const useWholesaleCheckbox = document.getElementById(`${prefix}-use-wholesale`);
+            const selectContainer = document.getElementById(`${prefix}-wholesale-select-container`);
+            const wholesaleSelect = document.getElementById(`${prefix}-wholesale-price-select`);
+
+            // Reset select options
+            wholesaleSelect.innerHTML = '<option value="">-- Tingkat --</option>';
+
+            if (selectedOption && selectedOption.value && useWholesaleCheckbox.checked) {
+                const wholesaleStr = selectedOption.getAttribute('data-wholesale');
+                let wholesalePrices = [];
+                try {
+                    wholesalePrices = JSON.parse(wholesaleStr) || [];
+                } catch(e) {}
+
+                if (wholesalePrices.length > 0) {
+                    selectContainer.classList.remove('hidden');
+                    wholesalePrices.sort((a, b) => a.min_qty - b.min_qty);
+                    wholesalePrices.forEach(wp => {
+                        const opt = document.createElement('option');
+                        opt.value = wp.min_qty;
+                        opt.setAttribute('data-price', wp.price);
+                        opt.textContent = `Min. ${wp.min_qty} - Rp ${formatNumberWithDots(wp.price)}`;
+                        wholesaleSelect.appendChild(opt);
+                    });
+                } else {
+                    selectContainer.classList.add('hidden');
+                }
+            } else {
+                selectContainer.classList.add('hidden');
+            }
+        }
+
+        function updatePriceBasedOnQty(prefix) {
+            const select = document.getElementById(`${prefix}-item-product`);
+            const selectedOption = select.options[select.selectedIndex];
+            const qtyInput = document.getElementById(`${prefix}-item-qty`);
+            const priceInput = document.getElementById(`${prefix}-item-price`);
+            const infoDiv = document.getElementById(`${prefix}-wholesale-info`);
+            const useWholesaleCheckbox = document.getElementById(`${prefix}-use-wholesale`);
+            const wholesaleSelect = document.getElementById(`${prefix}-wholesale-price-select`);
+
+            if (selectedOption && selectedOption.value) {
+                const defaultPrice = parseFloat(selectedOption.getAttribute('data-price')) || 0;
+                const qty = parseInt(qtyInput.value) || 0;
+                const useWholesale = useWholesaleCheckbox.checked;
+
+                const wholesaleStr = selectedOption.getAttribute('data-wholesale');
+                let wholesalePrices = [];
+                try {
+                    wholesalePrices = JSON.parse(wholesaleStr) || [];
+                } catch(e) {
+                    wholesalePrices = [];
+                }
+
+                // Find if any wholesale price matches the qty
+                let appliedPrice = defaultPrice;
+                let activeWholesale = null;
+
+                if (useWholesale) {
+                    // Sort descending to check from highest threshold
+                    wholesalePrices.sort((a, b) => b.min_qty - a.min_qty);
+
+                    for (let wp of wholesalePrices) {
+                        if (qty >= wp.min_qty) {
+                            appliedPrice = wp.price;
+                            activeWholesale = wp;
+                            break;
+                        }
+                    }
+                }
+
+                priceInput.value = formatNumberWithDots(appliedPrice);
+
+                // Synchronize the wholesale select value
+                if (activeWholesale) {
+                    wholesaleSelect.value = activeWholesale.min_qty;
+                } else {
+                    wholesaleSelect.value = "";
+                }
+
+                // Update info div text
+                if (wholesalePrices.length > 0 && useWholesale) {
+                    infoDiv.classList.remove('hidden');
+                    let infoHtml = '<strong>Tersedia Harga Grosir:</strong> ';
+                    // Sort ascending for display
+                    const displayWp = [...wholesalePrices].sort((a, b) => a.min_qty - b.min_qty);
+                    const wpTexts = displayWp.map(wp => {
+                        const isApplied = activeWholesale && activeWholesale.min_qty === wp.min_qty;
+                        const style = isApplied ? 'text-black font-extrabold bg-[#B4F481] px-2 py-0.5 rounded shadow' : 'text-[#B4F481] opacity-75';
+                        return `<span class="${style}">Min. ${wp.min_qty} = Rp ${formatNumberWithDots(wp.price)}</span>`;
+                    });
+                    infoHtml += wpTexts.join(' | ');
+                    infoDiv.innerHTML = infoHtml;
+                } else {
+                    infoDiv.classList.add('hidden');
+                    infoDiv.innerHTML = '';
+                }
+            } else {
+                priceInput.value = '';
+                infoDiv.classList.add('hidden');
+                infoDiv.innerHTML = '';
+                wholesaleSelect.value = "";
+            }
+        }
 
         function formatNumberWithDots(val) {
             const num = parseFloat(val) || 0;
@@ -733,7 +886,29 @@
             const product = availableProducts.find(p => p.id === productId);
             if (!product) return;
 
-            const price = parseFloat(product.sell_price) || 0;
+            let price = parseFloat(product.sell_price) || 0;
+            let isWholesaleApplied = false;
+
+            if (prefix === 'create') {
+                const priceInput = document.getElementById('create-item-price');
+                price = parseFloat(priceInput.value.replace(/\D/g, '')) || 0;
+                const useWholesaleCheckbox = document.getElementById('create-use-wholesale');
+                if (useWholesaleCheckbox.checked) {
+                    const wholesaleStr = productSelect.options[productSelect.selectedIndex].getAttribute('data-wholesale');
+                    let wholesalePrices = [];
+                    try {
+                        wholesalePrices = JSON.parse(wholesaleStr) || [];
+                    } catch(e) {}
+                    wholesalePrices.sort((a, b) => b.min_qty - a.min_qty);
+                    for (let wp of wholesalePrices) {
+                        if (qty >= wp.min_qty) {
+                            isWholesaleApplied = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
             if (price < 0) {
                 alert('Harga tidak boleh kurang dari 0.');
                 return;
@@ -745,6 +920,9 @@
             if (existingItem) {
                 existingItem.qty += qty;
                 existingItem.price = price;
+                if (prefix === 'create') {
+                    existingItem.is_wholesale = isWholesaleApplied;
+                }
             } else {
                 itemsArray.push({
                     product_id: productId,
@@ -752,7 +930,8 @@
                     sku: product.sku,
                     qty: qty,
                     price: price,
-                    image: product.image ?? ''
+                    image: product.image ?? '',
+                    is_wholesale: isWholesaleApplied
                 });
             }
 
@@ -770,6 +949,9 @@
                 if (imgPlaceholder) {
                     imgPlaceholder.classList.remove('hidden');
                 }
+                document.getElementById('create-use-wholesale').checked = false;
+                updateWholesalePricesSelect('create');
+                document.getElementById('create-wholesale-info').classList.add('hidden');
             }
 
             renderItems(prefix);
@@ -814,19 +996,22 @@
                     if (item.image) {
                         imgHtml = `<img src="${item.image}" alt="${item.product_name}" class="w-10 h-10 rounded-lg object-cover border border-gray-800/80 shadow-md mx-auto">`;
                     } else {
-                        imgHtml = `<div class="w-10 h-10 bg-gray-850 border border-gray-800 rounded-lg flex items-center justify-center text-gray-500 text-[9px] font-semibold uppercase mx-auto">No Img</div>`;
+                        imgHtml = `<div class="w-10 h-10 bg-gray-855 border border-gray-800 rounded-lg flex items-center justify-center text-gray-500 text-[9px] font-semibold uppercase mx-auto">No Img</div>`;
                     }
                     imgTdHtml = `<td class="p-2"><div class="flex justify-center">${imgHtml}</div></td>`;
                 }
 
+                const badge = item.is_wholesale ? ' <span class="ml-1.5 inline-block bg-green-955/20 text-green-400 border border-green-800/50 py-0.5 px-2 rounded-full text-[9px] font-semibold">Grosir</span>' : '';
+
                 tr.innerHTML = `
                     ${imgTdHtml}
                     <td class="p-2">
-                        <div class="font-semibold text-white">${item.product_name}</div>
+                        <div class="font-semibold text-white">${item.product_name}${badge}</div>
                         <div class="text-[9px] text-gray-500 font-mono">${item.sku}</div>
                         <input type="hidden" name="items[${index}][product_id]" value="${item.product_id}">
                         <input type="hidden" name="items[${index}][qty]" value="${item.qty}">
                         <input type="hidden" name="items[${index}][price]" value="${item.price}">
+                        <input type="hidden" name="items[${index}][is_wholesale]" value="${item.is_wholesale ? 1 : 0}">
                     </td>
                     <td class="p-2 text-center text-gray-400 font-semibold">${item.qty}</td>
                     <td class="p-2 text-right text-gray-400 font-mono">Rp ${item.price.toLocaleString('id-ID')}</td>
@@ -858,6 +1043,7 @@
 
             document.getElementById('create-modal').classList.remove('hidden');
         }
+
         function closeCreateModal() {
             document.getElementById('create-modal').classList.add('hidden');
             const select = document.getElementById('create-item-product');
@@ -875,6 +1061,14 @@
             }
             if (imgPlaceholder) {
                 imgPlaceholder.classList.remove('hidden');
+            }
+            const useWholesale = document.getElementById('create-use-wholesale');
+            if (useWholesale) useWholesale.checked = false;
+            updateWholesalePricesSelect('create');
+            const infoDiv = document.getElementById('create-wholesale-info');
+            if (infoDiv) {
+                infoDiv.classList.add('hidden');
+                infoDiv.innerHTML = '';
             }
             window.history.replaceState({}, document.title, window.location.pathname);
         }

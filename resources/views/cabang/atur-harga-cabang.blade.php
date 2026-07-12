@@ -62,7 +62,7 @@
                     <th class="pb-3 px-4">Produk</th>
                     <th class="pb-3 px-4">SKU</th>
                     <th class="pb-3 px-4">Kategori</th>
-                    <th class="pb-3 px-4 text-right">Harga Jual Pusat</th>
+                    <th class="pb-3 px-4 text-right">Harga Beli Cabang</th>
                     <th class="pb-3 px-4 text-right">Harga Jual Cabang</th>
                     <th class="pb-3 px-4 text-center">Status</th>
                     <th class="pb-3 pl-4 pr-4 text-right">Aksi</th>
@@ -75,12 +75,21 @@
                     @endphp
                     <tr class="hover:bg-gray-800/30 transition">
                         <td class="py-4 pl-4 pr-4 font-semibold text-gray-400">{{ $loop->iteration }}</td>
-                        <td class="py-4 px-4 font-semibold text-white">
-                            <div>
-                                <span class="block">{{ $product->name }}</span>
-                                @if($product->is_wholesale)
-                                    <span class="inline-block bg-green-950/20 text-[#B4F481] border border-green-800/50 py-0.5 px-2 rounded-full text-[9px] font-semibold mt-1">Grosir</span>
-                                @endif
+                        <td class="py-4 px-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                    @if($product->image)
+                                        <img src="{{ $product->image }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                                    @else
+                                        <div class="text-[9px] uppercase font-bold text-gray-600">No Img</div>
+                                    @endif
+                                </div>
+                                <div>
+                                    <span class="block font-semibold text-white">{{ $product->name }}</span>
+                                    @if($product->is_wholesale)
+                                        <span class="inline-block bg-green-950/20 text-[#B4F481] border border-green-800/50 py-0.5 px-2 rounded-full text-[9px] font-semibold mt-1">Grosir</span>
+                                    @endif
+                                </div>
                             </div>
                         </td>
                         <td class="py-4 px-4 font-mono text-gray-400">
@@ -90,10 +99,10 @@
                             {{ $product->category->name ?? '-' }}
                         </td>
                         <td class="py-4 px-4 text-right font-mono text-gray-400">
-                            Rp {{ number_format($product->sell_price, 0, ',', '.') }}
+                            Rp {{ number_format($product->latest_purchase_price ?? $product->sell_price, 0, ',', '.') }}
                         </td>
                         <td class="py-4 px-4 text-right font-mono font-bold {{ $branchPrice ? 'text-[#B4F481]' : 'text-gray-300' }}">
-                            Rp {{ number_format($branchPrice ? $branchPrice->sell_price : $product->sell_price, 0, ',', '.') }}
+                            Rp {{ number_format($branchPrice ? $branchPrice->sell_price : ($product->latest_purchase_price ?? $product->sell_price), 0, ',', '.') }}
                         </td>
                         <td class="py-4 px-4 text-center">
                             @if($branchPrice)
@@ -128,7 +137,7 @@
                                         </button>
                                     </form>
                                 @else
-                                    <button onclick="openEditModal('{{ $product->id }}', null, '{{ $product->sell_price }}')" class="text-[#B4F481] hover:text-green-400 font-semibold transition px-2 py-1 hover:bg-green-500/10 rounded cursor-pointer">
+                                    <button onclick="openEditModal('{{ $product->id }}', null, '{{ $product->latest_purchase_price ?? $product->sell_price }}')" class="text-[#B4F481] hover:text-green-400 font-semibold transition px-2 py-1 hover:bg-green-500/10 rounded cursor-pointer">
                                         Atur Harga
                                     </button>
                                 @endif
@@ -171,7 +180,7 @@
             </div>
 
             <div class="space-y-1">
-                <label class="block font-bold text-gray-400">Harga Jual Pusat</label>
+                <label class="block font-bold text-gray-400">Harga Beli Cabang</label>
                 <input type="text" id="edit-sell-price-pusat" readonly class="w-full bg-gray-800 border border-gray-800 text-gray-400 rounded-xl p-3 focus:outline-none cursor-not-allowed select-none">
             </div>
 
@@ -286,13 +295,14 @@
 
         document.getElementById('edit-product-id').value = product.id;
         document.getElementById('edit-name').value = product.name;
-        document.getElementById('edit-sell-price-pusat').value = 'Rp ' + parseInt(product.sell_price, 10).toLocaleString('id-ID').replace(/,/g, '.');
+        const buyPrice = product.latest_purchase_price !== null ? product.latest_purchase_price : product.sell_price;
+        document.getElementById('edit-sell-price-pusat').value = 'Rp ' + parseInt(buyPrice, 10).toLocaleString('id-ID').replace(/,/g, '.');
         
         const priceInput = document.getElementById('edit-sell-price-cabang');
         priceInput.value = currentPrice;
         formatRupiah(priceInput);
 
-        document.getElementById('edit-is-wholesale').value = product.is_wholesale ? '1' : '0';
+        document.getElementById('edit-is-wholesale').value = branchPriceId ? (product.is_wholesale ? '1' : '0') : '0';
 
         const form = document.getElementById('edit-price-form');
         const methodInput = document.getElementById('edit-method');
