@@ -12,6 +12,15 @@ class Product extends Model
 
     protected $table = 'products';
 
+    protected static function booted()
+    {
+        static::deleting(function ($product) {
+            $product->productStocks()->delete();
+            $product->wholesalePrices()->delete();
+            $product->branchPrices()->delete();
+        });
+    }
+
     protected $primaryKey = 'id';
 
     public $incrementing = false; // Karena id menggunakan varchar (UUID)

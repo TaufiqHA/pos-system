@@ -5,8 +5,11 @@ namespace Tests\Feature;
 use App\Models\Branch;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductBranchPrices;
+use App\Models\ProductStock;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\WholesalePrice;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -213,6 +216,37 @@ class ProductTest extends TestCase
             'sell_price' => 6000000,
         ]);
 
+        $branch = Branch::create([
+            'id' => Str::uuid()->toString(),
+            'name' => 'Branch Test',
+            'address' => 'Jl. Test No. 1',
+            'phone' => '08123456',
+        ]);
+
+        $stock = ProductStock::create([
+            'id' => Str::uuid()->toString(),
+            'product_id' => $product->id,
+            'branch_id' => $branch->id,
+            'stock' => 10,
+            'minimum_stock' => 5,
+            'average_cost' => 5000000,
+        ]);
+
+        $wholesale = WholesalePrice::create([
+            'id' => Str::uuid()->toString(),
+            'product_id' => $product->id,
+            'branch_id' => $branch->id,
+            'min_qty' => 10,
+            'price' => 4500000,
+        ]);
+
+        $branchPrice = ProductBranchPrices::create([
+            'id' => Str::uuid()->toString(),
+            'product_id' => $product->id,
+            'branch_id' => $branch->id,
+            'sell_price' => 6200000,
+        ]);
+
         $response = $this->actingAs($this->user)->delete(route('products.destroy', $product->id));
 
         $response->assertStatus(302);
@@ -221,6 +255,18 @@ class ProductTest extends TestCase
 
         $this->assertSoftDeleted('products', [
             'id' => $product->id,
+        ]);
+
+        $this->assertDatabaseMissing('product_stocks', [
+            'id' => $stock->id,
+        ]);
+
+        $this->assertDatabaseMissing('wholesale_prices', [
+            'id' => $wholesale->id,
+        ]);
+
+        $this->assertDatabaseMissing('product_branch_prices', [
+            'id' => $branchPrice->id,
         ]);
     }
 
