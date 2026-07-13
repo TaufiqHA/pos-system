@@ -16,139 +16,220 @@
         </div>
     @endif
 
-    <div class="flex flex-col sm:flex-row justify-end gap-3 mb-6 z-10">
-        <button onclick="openPoModal()"
-            class="w-full sm:w-auto flex items-center justify-center px-5 py-2 rounded-full border border-green-400 text-green-400 font-bold text-xs tracking-wider hover:bg-green-400 hover:text-black transition cursor-pointer">
-            BUAT ORDER
-        </button>
-        @php
-            $newDeliveryCount = $deliveries->where('status', 'DIKIRIM')->count();
-        @endphp
-        <button onclick="openDeliveryModal()"
-            class="w-full sm:w-auto flex items-center justify-center px-5 py-2 rounded-full border border-blue-400 text-blue-400 font-bold text-xs tracking-wider hover:bg-blue-400 hover:text-black transition cursor-pointer relative">
-            STATUS PENGIRIMAN
-            @if($newDeliveryCount > 0)
-                <span
-                    class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center animate-pulse border border-[#0B1120]">
-                    {{ $newDeliveryCount }}
+    <!-- Mobile Layout (Visible on mobile/tablet) -->
+    <div class="block md:hidden space-y-6 mb-8 z-10">
+        <!-- History Card -->
+        <div class="bg-[#111827] border border-gray-800 rounded-3xl p-6 shadow-xl text-center">
+            <h4 class="text-xs font-bold text-gray-400 tracking-wider">HISTORY</h4>
+            <h3 class="text-sm font-black text-[#B4F481] mt-1 tracking-widest uppercase">
+                BULAN : {{ Str::upper(\Carbon\Carbon::now()->translatedFormat('F')) }}
+            </h3>
+            
+            <div class="mt-6 space-y-4 text-left">
+                <div class="flex justify-between items-center pb-3.5 border-b border-gray-800">
+                    <span class="text-xs font-bold text-gray-300 tracking-wider uppercase">TOTAL BELANJA</span>
+                    <span class="text-sm font-extrabold text-white font-display">Rp {{ number_format($totalBelanja, 0, ',', '.') }}</span>
+                </div>
+                <div class="flex justify-between items-center pt-0.5">
+                    <span class="text-xs font-bold text-gray-300 tracking-wider uppercase">ORDER SELESAI</span>
+                    <span class="text-sm font-extrabold text-white font-display">{{ $totalOrder }} Order</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grid Navigasi 2-column -->
+        <div class="grid grid-cols-2 gap-6 my-8">
+            <!-- Box 1: Order Barang -->
+            <a href="{{ route('outlet.order') }}" class="flex flex-col items-center group">
+                <div class="w-full aspect-square flex items-center justify-center bg-white rounded-[2rem] shadow-lg group-hover:scale-105 transition-transform p-6 mb-3">
+                    <img src="https://cdn-icons-png.flaticon.com/512/3144/3144456.png" class="w-14 h-14 object-contain" alt="Order Barang">
+                </div>
+                <span class="text-[11px] font-bold text-white tracking-widest text-center uppercase group-hover:text-[#B4F481] transition-colors leading-tight">
+                    ORDER BARANG
                 </span>
-            @endif
-        </button>
-    </div>
+            </a>
 
-    <!-- 2 Kotak Indikator Utama Outlet -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 z-10">
-        <!-- Indikator 1: Total Belanja -->
-        <div class="card p-5 rounded-xl hover:border-gray-500 transition shadow-lg shadow-black/20">
-            <div class="flex justify-between items-start mb-3">
-                <p class="text-[10px] text-gray-400 font-bold tracking-wider">TOTAL BELANJA</p>
-                <div class="bg-green-950/50 p-1.5 rounded-lg text-green-400 border border-green-800/40">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-                    </svg>
+            <!-- Box 2: Riwayat -->
+            <a href="{{ route('outlet.history') }}" class="flex flex-col items-center group">
+                <div class="w-full aspect-square flex items-center justify-center bg-white rounded-[2rem] shadow-lg group-hover:scale-105 transition-transform p-6 mb-3">
+                    <img src="https://cdn-icons-png.flaticon.com/512/869/869636.png" class="w-14 h-14 object-contain" alt="Riwayat">
                 </div>
-            </div>
-            <h3 class="text-2xl font-bold mb-2 text-white font-display">Rp {{ number_format($totalBelanja, 0, ',', '.') }}</h3>
-            <p class="text-xs"><span class="text-green-400 font-bold">Akumulasi</span> <span class="text-gray-500">Seluruh transaksi belanja outlet</span></p>
+                <span class="text-[11px] font-bold text-white tracking-widest text-center uppercase group-hover:text-[#B4F481] transition-colors leading-tight">
+                    RIWAYAT
+                </span>
+            </a>
         </div>
 
-        <!-- Indikator 2: Order Selesai -->
-        <div class="card p-5 rounded-xl hover:border-gray-500 transition shadow-lg shadow-black/20">
-            <div class="flex justify-between items-start mb-3">
-                <p class="text-[10px] text-gray-400 font-bold tracking-wider">ORDER SELESAI</p>
-                <div class="bg-blue-950/50 p-1.5 rounded-lg text-blue-400 border border-blue-800/40">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-            </div>
-            <h3 class="text-2xl font-bold mb-2 text-blue-400 font-display">{{ $totalOrder }} Order</h3>
-            <p class="text-xs"><span class="text-blue-500 font-bold">Total</span> <span class="text-gray-500">Order yang telah dilakukan</span></p>
-        </div>
-    </div>
-
-    <!-- Area Chart & New Product Banner -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 z-10">
-        <!-- Area Chart Grafik Tren Penjualan Outlet -->
-        <div class="card p-6 rounded-xl border-gray-700 shadow-lg shadow-black/15 lg:col-span-2">
-            <div class="flex justify-between items-center mb-6">
-                <div class="flex items-center space-x-3">
-                    <div class="w-1 h-5 bg-[#B4F481] rounded-full"></div>
-                    <h3 class="font-bold text-sm tracking-wide font-display text-white">TREN TOTAL BELANJA OUTLET BULANAN</h3>
-                </div>
-                <span
-                    class="text-[9px] text-[#B4F481] font-bold tracking-widest border border-green-900 bg-green-950/40 px-2.5 py-1 rounded-md">LIVE UPDATE</span>
-            </div>
-            <!-- CANVAS FOR CHART.JS -->
-            <div class="h-64 w-full relative">
-                <canvas id="salesChartOutlet"></canvas>
-            </div>
+        <!-- Tombol Aksi Bawah -->
+        <div class="space-y-4">
+            <button onclick="openPoModal()"
+                class="w-full flex items-center justify-center px-6 py-4 rounded-2xl border-2 border-green-400 text-green-400 font-bold text-xs tracking-widest hover:bg-green-400 hover:text-black transition cursor-pointer relative uppercase bg-transparent">
+                BUAT ORDER
+            </button>
+            <button onclick="openDeliveryModal()"
+                class="w-full flex items-center justify-center px-6 py-4 rounded-2xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs tracking-widest transition cursor-pointer relative uppercase">
+                STATUS PENGIRIMAN
+                @php
+                    $newDeliveryCount = $deliveries->where('status', 'DIKIRIM')->count();
+                @endphp
+                @if($newDeliveryCount > 0)
+                    <span
+                        class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center animate-pulse border border-[#0B1120]">
+                        {{ $newDeliveryCount }}
+                    </span>
+                @endif
+            </button>
         </div>
 
-        <!-- Banner Produk Baru -->
-        <div id="upcoming-product-banner" onclick="handleBannerClick()" class="card p-0 rounded-xl border-gray-700 shadow-lg shadow-black/15 overflow-hidden relative group min-h-[320px] cursor-pointer">
-            <!-- Loading indicator -->
-            <div id="banner-loading" class="absolute inset-0 flex items-center justify-center bg-gray-900/80 z-20">
+        <!-- Banner Produk Rilis Mobile -->
+        <div id="mobile-upcoming-product-banner" onclick="handleBannerClick()" class="card p-0 rounded-2xl border-gray-700 shadow-lg shadow-black/15 overflow-hidden relative group min-h-[220px] cursor-pointer mt-8">
+            <div id="mobile-banner-loading" class="absolute inset-0 flex items-center justify-center bg-gray-900/80 z-20">
                 <span class="text-xs text-gray-400">Loading...</span>
             </div>
-
-            <!-- Slides Container -->
-            <div id="banner-slides-container" class="absolute inset-0 w-full h-full z-0">
-                <!-- Slides will be inserted here dynamically -->
-            </div>
-
-            <!-- Dot Indicators -->
-            <div id="banner-dots" class="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5 z-10">
-                <!-- Dots will be inserted here dynamically -->
-            </div>
-
-            <!-- Header Badge -->
+            <div id="mobile-banner-slides-container" class="absolute inset-0 w-full h-full z-0"></div>
+            <div id="mobile-banner-dots" class="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5 z-10"></div>
             <div class="absolute top-4 left-4 z-10 bg-black/60 backdrop-blur-md border border-gray-850 px-3 py-1 rounded-full text-[9px] font-bold tracking-widest text-[#B4F481] uppercase">
                 Produk yang Akan Rilis
             </div>
         </div>
     </div>
 
-    <!-- Navigasi & Manajemen Sistem Bawah -->
-    <div class="z-10">
-        <div class="flex items-center space-x-3 mb-5">
-            <div class="w-1.5 h-5 bg-white rounded-full"></div>
-            <h3 class="font-bold text-sm tracking-widest font-display text-white">MODUL UTAMA OUTLET</h3>
+    <!-- Desktop Layout (Visible on desktop/tablet) -->
+    <div class="hidden md:block">
+        <div class="flex flex-col sm:flex-row justify-end gap-3 mb-6 z-10">
+            <button onclick="openPoModal()"
+                class="w-full sm:w-auto flex items-center justify-center px-5 py-2 rounded-full border border-green-400 text-green-400 font-bold text-xs tracking-wider hover:bg-green-400 hover:text-black transition cursor-pointer">
+                BUAT ORDER
+            </button>
+            @php
+                $newDeliveryCount = $deliveries->where('status', 'DIKIRIM')->count();
+            @endphp
+            <button onclick="openDeliveryModal()"
+                class="w-full sm:w-auto flex items-center justify-center px-5 py-2 rounded-full border border-blue-400 text-blue-400 font-bold text-xs tracking-wider hover:bg-blue-400 hover:text-black transition cursor-pointer relative">
+                STATUS PENGIRIMAN
+                @if($newDeliveryCount > 0)
+                    <span
+                        class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center animate-pulse border border-[#0B1120]">
+                        {{ $newDeliveryCount }}
+                    </span>
+                @endif
+            </button>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <!-- Box 1: Order Barang -->
-            <a href="{{ route('outlet.order') }}"
-                class="card p-5 rounded-xl flex items-center justify-between hover:bg-gray-800/80 cursor-pointer transition border border-gray-750 shadow-md group">
-                <div class="pr-2">
-                    <p class="text-[9px] text-[#B4F481] font-bold mb-1 tracking-widest uppercase">Stok</p>
-                    <h4 class="font-bold text-sm mb-1 text-white group-hover:text-[#B4F481] transition-colors font-display">
-                        ORDER BARANG</h4>
-                    <p class="text-[10px] text-gray-400 leading-snug">Buat dan monitoring pengajuan PO stok barang ke Cabang.</p>
+        <!-- 2 Kotak Indikator Utama Outlet -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 z-10">
+            <!-- Indikator 1: Total Belanja -->
+            <div class="card p-5 rounded-xl hover:border-gray-500 transition shadow-lg shadow-black/20">
+                <div class="flex justify-between items-start mb-3">
+                    <p class="text-[10px] text-gray-400 font-bold tracking-wider">TOTAL BELANJA</p>
+                    <div class="bg-green-950/50 p-1.5 rounded-lg text-green-400 border border-green-800/40">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                        </svg>
+                    </div>
                 </div>
-                <div
-                    class="w-12 h-12 bg-white/5 rounded-xl border border-gray-700/80 flex-shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
-                    <img src="https://cdn-icons-png.flaticon.com/512/3144/3144456.png" class="w-6 h-6 invert" alt="Icon">
-                </div>
-            </a>
+                <h3 class="text-2xl font-bold mb-2 text-white font-display">Rp {{ number_format($totalBelanja, 0, ',', '.') }}</h3>
+                <p class="text-xs"><span class="text-green-400 font-bold">Akumulasi</span> <span class="text-gray-500">Seluruh transaksi belanja outlet</span></p>
+            </div>
 
-            <!-- Box 2: Riwayat Transaksi -->
-            <a href="{{ route('outlet.history') }}"
-                class="card p-5 rounded-xl flex items-center justify-between hover:bg-gray-800/80 cursor-pointer transition border border-gray-750 shadow-md group">
-                <div class="pr-2">
-                    <p class="text-[9px] text-purple-400 font-bold mb-1 tracking-widest uppercase">History</p>
-                    <h4
-                        class="font-bold text-sm mb-1 text-white group-hover:text-purple-400 transition-colors font-display">
-                        RIWAYAT</h4>
-                    <p class="text-[10px] text-gray-400 leading-snug">Cek log penjualan harian dan riwayat mutasi stok outlet.</p>
+            <!-- Indikator 2: Order Selesai -->
+            <div class="card p-5 rounded-xl hover:border-gray-500 transition shadow-lg shadow-black/20">
+                <div class="flex justify-between items-start mb-3">
+                    <p class="text-[10px] text-gray-400 font-bold tracking-wider">ORDER SELESAI</p>
+                    <div class="bg-blue-950/50 p-1.5 rounded-lg text-blue-400 border border-blue-800/40">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
                 </div>
-                <div
-                    class="w-12 h-12 bg-white/5 rounded-xl border border-gray-700/80 flex-shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
-                    <img src="https://cdn-icons-png.flaticon.com/512/869/869636.png" class="w-6 h-6 invert" alt="Icon">
+                <h3 class="text-2xl font-bold mb-2 text-blue-400 font-display">{{ $totalOrder }} Order</h3>
+                <p class="text-xs"><span class="text-blue-500 font-bold">Total</span> <span class="text-gray-500">Order yang telah dilakukan</span></p>
+            </div>
+        </div>
+
+        <!-- Area Chart & New Product Banner -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 z-10">
+            <!-- Area Chart Grafik Tren Penjualan Outlet -->
+            <div class="card p-6 rounded-xl border-gray-700 shadow-lg shadow-black/15 lg:col-span-2">
+                <div class="flex justify-between items-center mb-6">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-1 h-5 bg-[#B4F481] rounded-full"></div>
+                        <h3 class="font-bold text-sm tracking-wide font-display text-white">TREN TOTAL BELANJA OUTLET BULANAN</h3>
+                    </div>
+                    <span
+                        class="text-[9px] text-[#B4F481] font-bold tracking-widest border border-green-900 bg-green-950/40 px-2.5 py-1 rounded-md">LIVE UPDATE</span>
                 </div>
-            </a>
+                <!-- CANVAS FOR CHART.JS -->
+                <div class="h-64 w-full relative">
+                    <canvas id="salesChartOutlet"></canvas>
+                </div>
+            </div>
+
+            <!-- Banner Produk Baru -->
+            <div id="upcoming-product-banner" onclick="handleBannerClick()" class="card p-0 rounded-xl border-gray-700 shadow-lg shadow-black/15 overflow-hidden relative group min-h-[320px] cursor-pointer">
+                <!-- Loading indicator -->
+                <div id="banner-loading" class="absolute inset-0 flex items-center justify-center bg-gray-900/80 z-20">
+                    <span class="text-xs text-gray-400">Loading...</span>
+                </div>
+
+                <!-- Slides Container -->
+                <div id="banner-slides-container" class="absolute inset-0 w-full h-full z-0">
+                    <!-- Slides will be inserted here dynamically -->
+                </div>
+
+                <!-- Dot Indicators -->
+                <div id="banner-dots" class="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5 z-10">
+                    <!-- Dots will be inserted here dynamically -->
+                </div>
+
+                <!-- Header Badge -->
+                <div class="absolute top-4 left-4 z-10 bg-black/60 backdrop-blur-md border border-gray-850 px-3 py-1 rounded-full text-[9px] font-bold tracking-widest text-[#B4F481] uppercase">
+                    Produk yang Akan Rilis
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigasi & Manajemen Sistem Bawah -->
+        <div class="z-10">
+            <div class="flex items-center space-x-3 mb-5">
+                <div class="w-1.5 h-5 bg-white rounded-full"></div>
+                <h3 class="font-bold text-sm tracking-widest font-display text-white">MODUL UTAMA OUTLET</h3>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <!-- Box 1: Order Barang -->
+                <a href="{{ route('outlet.order') }}"
+                    class="card p-5 rounded-xl flex items-center justify-between hover:bg-gray-800/80 cursor-pointer transition border border-gray-750 shadow-md group">
+                    <div class="pr-2">
+                        <p class="text-[9px] text-[#B4F481] font-bold mb-1 tracking-widest uppercase">Stok</p>
+                        <h4 class="font-bold text-sm mb-1 text-white group-hover:text-[#B4F481] transition-colors font-display">
+                            ORDER BARANG</h4>
+                        <p class="text-[10px] text-gray-400 leading-snug">Buat dan monitoring pengajuan PO stok barang ke Cabang.</p>
+                    </div>
+                    <div
+                        class="w-12 h-12 bg-white/5 rounded-xl border border-gray-700/80 flex-shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <img src="https://cdn-icons-png.flaticon.com/512/3144/3144456.png" class="w-6 h-6 invert" alt="Icon">
+                    </div>
+                </a>
+
+                <!-- Box 2: Riwayat Transaksi -->
+                <a href="{{ route('outlet.history') }}"
+                    class="card p-5 rounded-xl flex items-center justify-between hover:bg-gray-800/80 cursor-pointer transition border border-gray-750 shadow-md group">
+                    <div class="pr-2">
+                        <p class="text-[9px] text-purple-400 font-bold mb-1 tracking-widest uppercase">History</p>
+                        <h4
+                            class="font-bold text-sm mb-1 text-white group-hover:text-purple-400 transition-colors font-display">
+                            RIWAYAT</h4>
+                        <p class="text-[10px] text-gray-400 leading-snug">Cek log penjualan harian dan riwayat mutasi stok outlet.</p>
+                    </div>
+                    <div
+                        class="w-12 h-12 bg-white/5 rounded-xl border border-gray-700/80 flex-shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <img src="https://cdn-icons-png.flaticon.com/512/869/869636.png" class="w-6 h-6 invert" alt="Icon">
+                    </div>
+                </a>
+            </div>
         </div>
     </div>
 
@@ -1083,14 +1164,21 @@
             .then(response => response.json())
             .then(data => {
                 upcomingProductsData = data;
+                
+                // Desktop elements
                 const slidesContainer = document.getElementById('banner-slides-container');
                 const dotsContainer = document.getElementById('banner-dots');
                 const loadingEl = document.getElementById('banner-loading');
-
                 if (loadingEl) loadingEl.classList.add('hidden');
 
+                // Mobile elements
+                const mobileSlidesContainer = document.getElementById('mobile-banner-slides-container');
+                const mobileDotsContainer = document.getElementById('mobile-banner-dots');
+                const mobileLoadingEl = document.getElementById('mobile-banner-loading');
+                if (mobileLoadingEl) mobileLoadingEl.classList.add('hidden');
+
                 if (!data || data.length === 0) {
-                    slidesContainer.innerHTML = `
+                    const noDataHtml = `
                         <div class="absolute inset-0 flex flex-col items-center justify-center p-6 bg-gray-900 text-center">
                             <svg class="w-10 h-10 text-gray-700 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
@@ -1099,39 +1187,74 @@
                             <p class="text-[10px] text-gray-400 mt-1 max-w-xs leading-normal">Rencana produk baru menarik sedang dipersiapkan oleh Pusat.</p>
                         </div>
                     `;
+                    if (slidesContainer) slidesContainer.innerHTML = noDataHtml;
+                    if (mobileSlidesContainer) mobileSlidesContainer.innerHTML = noDataHtml;
                     return;
                 }
 
-                // Render Slides
-                slidesContainer.innerHTML = '';
-                dotsContainer.innerHTML = '';
+                // Render Slides for Desktop and Mobile
+                if (slidesContainer) slidesContainer.innerHTML = '';
+                if (dotsContainer) dotsContainer.innerHTML = '';
+                if (mobileSlidesContainer) mobileSlidesContainer.innerHTML = '';
+                if (mobileDotsContainer) mobileDotsContainer.innerHTML = '';
 
                 data.forEach((item, index) => {
-                    const slide = document.createElement('div');
-                    slide.id = `banner-slide-${index}`;
-                    slide.className = `absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out ${index === 0 ? 'opacity-100 z-10' : 'opacity-0 z-0'}`;
-                    
-                    const imgHtml = item.image 
-                        ? `<img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover">`
-                        : `<div class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 to-gray-950 p-6 text-center">
-                                <svg class="w-12 h-12 text-gray-700 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                </svg>
-                                <span class="font-bold text-xs text-white">${escapeHtml(item.name)}</span>
-                           </div>`;
-                    
-                    slide.innerHTML = imgHtml;
-                    slidesContainer.appendChild(slide);
+                    // Create Desktop Slide
+                    if (slidesContainer) {
+                        const slide = document.createElement('div');
+                        slide.id = `banner-slide-${index}`;
+                        slide.className = `absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out ${index === 0 ? 'opacity-100 z-10' : 'opacity-0 z-0'}`;
+                        
+                        const imgHtml = item.image 
+                            ? `<img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover">`
+                            : `<div class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 to-gray-950 p-6 text-center">
+                                    <svg class="w-12 h-12 text-gray-700 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                    <span class="font-bold text-xs text-white">${escapeHtml(item.name)}</span>
+                               </div>`;
+                        
+                        slide.innerHTML = imgHtml;
+                        slidesContainer.appendChild(slide);
 
-                    // Create dot indicator
-                    if (data.length > 1) {
-                        const dot = document.createElement('button');
-                        dot.className = `w-2 h-2 rounded-full transition-all duration-300 ${index === 0 ? 'bg-[#B4F481] scale-125' : 'bg-gray-600 hover:bg-gray-400'}`;
-                        dot.onclick = (e) => {
-                            e.stopPropagation();
-                            showSlide(index);
-                        };
-                        dotsContainer.appendChild(dot);
+                        if (data.length > 1 && dotsContainer) {
+                            const dot = document.createElement('button');
+                            dot.className = `w-2 h-2 rounded-full transition-all duration-300 ${index === 0 ? 'bg-[#B4F481] scale-125' : 'bg-gray-600 hover:bg-gray-400'}`;
+                            dot.onclick = (e) => {
+                                e.stopPropagation();
+                                showSlide(index);
+                            };
+                            dotsContainer.appendChild(dot);
+                        }
+                    }
+
+                    // Create Mobile Slide
+                    if (mobileSlidesContainer) {
+                        const mobileSlide = document.createElement('div');
+                        mobileSlide.id = `mobile-banner-slide-${index}`;
+                        mobileSlide.className = `absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out ${index === 0 ? 'opacity-100 z-10' : 'opacity-0 z-0'}`;
+                        
+                        const mobileImgHtml = item.image 
+                            ? `<img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover">`
+                            : `<div class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 to-gray-950 p-6 text-center">
+                                    <svg class="w-12 h-12 text-gray-700 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                    <span class="font-bold text-xs text-white">${escapeHtml(item.name)}</span>
+                               </div>`;
+                        
+                        mobileSlide.innerHTML = mobileImgHtml;
+                        mobileSlidesContainer.appendChild(mobileSlide);
+
+                        if (data.length > 1 && mobileDotsContainer) {
+                            const mobileDot = document.createElement('button');
+                            mobileDot.className = `w-2 h-2 rounded-full transition-all duration-300 ${index === 0 ? 'bg-[#B4F481] scale-125' : 'bg-gray-600 hover:bg-gray-400'}`;
+                            mobileDot.onclick = (e) => {
+                                e.stopPropagation();
+                                showSlide(index);
+                            };
+                            mobileDotsContainer.appendChild(mobileDot);
+                        }
                     }
                 });
 
@@ -1145,11 +1268,18 @@
                 const slidesContainer = document.getElementById('banner-slides-container');
                 const loadingEl = document.getElementById('banner-loading');
                 if (loadingEl) loadingEl.classList.add('hidden');
-                slidesContainer.innerHTML = `
+                
+                const errorHtml = `
                     <div class="absolute inset-0 flex items-center justify-center bg-gray-900 text-red-400 text-xs">
                         Gagal memuat data.
                     </div>
                 `;
+                if (slidesContainer) slidesContainer.innerHTML = errorHtml;
+                
+                const mobileSlidesContainer = document.getElementById('mobile-banner-slides-container');
+                const mobileLoadingEl = document.getElementById('mobile-banner-loading');
+                if (mobileLoadingEl) mobileLoadingEl.classList.add('hidden');
+                if (mobileSlidesContainer) mobileSlidesContainer.innerHTML = errorHtml;
             });
         }
 
@@ -1158,9 +1288,11 @@
 
             stopAutoplay();
 
-            const oldSlide = document.getElementById(`banner-slide-${currentSlideIndex}`);
-            const newSlide = document.getElementById(`banner-slide-${index}`);
-            const dots = document.getElementById('banner-dots').children;
+            // Desktop transition
+            const oldSlide = document.getElementById('banner-slide-' + currentSlideIndex);
+            const newSlide = document.getElementById('banner-slide-' + index);
+            const dotsContainer = document.getElementById('banner-dots');
+            const dots = dotsContainer ? dotsContainer.children : [];
 
             if (oldSlide && newSlide) {
                 oldSlide.classList.remove('opacity-100', 'z-10');
@@ -1175,10 +1307,30 @@
                 if (dots[index]) {
                     dots[index].className = 'w-2 h-2 rounded-full bg-[#B4F481] scale-125 transition-all duration-300';
                 }
-
-                currentSlideIndex = index;
             }
 
+            // Mobile transition
+            const oldMobileSlide = document.getElementById('mobile-banner-slide-' + currentSlideIndex);
+            const newMobileSlide = document.getElementById('mobile-banner-slide-' + index);
+            const mobileDotsContainer = document.getElementById('mobile-banner-dots');
+            const mobileDots = mobileDotsContainer ? mobileDotsContainer.children : [];
+
+            if (oldMobileSlide && newMobileSlide) {
+                oldMobileSlide.classList.remove('opacity-100', 'z-10');
+                oldMobileSlide.classList.add('opacity-0', 'z-0');
+
+                newMobileSlide.classList.remove('opacity-0', 'z-0');
+                newMobileSlide.classList.add('opacity-100', 'z-10');
+
+                if (mobileDots[currentSlideIndex]) {
+                    mobileDots[currentSlideIndex].className = 'w-2 h-2 rounded-full bg-gray-600 hover:bg-gray-400 transition-all duration-300';
+                }
+                if (mobileDots[index]) {
+                    mobileDots[index].className = 'w-2 h-2 rounded-full bg-[#B4F481] scale-125 transition-all duration-300';
+                }
+            }
+
+            currentSlideIndex = index;
             startAutoplay();
         }
 

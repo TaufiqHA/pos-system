@@ -20,189 +20,281 @@
         </div>
     @endif
 
-    <div class="flex flex-col sm:flex-row justify-end gap-3 mb-6 z-10">
-        <button onclick="openPermintaanPoModal()"
-            class="w-full sm:w-auto flex items-center justify-center px-5 py-2 rounded-full border border-green-400 text-green-400 font-bold text-xs tracking-wider hover:bg-green-400 hover:text-black transition cursor-pointer relative">
-            PERMINTAAN PO
-            @php
-                $pendingCount = $purchaseOrders->where('status', 'Pending')->count();
-            @endphp
-            @if($pendingCount > 0)
-                <span
-                    class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center animate-pulse border border-[#0B1120]">
-                    {{ $pendingCount }}
-                </span>
-            @endif
-        </button>
-        <button onclick="openUpcomingProductsModal()"
-            class="w-full sm:w-auto justify-center px-5 py-2 rounded-full bg-[#B4F481] text-black font-bold text-xs tracking-wider hover:bg-[#a0dc72] transition flex items-center space-x-2 cursor-pointer">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path>
-            </svg>
-            <span>UPLOAD PRODUK BARU</span>
-        </button>
-    </div>
-
-    <!-- 4 Kotak Indikator Utama -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 z-10">
-        <!-- Indikator 1: Omset Penjualan -->
-        <div class="card p-5 rounded-xl hover:border-gray-500 transition shadow-lg shadow-black/20">
-            <div class="flex justify-between items-start mb-3">
-                <p class="text-[10px] text-gray-400 font-bold tracking-wider">OMSET PENJUALAN</p>
-                <div class="bg-green-950/50 p-1.5 rounded-lg text-green-400 border border-green-800/40">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M13 7h8m0 0v8m0-8l-9 9-4-4-6 6"></path>
-                    </svg>
+    <!-- Mobile Layout (Visible on mobile/tablet) -->
+    <div class="block md:hidden space-y-6 mb-8 z-10">
+        <!-- History Card -->
+        <div class="bg-[#111827] border border-gray-800 rounded-3xl p-6 shadow-xl text-center">
+            <h4 class="text-xs font-bold text-gray-400 tracking-wider">HISTORY</h4>
+            <h3 class="text-sm font-black text-[#B4F481] mt-1 tracking-widest uppercase">
+                BULAN : {{ Str::upper(\Carbon\Carbon::now()->translatedFormat('F')) }}
+            </h3>
+            
+            <div class="mt-6 space-y-4 text-left">
+                <div class="flex justify-between items-center pb-3.5 border-b border-gray-800">
+                    <span class="text-xs font-bold text-gray-300 tracking-wider uppercase">OMSET PENJUALAN</span>
+                    <span class="text-sm font-extrabold text-white font-display">Rp {{ number_format($widgetOmset, 0, ',', '.') }}</span>
+                </div>
+                <div class="flex justify-between items-center pt-0.5">
+                    <span class="text-xs font-bold text-gray-300 tracking-wider uppercase">HUTANG (KE SUPPLIER)</span>
+                    <span class="text-sm font-extrabold text-yellow-500 font-display">Rp {{ number_format($hutangSupplier, 0, ',', '.') }}</span>
                 </div>
             </div>
-            <h3 class="text-2xl font-bold mb-2 text-white font-display">Rp {{ number_format($widgetOmset, 0, ',', '.') }}</h3>
-            <p class="text-xs">
-                @if($omsetTrendPercent >= 0)
-                    <span class="text-green-400 font-bold">+{{ number_format($omsetTrendPercent, 1) }}%</span>
-                @else
-                    <span class="text-red-500 font-bold">{{ number_format($omsetTrendPercent, 1) }}%</span>
-                @endif
-                <span class="text-gray-500">Dari bulan lalu</span>
-            </p>
         </div>
 
-        <!-- Indikator 2: Hutang Supplier -->
-        <div class="card p-5 rounded-xl hover:border-gray-500 transition shadow-lg shadow-black/20">
-            <div class="flex justify-between items-start mb-3">
-                <p class="text-[10px] text-gray-400 font-bold tracking-wider">HUTANG (KE SUPPLIER)</p>
-                <div class="bg-yellow-950/50 p-1.5 rounded-lg text-yellow-500 border border-yellow-800/40">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
-                        </path>
-                    </svg>
-                </div>
-            </div>
-            <h3 class="text-2xl font-bold mb-2 text-yellow-500 font-display">Rp {{ number_format($hutangSupplier, 0, ',', '.') }}</h3>
-            <p class="text-xs"><span class="text-yellow-500 font-bold">Penting</span> <span class="text-gray-500">Bulan ini</span></p>
-        </div>
-
-        <!-- Indikator 3: Hutang Cabang -->
-        <div class="card p-5 rounded-xl hover:border-gray-500 transition shadow-lg shadow-black/20">
-            <div class="flex justify-between items-start mb-3">
-                <p class="text-[10px] text-gray-400 font-bold tracking-wider">HUTANG (DARI CABANG)</p>
-                <div class="bg-red-950/50 p-1.5 rounded-lg text-red-400 border border-red-800/40">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-            </div>
-            <h3 class="text-2xl font-bold mb-2 text-red-400 font-display">Rp {{ number_format($hutangCabang, 0, ',', '.') }}</h3>
-            <p class="text-xs"><span class="text-red-500 font-bold">Net Hutang</span> <span class="text-gray-500">Sisa saldo</span></p>
-        </div>
-
-        <!-- Indikator 4: Total SKU -->
-        <div class="card p-5 rounded-xl hover:border-gray-500 transition shadow-lg shadow-black/20">
-            <div class="flex justify-between items-start mb-3">
-                <p class="text-[10px] text-gray-400 font-bold tracking-wider">TOTAL SKU PRODUK</p>
-                <div class="bg-blue-950/50 p-1.5 rounded-lg text-blue-400 border border-blue-800/40">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M7 7h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
-                </div>
-            </div>
-            <h3 class="text-2xl font-bold mb-2 text-blue-400 font-display">{{ number_format($totalSku) }} {{ $totalSku > 1 ? 'Items' : 'Item' }}</h3>
-            <p class="text-xs"><span class="text-blue-500 font-bold">{{ number_format($totalStok) }} {{ $totalStok > 1 ? 'Units' : 'Unit' }}</span> <span class="text-gray-500">Siap jual</span></p>
-        </div>
-    </div>
-
-    <!-- Area Chart Grafik -->
-    <div class="card p-6 rounded-xl mb-8 border-gray-700 z-10 shadow-lg shadow-black/15">
-        <div class="flex justify-between items-center mb-6">
-            <div class="flex items-center space-x-3">
-                <div class="w-1 h-5 bg-[#B4F481] rounded-full"></div>
-                <h3 class="font-bold text-sm tracking-wide font-display text-white">TREN OMSET PENJUALAN BULANAN</h3>
-            </div>
-            <span
-                class="text-[9px] text-[#B4F481] font-bold tracking-widest border border-green-900 bg-green-950/40 px-2.5 py-1 rounded-md">UPDATE
-                OTOMATIS</span>
-        </div>
-        <!-- CANVAS FOR CHART.JS -->
-        <div class="h-64 w-full relative">
-            <canvas id="salesChart"></canvas>
-        </div>
-    </div>
-
-    <!-- Navigasi & Manajemen Sistem Bawah -->
-    <div class="z-10">
-        <div class="flex items-center space-x-3 mb-5">
-            <div class="w-1.5 h-5 bg-white rounded-full"></div>
-            <h3 class="font-bold text-sm tracking-widest font-display text-white">NAVIGASI & MANAJEMEN SISTEM</h3>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <!-- Grid Navigasi 2x2 -->
+        <div class="grid grid-cols-2 gap-6 my-8">
             <!-- Box 1: Produk & Stok -->
-            <a href="{{ route('products.index') }}"
-                class="card p-5 rounded-xl flex items-center justify-between hover:bg-gray-800/80 cursor-pointer transition border border-gray-750 shadow-md group">
-                <div class="pr-2">
-                    <p class="text-[9px] text-[#B4F481] font-bold mb-1 tracking-widest uppercase">Produk</p>
-                    <h4 class="font-bold text-sm mb-1 text-white group-hover:text-[#B4F481] transition-colors font-display">
-                        PRODUK & STOK</h4>
-                    <p class="text-[10px] text-gray-400 leading-snug">Kelola katalog produk, minimal stok & import.</p>
+            <a href="{{ route('products.index') }}" class="flex flex-col items-center group">
+                <div class="w-full aspect-square flex items-center justify-center bg-white rounded-[2rem] shadow-lg group-hover:scale-105 transition-transform p-6 mb-3">
+                    <img src="https://cdn-icons-png.flaticon.com/512/3144/3144456.png" class="w-14 h-14 object-contain" alt="Produk & Stok">
                 </div>
-                <div
-                    class="w-12 h-12 bg-white/5 rounded-xl border border-gray-700/80 flex-shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
-                    <img src="https://cdn-icons-png.flaticon.com/512/3144/3144456.png" class="w-6 h-6 invert" alt="Icon">
-                </div>
+                <span class="text-[11px] font-bold text-white tracking-widest text-center uppercase group-hover:text-[#B4F481] transition-colors leading-tight">
+                    PRODUK & STOK
+                </span>
             </a>
 
             <!-- Box 2: Transaksi -->
-            <a href="{{ route('sales.index') }}"
-                class="card p-5 rounded-xl flex items-center justify-between hover:bg-gray-800/80 cursor-pointer transition border border-gray-750 shadow-md group">
-                <div class="pr-2">
-                    <p class="text-[9px] text-blue-400 font-bold mb-1 tracking-widest uppercase">Kasir</p>
-                    <h4 class="font-bold text-sm mb-1 text-white group-hover:text-blue-400 transition-colors font-display">
-                        TRANSAKSI</h4>
-                    <p class="text-[10px] text-gray-400 leading-snug">Input transaksi penjualan, cetak struk, dan pantau
-                        kasir.</p>
+            <a href="{{ route('sales.index') }}" class="flex flex-col items-center group">
+                <div class="w-full aspect-square flex items-center justify-center bg-white rounded-[2rem] shadow-lg group-hover:scale-105 transition-transform p-6 mb-3">
+                    <img src="https://cdn-icons-png.flaticon.com/512/3135/3135706.png" class="w-14 h-14 object-contain" alt="Transaksi">
                 </div>
-                <div
-                    class="w-12 h-12 bg-white/5 rounded-xl border border-gray-700/80 flex-shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
-                    <img src="https://cdn-icons-png.flaticon.com/512/3135/3135706.png" class="w-6 h-6 invert" alt="Icon">
-                </div>
+                <span class="text-[11px] font-bold text-white tracking-widest text-center uppercase group-hover:text-[#B4F481] transition-colors leading-tight">
+                    TRANSAKSI
+                </span>
             </a>
 
             <!-- Box 3: Data Cabang -->
-            <a href="{{ route('branches.index') }}"
-                class="card p-5 rounded-xl flex items-center justify-between hover:bg-gray-800/80 cursor-pointer transition border border-gray-750 shadow-md group">
-                <div class="pr-2">
-                    <p class="text-[9px] text-purple-400 font-bold mb-1 tracking-widest uppercase">Cabang</p>
-                    <h4
-                        class="font-bold text-sm mb-1 text-white group-hover:text-purple-400 transition-colors font-display">
-                        DATA CABANG</h4>
-                    <p class="text-[10px] text-gray-400 leading-snug">Kelola lokasi toko cabang, log aktivitas & karyawan.
-                    </p>
+            <a href="{{ route('branches.index') }}" class="flex flex-col items-center group">
+                <div class="w-full aspect-square flex items-center justify-center bg-white rounded-[2rem] shadow-lg group-hover:scale-105 transition-transform p-6 mb-3">
+                    <img src="https://cdn-icons-png.flaticon.com/512/869/869636.png" class="w-14 h-14 object-contain" alt="Data Cabang">
                 </div>
-                <div
-                    class="w-12 h-12 bg-white/5 rounded-xl border border-gray-700/80 flex-shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
-                    <img src="https://cdn-icons-png.flaticon.com/512/869/869636.png" class="w-6 h-6 invert" alt="Icon">
-                </div>
+                <span class="text-[11px] font-bold text-white tracking-widest text-center uppercase group-hover:text-[#B4F481] transition-colors leading-tight">
+                    DATA CABANG
+                </span>
             </a>
 
             <!-- Box 4: Keuangan -->
-            <a href="{{ route('admin.laporan') }}"
-                class="card p-5 rounded-xl flex items-center justify-between hover:bg-gray-800/80 cursor-pointer transition border border-gray-750 shadow-md group">
-                <div class="pr-2">
-                    <p class="text-[9px] text-yellow-400 font-bold mb-1 tracking-widest uppercase">Laporan</p>
-                    <h4
-                        class="font-bold text-sm mb-1 text-white group-hover:text-yellow-400 transition-colors font-display">
-                        KEUANGAN</h4>
-                    <p class="text-[10px] text-gray-400 leading-snug">Monitor laba rugi bulanan, setoran cash, dan
-                        pengeluaran.</p>
+            <a href="{{ route('admin.laporan') }}" class="flex flex-col items-center group">
+                <div class="w-full aspect-square flex items-center justify-center bg-white rounded-[2rem] shadow-lg group-hover:scale-105 transition-transform p-6 mb-3">
+                    <img src="https://cdn-icons-png.flaticon.com/512/2916/2916315.png" class="w-14 h-14 object-contain" alt="Keuangan">
                 </div>
-                <div
-                    class="w-12 h-12 bg-white/5 rounded-xl border border-gray-700/80 flex-shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
-                    <img src="https://cdn-icons-png.flaticon.com/512/2916/2916315.png" class="w-6 h-6 invert" alt="Icon">
-                </div>
+                <span class="text-[11px] font-bold text-white tracking-widest text-center uppercase group-hover:text-[#B4F481] transition-colors leading-tight">
+                    KEUANGAN
+                </span>
             </a>
+        </div>
+
+        <!-- Tombol Aksi Bawah -->
+        <div class="space-y-4">
+            <button onclick="openPermintaanPoModal()"
+                class="w-full flex items-center justify-center px-6 py-4 rounded-2xl border-2 border-[#B4F481] text-[#B4F481] font-bold text-xs tracking-widest hover:bg-[#B4F481] hover:text-black transition cursor-pointer relative uppercase">
+                PERMINTAAN PO
+                @php
+                    $pendingCount = $purchaseOrders->where('status', 'Pending')->count();
+                @endphp
+                @if($pendingCount > 0)
+                    <span
+                        class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center animate-pulse border border-[#0B1120]">
+                        {{ $pendingCount }}
+                    </span>
+                @endif
+            </button>
+            <button onclick="openUpcomingProductsModal()"
+                class="w-full justify-center px-6 py-4 rounded-2xl bg-[#B4F481] text-black font-bold text-xs tracking-widest hover:bg-[#a0dc72] transition flex items-center space-x-2 cursor-pointer uppercase">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path>
+                </svg>
+                <span>UPLOAD PRODUK BARU</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Desktop Layout (Visible on desktop/tablet) -->
+    <div class="hidden md:block">
+        <div class="flex flex-col sm:flex-row justify-end gap-3 mb-6 z-10">
+            <button onclick="openPermintaanPoModal()"
+                class="w-full sm:w-auto flex items-center justify-center px-5 py-2 rounded-full border border-green-400 text-green-400 font-bold text-xs tracking-wider hover:bg-green-400 hover:text-black transition cursor-pointer relative">
+                PERMINTAAN PO
+                @php
+                    $pendingCount = $purchaseOrders->where('status', 'Pending')->count();
+                @endphp
+                @if($pendingCount > 0)
+                    <span
+                        class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center animate-pulse border border-[#0B1120]">
+                        {{ $pendingCount }}
+                    </span>
+                @endif
+            </button>
+            <button onclick="openUpcomingProductsModal()"
+                class="w-full sm:w-auto justify-center px-5 py-2 rounded-full bg-[#B4F481] text-black font-bold text-xs tracking-wider hover:bg-[#a0dc72] transition flex items-center space-x-2 cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path>
+                </svg>
+                <span>UPLOAD PRODUK BARU</span>
+            </button>
+        </div>
+
+        <!-- 4 Kotak Indikator Utama -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 z-10">
+            <!-- Indikator 1: Omset Penjualan -->
+            <div class="card p-5 rounded-xl hover:border-gray-500 transition shadow-lg shadow-black/20">
+                <div class="flex justify-between items-start mb-3">
+                    <p class="text-[10px] text-gray-400 font-bold tracking-wider">OMSET PENJUALAN</p>
+                    <div class="bg-green-950/50 p-1.5 rounded-lg text-green-400 border border-green-800/40">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 7h8m0 0v8m0-8l-9 9-4-4-6 6"></path>
+                        </svg>
+                    </div>
+                </div>
+                <h3 class="text-2xl font-bold mb-2 text-white font-display">Rp {{ number_format($widgetOmset, 0, ',', '.') }}</h3>
+                <p class="text-xs">
+                    @if($omsetTrendPercent >= 0)
+                        <span class="text-green-400 font-bold">+{{ number_format($omsetTrendPercent, 1) }}%</span>
+                    @else
+                        <span class="text-red-500 font-bold">{{ number_format($omsetTrendPercent, 1) }}%</span>
+                    @endif
+                    <span class="text-gray-500">Dari bulan lalu</span>
+                </p>
+            </div>
+
+            <!-- Indikator 2: Hutang Supplier -->
+            <div class="card p-5 rounded-xl hover:border-gray-500 transition shadow-lg shadow-black/20">
+                <div class="flex justify-between items-start mb-3">
+                    <p class="text-[10px] text-gray-400 font-bold tracking-wider">HUTANG (KE SUPPLIER)</p>
+                    <div class="bg-yellow-950/50 p-1.5 rounded-lg text-yellow-500 border border-yellow-800/40">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                            </path>
+                        </svg>
+                    </div>
+                </div>
+                <h3 class="text-2xl font-bold mb-2 text-yellow-500 font-display">Rp {{ number_format($hutangSupplier, 0, ',', '.') }}</h3>
+                <p class="text-xs"><span class="text-yellow-500 font-bold">Penting</span> <span class="text-gray-500">Bulan ini</span></p>
+            </div>
+
+            <!-- Indikator 3: Hutang Cabang -->
+            <div class="card p-5 rounded-xl hover:border-gray-500 transition shadow-lg shadow-black/20">
+                <div class="flex justify-between items-start mb-3">
+                    <p class="text-[10px] text-gray-400 font-bold tracking-wider">HUTANG (DARI CABANG)</p>
+                    <div class="bg-red-950/50 p-1.5 rounded-lg text-red-400 border border-red-800/40">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <h3 class="text-2xl font-bold mb-2 text-red-400 font-display">Rp {{ number_format($hutangCabang, 0, ',', '.') }}</h3>
+                <p class="text-xs"><span class="text-red-500 font-bold">Net Hutang</span> <span class="text-gray-500">Sisa saldo</span></p>
+            </div>
+
+            <!-- Indikator 4: Total SKU -->
+            <div class="card p-5 rounded-xl hover:border-gray-500 transition shadow-lg shadow-black/20">
+                <div class="flex justify-between items-start mb-3">
+                    <p class="text-[10px] text-gray-400 font-bold tracking-wider">TOTAL SKU PRODUK</p>
+                    <div class="bg-blue-950/50 p-1.5 rounded-lg text-blue-400 border border-blue-800/40">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M7 7h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <h3 class="text-2xl font-bold mb-2 text-blue-400 font-display">{{ number_format($totalSku) }} {{ $totalSku > 1 ? 'Items' : 'Item' }}</h3>
+                <p class="text-xs"><span class="text-blue-500 font-bold">{{ number_format($totalStok) }} {{ $totalStok > 1 ? 'Units' : 'Unit' }}</span> <span class="text-gray-500">Siap jual</span></p>
+            </div>
+        </div>
+
+        <!-- Area Chart Grafik -->
+        <div class="card p-6 rounded-xl mb-8 border-gray-700 z-10 shadow-lg shadow-black/15">
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center space-x-3">
+                    <div class="w-1 h-5 bg-[#B4F481] rounded-full"></div>
+                    <h3 class="font-bold text-sm tracking-wide font-display text-white">TREN OMSET PENJUALAN BULANAN</h3>
+                </div>
+                <span
+                    class="text-[9px] text-[#B4F481] font-bold tracking-widest border border-green-900 bg-green-950/40 px-2.5 py-1 rounded-md">UPDATE
+                    OTOMATIS</span>
+            </div>
+            <!-- CANVAS FOR CHART.JS -->
+            <div class="h-64 w-full relative">
+                <canvas id="salesChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Navigasi & Manajemen Sistem Bawah -->
+        <div class="z-10">
+            <div class="flex items-center space-x-3 mb-5">
+                <div class="w-1.5 h-5 bg-white rounded-full"></div>
+                <h3 class="font-bold text-sm tracking-widest font-display text-white">NAVIGASI & MANAJEMEN SISTEM</h3>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <!-- Box 1: Produk & Stok -->
+                <a href="{{ route('products.index') }}"
+                    class="card p-5 rounded-xl flex items-center justify-between hover:bg-gray-800/80 cursor-pointer transition border border-gray-750 shadow-md group">
+                    <div class="pr-2">
+                        <p class="text-[9px] text-[#B4F481] font-bold mb-1 tracking-widest uppercase">Produk</p>
+                        <h4 class="font-bold text-sm mb-1 text-white group-hover:text-[#B4F481] transition-colors font-display">
+                            PRODUK & STOK</h4>
+                        <p class="text-[10px] text-gray-400 leading-snug">Kelola katalog produk, minimal stok & import.</p>
+                    </div>
+                    <div
+                        class="w-12 h-12 bg-white/5 rounded-xl border border-gray-700/80 flex-shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <img src="https://cdn-icons-png.flaticon.com/512/3144/3144456.png" class="w-6 h-6 invert" alt="Icon">
+                    </div>
+                </a>
+
+                <!-- Box 2: Transaksi -->
+                <a href="{{ route('sales.index') }}"
+                    class="card p-5 rounded-xl flex items-center justify-between hover:bg-gray-800/80 cursor-pointer transition border border-gray-750 shadow-md group">
+                    <div class="pr-2">
+                        <p class="text-[9px] text-blue-400 font-bold mb-1 tracking-widest uppercase">Kasir</p>
+                        <h4 class="font-bold text-sm mb-1 text-white group-hover:text-blue-400 transition-colors font-display">
+                            TRANSAKSI</h4>
+                        <p class="text-[10px] text-gray-400 leading-snug">Input transaksi penjualan, cetak struk, dan pantau
+                            kasir.</p>
+                    </div>
+                    <div
+                        class="w-12 h-12 bg-white/5 rounded-xl border border-gray-700/80 flex-shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <img src="https://cdn-icons-png.flaticon.com/512/3135/3135706.png" class="w-6 h-6 invert" alt="Icon">
+                    </div>
+                </a>
+
+                <!-- Box 3: Data Cabang -->
+                <a href="{{ route('branches.index') }}"
+                    class="card p-5 rounded-xl flex items-center justify-between hover:bg-gray-800/80 cursor-pointer transition border border-gray-750 shadow-md group">
+                    <div class="pr-2">
+                        <p class="text-[9px] text-purple-400 font-bold mb-1 tracking-widest uppercase">Cabang</p>
+                        <h4
+                            class="font-bold text-sm mb-1 text-white group-hover:text-purple-400 transition-colors font-display">
+                            DATA CABANG</h4>
+                        <p class="text-[10px] text-gray-400 leading-snug">Kelola lokasi toko cabang, log aktivitas & karyawan.
+                        </p>
+                    </div>
+                    <div
+                        class="w-12 h-12 bg-white/5 rounded-xl border border-gray-700/80 flex-shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <img src="https://cdn-icons-png.flaticon.com/512/869/869636.png" class="w-6 h-6 invert" alt="Icon">
+                    </div>
+                </a>
+
+                <!-- Box 4: Keuangan -->
+                <a href="{{ route('admin.laporan') }}"
+                    class="card p-5 rounded-xl flex items-center justify-between hover:bg-gray-800/80 cursor-pointer transition border border-gray-750 shadow-md group">
+                    <div class="pr-2">
+                        <p class="text-[9px] text-yellow-400 font-bold mb-1 tracking-widest uppercase">Laporan</p>
+                        <h4
+                            class="font-bold text-sm mb-1 text-white group-hover:text-yellow-400 transition-colors font-display">
+                            KEUANGAN</h4>
+                        <p class="text-[10px] text-gray-400 leading-snug">Monitor laba rugi bulanan, setoran cash, dan
+                            pengeluaran.</p>
+                    </div>
+                    <div
+                        class="w-12 h-12 bg-white/5 rounded-xl border border-gray-700/80 flex-shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <img src="https://cdn-icons-png.flaticon.com/512/2916/2916315.png" class="w-6 h-6 invert" alt="Icon">
+                    </div>
+                </a>
+            </div>
         </div>
     </div>
 
