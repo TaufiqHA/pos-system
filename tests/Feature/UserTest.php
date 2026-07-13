@@ -45,7 +45,7 @@ class UserTest extends TestCase
         $response = $this->actingAs($this->user)->postJson(route('users.store'), [
             'name' => 'User Baru',
             'email' => 'userbaru@example.com',
-            'password' => 'password123',
+            'password' => '123456',
             'role_id' => $this->adminRole->id,
             'status' => 'active',
         ]);
@@ -161,7 +161,7 @@ class UserTest extends TestCase
         $response = $this->actingAs($this->user)->postJson(route('users.store'), [
             'name' => 'Duplicate User',
             'email' => $this->user->email,
-            'password' => 'password123',
+            'password' => '123456',
             'role_id' => $this->adminRole->id,
             'status' => 'active',
         ]);

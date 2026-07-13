@@ -139,7 +139,7 @@
 
                 <div class="space-y-1">
                     <label for="create-password" class="block font-bold text-gray-300">Password</label>
-                    <input type="password" name="password" id="create-password" placeholder="Password akun" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @error('password') border-red-500 @enderror" required>
+                    <input type="password" name="password" id="create-password" placeholder="3 - 6 karakter" minlength="3" maxlength="6" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @error('password') border-red-500 @enderror" required>
                     @error('password')
                         <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p>
                     @enderror

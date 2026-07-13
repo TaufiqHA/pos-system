@@ -17,26 +17,26 @@ class ProductBranchPricesController extends Controller
         $query = Product::whereHas('productStocks', function ($q) use ($branchId) {
             $q->where('branch_id', $branchId);
         })
-        ->select('products.*')
-        ->selectSub(function ($q) use ($branchId) {
-            $q->select('sale_items.price')
-                ->from('sale_items')
-                ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
-                ->whereColumn('sale_items.product_id', 'products.id')
-                ->where('sales.branch_id', $branchId)
-                ->orderByDesc('sales.date')
-                ->orderByDesc('sales.created_at')
-                ->limit(1);
-        }, 'latest_purchase_price')
-        ->with([
-            'category',
-            'branchPrices' => function ($q) use ($branchId) {
-                $q->where('branch_id', $branchId);
-            },
-            'wholesalePrices' => function ($q) use ($branchId) {
-                $q->where('branch_id', $branchId);
-            },
-        ]);
+            ->select('products.*')
+            ->selectSub(function ($q) use ($branchId) {
+                $q->select('sale_items.price')
+                    ->from('sale_items')
+                    ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
+                    ->whereColumn('sale_items.product_id', 'products.id')
+                    ->where('sales.branch_id', $branchId)
+                    ->orderByDesc('sales.date')
+                    ->orderByDesc('sales.created_at')
+                    ->limit(1);
+            }, 'latest_purchase_price')
+            ->with([
+                'category',
+                'branchPrices' => function ($q) use ($branchId) {
+                    $q->where('branch_id', $branchId);
+                },
+                'wholesalePrices' => function ($q) use ($branchId) {
+                    $q->where('branch_id', $branchId);
+                },
+            ]);
 
         // Search filter (name or SKU)
         if ($request->filled('search')) {

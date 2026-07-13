@@ -23,7 +23,7 @@
     <!-- Main Card Container -->
     <div class="w-full max-w-md bg-[#131b2f]/95 backdrop-blur-md rounded-2xl border border-gray-800/80 p-6 sm:p-8 shadow-2xl z-10">
         
-        <!-- Demo Accounts Section -->
+        {{-- <!-- Demo Accounts Section -->
         <div class="bg-[#0b1120]/80 border border-gray-850 p-4 rounded-xl mb-6 relative overflow-hidden group select-none">
             <!-- Shimmer effect -->
             <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out"></div>
@@ -39,10 +39,10 @@
                 </div>
                 <div class="flex justify-between items-center text-gray-400">
                     <span>Kata Sandi:</span>
-                    <span class="text-white font-mono select-all font-semibold">password</span>
+                    <span class="text-white font-mono select-all font-semibold">123456</span>
                 </div>
             </div>
-        </div>
+        </div> --}}
 
         <!-- Error Alert Message -->
         @if ($errors->any())
@@ -84,8 +84,9 @@
                         </svg>
                     </span>
                     <input type="password" name="password" id="password" 
+                        minlength="3" maxlength="6"
                         class="w-full bg-[#0b1120] text-white border border-gray-800 rounded-xl py-3.5 pl-11 pr-4 text-sm placeholder-gray-600 focus:outline-none focus:border-[#b4f45b] focus:ring-1 focus:ring-[#b4f45b] transition-all duration-200" 
-                        placeholder="••••••••" required autocomplete="current-password">
+                        placeholder="password" required autocomplete="current-password">
                 </div>
             </div>
 

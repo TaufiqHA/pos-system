@@ -47,7 +47,7 @@ class BranchController extends Controller
             'wilayah_id' => 'nullable|string|exists:wilayahs,id',
             'notes' => 'nullable|string',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6',
+            'password' => 'required|string|min:3|max:6',
         ]);
 
         $branchId = (string) Str::uuid();

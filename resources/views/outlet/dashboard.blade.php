@@ -21,9 +21,18 @@
             class="w-full sm:w-auto flex items-center justify-center px-5 py-2 rounded-full border border-green-400 text-green-400 font-bold text-xs tracking-wider hover:bg-green-400 hover:text-black transition cursor-pointer">
             BUAT ORDER
         </button>
+        @php
+            $newDeliveryCount = $deliveries->where('status', 'DIKIRIM')->count();
+        @endphp
         <button onclick="openDeliveryModal()"
-            class="w-full sm:w-auto flex items-center justify-center px-5 py-2 rounded-full border border-blue-400 text-blue-400 font-bold text-xs tracking-wider hover:bg-blue-400 hover:text-black transition cursor-pointer">
+            class="w-full sm:w-auto flex items-center justify-center px-5 py-2 rounded-full border border-blue-400 text-blue-400 font-bold text-xs tracking-wider hover:bg-blue-400 hover:text-black transition cursor-pointer relative">
             STATUS PENGIRIMAN
+            @if($newDeliveryCount > 0)
+                <span
+                    class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center animate-pulse border border-[#0B1120]">
+                    {{ $newDeliveryCount }}
+                </span>
+            @endif
         </button>
     </div>
 
@@ -296,8 +305,8 @@
                     </table>
                 </div>
 
-                <!-- Ringkasan Kolom 1 (Subtotal, Diskon, Pajak) -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Ringkasan Total (Subtotal & Grand Total) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-1">
                         <label class="block font-bold text-gray-300">Subtotal *</label>
                         <input type="text" id="po-subtotal-display" value="0" readonly
@@ -305,24 +314,14 @@
                         <input type="hidden" id="po-subtotal" name="subtotal" value="0">
                     </div>
                     <div class="space-y-1">
-                        <label class="block font-bold text-gray-300">Diskon</label>
-                        <input type="number" id="po-discount-input" name="discount" value="0" min="0"
-                            oninput="calculateGrandTotal()"
-                            class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-[#B4F481]">
+                        <label class="block font-bold text-gray-300">Grand Total *</label>
+                        <input type="text" id="po-grand-total-display" value="0" readonly
+                            class="w-full bg-gray-950 border border-gray-800 text-gray-400 rounded-xl p-3 cursor-not-allowed focus:outline-none">
+                        <input type="hidden" id="po-grand-total" name="grand_total" value="0">
                     </div>
-                    <div class="space-y-1">
-                        <label class="block font-bold text-gray-300">Pajak</label>
-                        <input type="number" id="po-tax-input" name="tax" value="0" min="0" oninput="calculateGrandTotal()"
-                            class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-[#B4F481]">
-                    </div>
-                </div>
-
-                <!-- Ringkasan Kolom 2 (Grand Total) -->
-                <div class="space-y-1">
-                    <label class="block font-bold text-gray-300">Grand Total *</label>
-                    <input type="text" id="po-grand-total-display" value="0" readonly
-                        class="w-full bg-gray-950 border border-gray-800 text-gray-400 rounded-xl p-3 cursor-not-allowed focus:outline-none">
-                    <input type="hidden" id="po-grand-total" name="grand_total" value="0">
+                    <!-- Hidden inputs for discount and tax to prevent breaking JS / controller logic -->
+                    <input type="hidden" id="po-discount-input" name="discount" value="0">
+                    <input type="hidden" id="po-tax-input" name="tax" value="0">
                 </div>
                 <input type="hidden" id="po-payment-method" name="payment_method" value="KREDIT">
 

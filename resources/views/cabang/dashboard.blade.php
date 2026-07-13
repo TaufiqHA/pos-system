@@ -610,10 +610,10 @@
 
                             <!-- Flat notes inputs for controller auto-serialization -->
                             <input type="hidden" name="user_notes" value="{{ $selectedPoNotes['user_notes'] ?? '' }}">
-                            <input type="hidden" name="subtotal" value="{{ $selectedPoNotes['subtotal'] ?? 0 }}">
-                            <input type="hidden" name="discount" value="{{ $selectedPoNotes['discount'] ?? 0 }}">
-                            <input type="hidden" name="tax" value="{{ $selectedPoNotes['tax'] ?? 0 }}">
-                            <input type="hidden" name="grand_total" value="{{ $selectedPoNotes['grand_total'] ?? 0 }}">
+                            <input type="hidden" name="subtotal" id="hidden-subtotal" value="{{ $selectedPoNotes['subtotal'] ?? 0 }}">
+                            <input type="hidden" name="discount" id="hidden-discount" value="{{ $selectedPoNotes['discount'] ?? 0 }}">
+                            <input type="hidden" name="tax" id="hidden-tax" value="{{ $selectedPoNotes['tax'] ?? 0 }}">
+                            <input type="hidden" name="grand_total" id="hidden-grand-total" value="{{ $selectedPoNotes['grand_total'] ?? 0 }}">
                             @foreach(($selectedPoNotes['items'] ?? []) as $index => $item)
                                 <input type="hidden" name="items[{{ $index }}][product_id]" value="{{ $item['product_id'] }}">
                                 <input type="hidden" name="items[{{ $index }}][name]" value="{{ $item['name'] }}">
@@ -689,11 +689,45 @@
                                 </div>
                             </div>
 
+                            <!-- Ringkasan Finansial (Subtotal, Diskon, Pajak) -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-gray-800 pt-4">
+                                <div class="space-y-1">
+                                    <label class="block font-bold text-gray-400">Subtotal</label>
+                                    <input type="text" readonly
+                                        value="Rp {{ number_format($selectedPoNotes['subtotal'] ?? 0, 0, ',', '.') }}"
+                                        class="w-full bg-gray-900 border border-gray-800 text-gray-400 rounded-xl p-3 cursor-not-allowed focus:outline-none">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="block font-bold text-gray-400">Diskon</label>
+                                    @if($selectedPo->status === 'Pending')
+                                        <input type="number" id="visible-discount"
+                                            value="{{ $selectedPoNotes['discount'] ?? 0 }}"
+                                            class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-[#B4F481]">
+                                    @else
+                                        <input type="text" readonly
+                                            value="Rp {{ number_format($selectedPoNotes['discount'] ?? 0, 0, ',', '.') }}"
+                                            class="w-full bg-gray-900 border border-gray-800 text-gray-400 rounded-xl p-3 cursor-not-allowed focus:outline-none">
+                                    @endif
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="block font-bold text-gray-400">Pajak</label>
+                                    @if($selectedPo->status === 'Pending')
+                                        <input type="number" id="visible-tax"
+                                            value="{{ $selectedPoNotes['tax'] ?? 0 }}"
+                                            class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-[#B4F481]">
+                                    @else
+                                        <input type="text" readonly
+                                            value="Rp {{ number_format($selectedPoNotes['tax'] ?? 0, 0, ',', '.') }}"
+                                            class="w-full bg-gray-900 border border-gray-800 text-gray-400 rounded-xl p-3 cursor-not-allowed focus:outline-none">
+                                    @endif
+                                </div>
+                            </div>
+
                             <!-- Grand Total & Payment Method -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="space-y-1">
                                     <label class="block font-bold text-gray-400">Grand Total *</label>
-                                    <input type="text" readonly
+                                    <input type="text" readonly id="visible-grand-total"
                                         value="Rp {{ number_format($selectedPoNotes['grand_total'] ?? 0, 0, ',', '.') }}"
                                         class="w-full bg-gray-900 border border-gray-800 text-[#B4F481] font-bold rounded-xl p-3 cursor-not-allowed focus:outline-none">
                                 </div>
@@ -1624,6 +1658,39 @@
             document.getElementById('form-status').value = status;
             document.getElementById('approval-form').submit();
         }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const visibleDiscountInput = document.getElementById('visible-discount');
+            const visibleTaxInput = document.getElementById('visible-tax');
+            const hiddenSubtotalInput = document.getElementById('hidden-subtotal');
+            const hiddenDiscountInput = document.getElementById('hidden-discount');
+            const hiddenTaxInput = document.getElementById('hidden-tax');
+            const hiddenGrandTotalInput = document.getElementById('hidden-grand-total');
+            const visibleGrandTotalInput = document.getElementById('visible-grand-total');
+
+            if (visibleDiscountInput && visibleTaxInput) {
+                function updateTotals() {
+                    const subtotal = parseFloat(hiddenSubtotalInput.value) || 0;
+                    const discount = parseFloat(visibleDiscountInput.value) || 0;
+                    const tax = parseFloat(visibleTaxInput.value) || 0;
+
+                    const grandTotal = Math.max(0, subtotal - discount + tax);
+
+                    hiddenDiscountInput.value = discount;
+                    hiddenTaxInput.value = tax;
+                    hiddenGrandTotalInput.value = grandTotal;
+
+                    if (visibleGrandTotalInput) {
+                        visibleGrandTotalInput.value = 'Rp ' + Math.round(grandTotal).toLocaleString('id-ID');
+                    }
+                }
+
+                visibleDiscountInput.addEventListener('input', updateTotals);
+                visibleTaxInput.addEventListener('input', updateTotals);
+                visibleDiscountInput.addEventListener('change', updateTotals);
+                visibleTaxInput.addEventListener('change', updateTotals);
+            }
+        });
     </script>
 
     <!-- ================= MODAL BOX: DETAIL UPCOMING PRODUCT (CABANG) ================= -->

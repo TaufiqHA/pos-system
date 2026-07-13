@@ -58,7 +58,7 @@ class SalesController extends Controller
         $products = Product::with([
             'wholesalePrices' => function ($query) use ($adminBranchId) {
                 $query->where('branch_id', $adminBranchId);
-            }
+            },
         ])->orderBy('name')->get();
         $branches = Branch::whereDoesntHave('users', function ($query) {
             $query->whereHas('role', function ($q) {

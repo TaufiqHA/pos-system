@@ -28,7 +28,7 @@ class BranchControllerTest extends TestCase
             'wilayah_id' => 'Jawa Barat',
             'notes' => 'Kantor Cabang Baru',
             'email' => 'bandung@pos.com',
-            'password' => 'password123',
+            'password' => '123456',
         ]);
 
         $response->assertStatus(302);
@@ -59,7 +59,7 @@ class BranchControllerTest extends TestCase
         $response = $this->post(route('branches.store'), [
             'name' => '',
             'email' => 'bandung@pos.com',
-            'password' => 'password123',
+            'password' => '123456',
         ]);
 
         $response->assertSessionHasErrors('name');

@@ -43,9 +43,9 @@ class UserController extends Controller
                 $q->whereHas('branch', function ($bq) use ($wilayahId) {
                     $bq->where('wilayah_id', $wilayahId);
                 })
-                ->orWhereHas('outlet.branch', function ($bq) use ($wilayahId) {
-                    $bq->where('wilayah_id', $wilayahId);
-                });
+                    ->orWhereHas('outlet.branch', function ($bq) use ($wilayahId) {
+                        $bq->where('wilayah_id', $wilayahId);
+                    });
             });
         }
 
@@ -56,7 +56,7 @@ class UserController extends Controller
         }
 
         $roles = Role::all();
-        
+
         // Exclude branches connected to admin users
         $adminBranchIds = User::whereHas('role', function ($q) {
             $q->where('name', 'admin');
@@ -78,7 +78,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email',
-            'password' => 'required|string|min:8',
+            'password' => 'required|string|min:3|max:6',
             'role_id' => 'required|exists:roles,id',
             'branch_id' => 'nullable|exists:branches,id',
             'status' => 'required|in:active,inactive',
@@ -115,7 +115,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,'.$id,
-            'password' => 'nullable|string|min:8',
+            'password' => 'nullable|string|min:3|max:6',
             'role_id' => 'required|exists:roles,id',
             'branch_id' => 'nullable|exists:branches,id',
             'status' => 'required|in:active,inactive',

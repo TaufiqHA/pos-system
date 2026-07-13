@@ -41,7 +41,7 @@ class OutletsController extends Controller
             'phone' => 'required|string|max:20',
             // New fields for user creation
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8',
+            'password' => 'required|string|min:3|max:6',
         ]);
 
         // Create Outlet first
@@ -98,9 +98,20 @@ class OutletsController extends Controller
             'name' => 'sometimes|required|string|max:255',
             'address' => 'sometimes|required|string',
             'phone' => 'sometimes|required|string|max:20',
+            'password' => 'nullable|string|min:3|max:6',
         ]);
 
+        $password = $validated['password'] ?? null;
+        unset($validated['password']);
+
         $outlet->update($validated);
+
+        if (! empty($password)) {
+            $user = User::where('outlet_id', $outlet->id)->first();
+            if ($user) {
+                $user->update(['password' => $password]);
+            }
+        }
 
         if ($request->wantsJson()) {
             return response()->json([

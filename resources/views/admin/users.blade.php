@@ -195,7 +195,7 @@
 
             <div class="space-y-1">
                 <label for="create-password" class="block font-bold text-gray-300">Password <span class="text-red-500">*</span></label>
-                <input type="password" name="password" id="create-password" placeholder="Minimal 8 karakter" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @if($errors->any() && !old('_method') && $errors->has('password')) border-red-500 @endif" required>
+                <input type="password" name="password" id="create-password" placeholder="3 - 6 karakter" minlength="3" maxlength="6" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @if($errors->any() && !old('_method') && $errors->has('password')) border-red-500 @endif" required>
                 @if($errors->any() && !old('_method'))
                     @error('password')
                         <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p>
@@ -286,8 +286,8 @@
             </div>
 
             <div class="space-y-1">
-                <label for="edit-password" class="block font-bold text-gray-300">Password</label>
-                <input type="password" name="password" id="edit-password" placeholder="Kosongkan jika tidak diubah" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @if($errors->any() && old('_method') === 'PUT' && $errors->has('password')) border-red-500 @endif">
+                <label for="edit-password" class="block font-bold text-gray-300">Password (optional, 3 - 6 karakter)</label>
+                <input type="password" name="password" id="edit-password" placeholder="Kosongkan jika tidak diubah" minlength="3" maxlength="6" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @if($errors->any() && old('_method') === 'PUT' && $errors->has('password')) border-red-500 @endif">
                 @if($errors->any() && old('_method') === 'PUT')
                     @error('password')
                         <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p>

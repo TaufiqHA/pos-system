@@ -143,8 +143,8 @@
                     <input type="email" name="email" id="edit-email" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400"/>
                 </div>
                 <div class="space-y-1">
-                    <label class="block font-bold text-gray-300">Password (optional)</label>
-                    <input type="password" name="password" id="edit-password" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400"/>
+                    <label class="block font-bold text-gray-300">Password (optional, 3 - 6 karakter)</label>
+                    <input type="password" name="password" id="edit-password" minlength="3" maxlength="6" placeholder="Kosongkan jika tidak diubah" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400"/>
                 </div>
             </div>
             <div class="pt-4 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 border-t border-gray-800">
@@ -205,8 +205,8 @@
                     @endif
                 </div>
                 <div class="space-y-1">
-                    <label for="create-password" class="block font-bold text-gray-300">Password *</label>
-                    <input type="password" name="password" id="create-password" placeholder="Minimal 8 karakter" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @if($errors->has('password')) border-red-500 @endif">
+                    <label class="block font-bold text-gray-300">Password *</label>
+                    <input type="password" name="password" id="create-password" placeholder="3 - 6 karakter" minlength="3" maxlength="6" class="w-full bg-gray-900 border border-gray-800 text-white rounded-xl p-3 focus:outline-none focus:border-green-400 @if($errors->has('password')) border-red-500 @endif" required>
                     @if($errors->has('password'))
                         <p class="text-red-500 text-[10px] mt-1">{{ $errors->first('password') }}</p>
                     @endif

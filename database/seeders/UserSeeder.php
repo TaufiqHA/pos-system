@@ -36,7 +36,7 @@ class UserSeeder extends Seeder
                 'branch_id' => 'BRC-001', // Relasi ke Gudang Pusat
                 'name' => 'Admin POS',
                 'email' => 'admin@pos.com',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('123456'),
                 'status' => 'active',
             ]);
         }

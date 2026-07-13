@@ -18,12 +18,12 @@ class AuthTest extends TestCase
     {
         $user = User::factory()->create([
             'email' => 'john@example.com',
-            'password' => Hash::make('secret-password'),
+            'password' => Hash::make('secret'),
         ]);
 
         $response = $this->postJson('/auth/login', [
             'email' => 'john@example.com',
-            'password' => 'secret-password',
+            'password' => 'secret',
         ]);
 
         $response->assertStatus(200)
@@ -52,12 +52,12 @@ class AuthTest extends TestCase
     {
         $user = User::factory()->create([
             'email' => 'john@example.com',
-            'password' => Hash::make('secret-password'),
+            'password' => Hash::make('secret'),
         ]);
 
         $response = $this->postJson('/auth/login', [
             'email' => 'john@example.com',
-            'password' => 'wrong-password',
+            'password' => 'wrong',
         ]);
 
         $response->assertStatus(401)
